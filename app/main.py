@@ -6,6 +6,8 @@ from app.analyzer import analyze_report
 
 from app.logger import logger
 
+from app.exceptions import SOCIQError
+
 
 def main() -> None:
     """
@@ -20,6 +22,9 @@ def main() -> None:
         print_banner()
 
         analyze_report()
+
+    except SOCIQError as error:
+        logger.error(str(error))
 
     except Exception:
         logger.exception(
