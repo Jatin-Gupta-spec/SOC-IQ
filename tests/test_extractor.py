@@ -43,16 +43,11 @@ def test_extract_ipv4_addresses():
     Verify that IPv4 addresses are extracted correctly.
     """
 
-    # Arrange
-    report = SAMPLE_REPORT
-
-    # Act
     results = extract_iocs(
-        report,
+        SAMPLE_REPORT,
         COMPILED_PATTERNS,
     )
 
-    # Assert
     assert results["IPv4"] == [
         "192.168.1.10",
     ]
@@ -63,16 +58,11 @@ def test_duplicate_ipv4_addresses_are_removed():
     Verify duplicate IPv4 addresses are removed.
     """
 
-    # Arrange
-    report = DUPLICATE_IPV4_REPORT
-
-    # Act
     results = extract_iocs(
-        report,
+        DUPLICATE_IPV4_REPORT,
         COMPILED_PATTERNS,
     )
 
-    # Assert
     assert results["IPv4"] == [
         "8.8.8.8",
     ]
@@ -84,16 +74,11 @@ def test_no_ipv4_addresses_found():
     when no IPv4 addresses exist.
     """
 
-    # Arrange
-    report = NO_IPV4_REPORT
-
-    # Act
     results = extract_iocs(
-        report,
+        NO_IPV4_REPORT,
         COMPILED_PATTERNS,
     )
 
-    # Assert
     assert results["IPv4"] == []
 
 
@@ -102,13 +87,11 @@ def test_extract_domains():
     Verify domain names are extracted correctly.
     """
 
-    # Act
     results = extract_iocs(
         SAMPLE_REPORT,
         COMPILED_PATTERNS,
     )
 
-    # Assert
     assert results["Domains"] == [
         "evilcorp.com",
     ]
@@ -119,13 +102,11 @@ def test_extract_urls():
     Verify URLs are extracted correctly.
     """
 
-    # Act
     results = extract_iocs(
         SAMPLE_REPORT,
         COMPILED_PATTERNS,
     )
 
-    # Assert
     assert results["URLs"] == [
         "https://evilcorp.com/payload.exe",
     ]
@@ -136,13 +117,101 @@ def test_extract_emails():
     Verify email addresses are extracted correctly.
     """
 
-    # Act
     results = extract_iocs(
         SAMPLE_REPORT,
         COMPILED_PATTERNS,
     )
 
-    # Assert
     assert results["Emails"] == [
         "attacker@evilcorp.com",
+    ]
+
+
+def test_extract_md5():
+    """
+    Verify MD5 hashes are extracted correctly.
+    """
+
+    results = extract_iocs(
+        SAMPLE_REPORT,
+        COMPILED_PATTERNS,
+    )
+
+    assert results["MD5"] == [
+        "44d88612fea8a8f36de82e1278abb02f",
+    ]
+
+
+def test_extract_sha1():
+    """
+    Verify SHA1 hashes are extracted correctly.
+    """
+
+    results = extract_iocs(
+        SAMPLE_REPORT,
+        COMPILED_PATTERNS,
+    )
+
+    assert results["SHA1"] == [
+        "7c4a8d09ca3762af61e59520943dc26494f8941b",
+    ]
+
+
+def test_extract_sha256():
+    """
+    Verify SHA256 hashes are extracted correctly.
+    """
+
+    results = extract_iocs(
+        SAMPLE_REPORT,
+        COMPILED_PATTERNS,
+    )
+
+    assert results["SHA256"] == [
+        "3f786850e387550fdab836ed7e6dc881de23001b4fb5d6fcb5b8f8f9d4f6b6c5",
+    ]
+
+
+def test_extract_cve():
+    """
+    Verify CVE identifiers are extracted correctly.
+    """
+
+    results = extract_iocs(
+        SAMPLE_REPORT,
+        COMPILED_PATTERNS,
+    )
+
+    assert results["CVE"] == [
+        "CVE-2024-4577",
+    ]
+
+
+def test_extract_windows_file_paths():
+    """
+    Verify Windows file paths are extracted correctly.
+    """
+
+    results = extract_iocs(
+        SAMPLE_REPORT,
+        COMPILED_PATTERNS,
+    )
+
+    assert results["Windows File Paths"] == [
+        "C:\\Windows\\System32\\cmd.exe",
+    ]
+
+
+def test_extract_registry_keys():
+    """
+    Verify Windows registry keys are extracted correctly.
+    """
+
+    results = extract_iocs(
+        SAMPLE_REPORT,
+        COMPILED_PATTERNS,
+    )
+
+    assert results["Windows Registry Keys"] == [
+        "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
     ]
