@@ -1,9 +1,13 @@
-from argparse import ArgumentParser, Namespace
+from argparse import (
+    ArgumentParser,
+    Namespace,
+)
 
 from app.config import (
     APP_NAME,
     APP_DESCRIPTION,
     APP_VERSION,
+    SAMPLE_REPORT,
 )
 
 
@@ -22,6 +26,14 @@ def parse_arguments() -> Namespace:
         action="version",
         version=f"%(prog)s {APP_VERSION}",
         help="Display the application version and exit.",
+    )
+
+    parser.add_argument(
+        "--input",
+        type=str,
+        default=str(SAMPLE_REPORT),
+        metavar="FILE",
+        help="Path to the malware report to analyze.",
     )
 
     return parser.parse_args()

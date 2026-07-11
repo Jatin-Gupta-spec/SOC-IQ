@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from app.initializer import initialize_application
 
 from app.display import print_banner
@@ -21,11 +23,13 @@ def main() -> None:
 
         logger.info("Application started.")
 
-        parse_arguments()
+        arguments = parse_arguments()
 
         print_banner()
 
-        analyze_report()
+        analyze_report(
+            Path(arguments.input),
+        )
 
     except SOCIQError as error:
         logger.error(str(error))

@@ -1,4 +1,4 @@
-from app.config import SAMPLE_REPORT
+from pathlib import Path
 
 from app.extractor import (
     COMPILED_PATTERNS,
@@ -19,15 +19,15 @@ from app.exporters import (
 from app.logger import logger
 
 
-def analyze_report() -> dict:
+def analyze_report(report_path: Path) -> dict:
     """
-    Analyze the sample malware report and
+    Analyze a malware report and
     generate all application outputs.
     """
 
     logger.info("Reading malware report...")
     report_text = read_report(
-        SAMPLE_REPORT,
+        report_path,
     )
 
     logger.info("Extracting IOCs...")
