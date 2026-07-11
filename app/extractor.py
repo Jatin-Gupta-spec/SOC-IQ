@@ -47,7 +47,16 @@ IOC_PATTERNS = {
 }
 
 
-def read_report(report_path):
+COMPILED_PATTERNS = {
+    name: re.compile(
+        pattern,
+        re.IGNORECASE,
+    )
+    for name, pattern in IOC_PATTERNS.items()
+}
+
+
+def read_report(report_path) -> str:
     """
     Read the malware report and return its contents.
     """
@@ -60,26 +69,24 @@ def read_report(report_path):
         return file.read()
 
 
-def extract_iocs(report, patterns):
+def extract_iocs(
+    report: str,
+    patterns: dict,
+) -> dict:
     """
     Extract every IOC type from the report.
 
-    Returns a dictionary where:
-
-    key = IOC type
-
-    value = Sorted list of unique IOCs
+    Returns:
+        Dictionary where:
+            key = IOC type
+            value = Sorted list of unique IOCs.
     """
 
     extracted = {}
 
     for ioc_type, pattern in patterns.items():
 
-        matches = re.findall(
-            pattern,
-            report,
-            flags=re.IGNORECASE,
-        )
+        matches = pattern.findall(report)
 
         extracted[ioc_type] = sorted(
             set(matches)

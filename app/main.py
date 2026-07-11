@@ -3,13 +3,13 @@ from app.config import (
     APP_VERSION,
     APP_AUTHOR,
     APP_DESCRIPTION,
-    SAMPLE_REPORT_FILE,
+    SAMPLE_REPORT,
 )
 
 from app.initializer import initialize_application
 
 from app.extractor import (
-    IOC_PATTERNS,
+    COMPILED_PATTERNS,
     read_report,
     extract_iocs,
 )
@@ -28,7 +28,7 @@ from app.exporters import (
 from app.logger import logger
 
 
-def main():
+def main() -> None:
     """
     Main entry point for the SOC-IQ application.
     """
@@ -43,12 +43,12 @@ def main():
         print_banner()
 
         logger.info("Reading malware report...")
-        report_text = read_report(SAMPLE_REPORT_FILE)
+        report_text = read_report(SAMPLE_REPORT)
 
         logger.info("Extracting IOCs...")
         extracted_iocs = extract_iocs(
             report_text,
-            IOC_PATTERNS,
+            COMPILED_PATTERNS,
         )
 
         logger.info("Displaying results...")
@@ -57,12 +57,10 @@ def main():
 
         logger.info("Exporting JSON report...")
         export_to_json(extracted_iocs)
-
         logger.info("JSON report exported successfully.")
 
         logger.info("Exporting CSV report...")
         export_to_csv(extracted_iocs)
-
         logger.info("CSV report exported successfully.")
 
         logger.info("IOC extraction completed successfully.")

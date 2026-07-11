@@ -8,10 +8,10 @@ from app.config import (
     APP_DESCRIPTION,
 )
 
-console = Console()
+console: Console = Console()
 
 
-def print_banner():
+def print_banner() -> None:
     """
     Display the SOC-IQ application banner.
     """
@@ -33,7 +33,9 @@ def print_banner():
     console.rule()
 
 
-def display_summary(results):
+def display_summary(
+    results: dict[str, list[str]]
+) -> None:
     """
     Display a summary table showing the number of
     extracted IOCs for each IOC category.
@@ -52,11 +54,11 @@ def display_summary(results):
         style="green",
     )
 
-    total_iocs = 0
+    total_iocs: int = 0
 
     for ioc_type, values in results.items():
 
-        count = len(values)
+        count: int = len(values)
 
         total_iocs += count
 
@@ -75,7 +77,9 @@ def display_summary(results):
     console.print(summary_table)
 
 
-def display_iocs(results):
+def display_iocs(
+    results: dict[str, list[str]]
+) -> None:
     """
     Display each IOC category in its own Rich table.
     """

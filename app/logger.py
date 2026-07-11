@@ -8,4 +8,4 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 
-logger = logging.getLogger("SOC-IQ")
+logger: logging.Logger = logging.getLogger("SOC-IQ")

@@ -1,13 +1,14 @@
 import csv
 import json
 
+
 from app.config import (
     JSON_EXPORT_FILE,
     CSV_EXPORT_FILE,
 )
 
 
-def export_to_json(results):
+def export_to_json(results: dict) -> None:
     """
     Export extracted IOCs to a JSON report.
     """
@@ -24,7 +25,7 @@ def export_to_json(results):
         )
 
 
-def export_to_csv(results):
+def export_to_csv(results: dict) -> None:
     """
     Export extracted IOCs to a CSV report.
     """
@@ -45,6 +46,9 @@ def export_to_csv(results):
         )
 
         for ioc_type, values in results.items():
+
+            if not values:
+                continue
 
             for value in values:
 
