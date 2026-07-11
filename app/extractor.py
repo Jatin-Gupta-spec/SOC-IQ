@@ -1,5 +1,10 @@
 import re
 
+from app.exceptions import (
+    IOCExtractionError,
+    ReportReadError,
+)
+
 
 IOC_PATTERNS = {
     "IPv4": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
@@ -61,12 +66,20 @@ def read_report(report_path) -> str:
     Read the malware report and return its contents.
     """
 
-    with report_path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
+    try:
 
-        return file.read()
+        with report_path.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+
+            return file.read()
+
+    except OSError as error:
+
+        raise ReportReadError(
+            f"Failed to read report: {report_path}"
+        ) from error
 
 
 def extract_iocs(
@@ -82,14 +95,22 @@ def extract_iocs(
             value = Sorted list of unique IOCs.
     """
 
-    extracted = {}
+    try:
 
-    for ioc_type, pattern in patterns.items():
+        extracted = {}
 
-        matches = pattern.findall(report)
+        for ioc_type, pattern in patterns.items():
 
-        extracted[ioc_type] = sorted(
-            set(matches)
-        )
+            matches = pattern.findall(report)
 
-    return extracted
+            extracted[ioc_type] = sorted(
+                set(matches)
+            )
+
+        return extracted
+
+    except Exception as error:
+
+        raise IOCExtractionError(
+            "Failed to extract IOCs from report."
+        ) from error
