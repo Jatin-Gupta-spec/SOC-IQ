@@ -1,11 +1,12 @@
 import csv
 import json
 
-
 from app.config import (
     JSON_EXPORT_FILE,
     CSV_EXPORT_FILE,
 )
+
+from app.exceptions import ExportError
 
 
 def export_to_json(results: dict) -> None:
@@ -13,16 +14,24 @@ def export_to_json(results: dict) -> None:
     Export extracted IOCs to a JSON report.
     """
 
-    with JSON_EXPORT_FILE.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
+    try:
 
-        json.dump(
-            results,
-            file,
-            indent=4,
-        )
+        with JSON_EXPORT_FILE.open(
+            "w",
+            encoding="utf-8",
+        ) as file:
+
+            json.dump(
+                results,
+                file,
+                indent=4,
+            )
+
+    except (OSError, TypeError, ValueError) as error:
+
+        raise ExportError(
+            "Failed to export JSON report."
+        ) from error
 
 
 def export_to_csv(results: dict) -> None:
@@ -30,31 +39,39 @@ def export_to_csv(results: dict) -> None:
     Export extracted IOCs to a CSV report.
     """
 
-    with CSV_EXPORT_FILE.open(
-        "w",
-        newline="",
-        encoding="utf-8",
-    ) as file:
+    try:
 
-        writer = csv.writer(file)
+        with CSV_EXPORT_FILE.open(
+            "w",
+            newline="",
+            encoding="utf-8",
+        ) as file:
 
-        writer.writerow(
-            [
-                "IOC Type",
-                "IOC Value",
-            ]
-        )
+            writer = csv.writer(file)
 
-        for ioc_type, values in results.items():
+            writer.writerow(
+                [
+                    "IOC Type",
+                    "IOC Value",
+                ]
+            )
 
-            if not values:
-                continue
+            for ioc_type, values in results.items():
 
-            for value in values:
+                if not values:
+                    continue
 
-                writer.writerow(
-                    [
-                        ioc_type,
-                        value,
-                    ]
-                )
+                for value in values:
+
+                    writer.writerow(
+                        [
+                            ioc_type,
+                            value,
+                        ]
+                    )
+
+    except (OSError, csv.Error, TypeError, ValueError) as error:
+
+        raise ExportError(
+            "Failed to export CSV report."
+        ) from error
