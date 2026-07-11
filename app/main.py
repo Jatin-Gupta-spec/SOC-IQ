@@ -8,6 +8,8 @@ from app.logger import logger
 
 from app.exceptions import SOCIQError
 
+from app.cli import parse_arguments
+
 
 def main() -> None:
     """
@@ -18,6 +20,8 @@ def main() -> None:
         initialize_application()
 
         logger.info("Application started.")
+
+        parse_arguments()
 
         print_banner()
 

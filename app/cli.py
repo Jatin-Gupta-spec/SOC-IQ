@@ -1,0 +1,27 @@
+from argparse import ArgumentParser, Namespace
+
+from app.config import (
+    APP_NAME,
+    APP_DESCRIPTION,
+    APP_VERSION,
+)
+
+
+def parse_arguments() -> Namespace:
+    """
+    Parse command-line arguments for the SOC-IQ application.
+    """
+
+    parser = ArgumentParser(
+        prog=APP_NAME,
+        description=APP_DESCRIPTION,
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {APP_VERSION}",
+        help="Display the application version and exit.",
+    )
+
+    return parser.parse_args()
