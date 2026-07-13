@@ -15,7 +15,10 @@ from app.exporters import (
     export_to_csv,
 )
 
-from app.logger import logger
+from app.logger import (
+    logger,
+    configure_logger,
+)
 
 from app.exceptions import SOCIQError
 
@@ -30,14 +33,27 @@ def main() -> None:
     try:
         initialize_application()
 
-        logger.info("Application started.")
-
         arguments = parse_arguments()
+
+        configure_logger(
+            verbose=arguments.verbose,
+        )
+
+        logger.info("Application started.")
 
         print_banner()
 
+        logger.info(
+            "Analyzing report: %s",
+            arguments.input,
+        )
+
         extracted_iocs = analyze_report(
             Path(arguments.input),
+        )
+
+        logger.info(
+            "IOC extraction completed successfully."
         )
 
         logger.info("Displaying results...")
@@ -50,24 +66,52 @@ def main() -> None:
             extracted_iocs,
         )
 
-        logger.info("Exporting JSON report...")
-
-        export_to_json(
-            extracted_iocs,
+        export_json = (
+            arguments.json
+            or (
+                not arguments.json
+                and not arguments.csv
+            )
         )
+
+        export_csv = (
+            arguments.csv
+            or (
+                not arguments.json
+                and not arguments.csv
+            )
+        )
+
+        if export_json:
+
+            logger.info(
+                "Exporting JSON report..."
+            )
+
+            export_to_json(
+                extracted_iocs,
+            )
+
+            logger.info(
+                "JSON report exported successfully."
+            )
+
+        if export_csv:
+
+            logger.info(
+                "Exporting CSV report..."
+            )
+
+            export_to_csv(
+                extracted_iocs,
+            )
+
+            logger.info(
+                "CSV report exported successfully."
+            )
 
         logger.info(
-            "JSON report exported successfully."
-        )
-
-        logger.info("Exporting CSV report...")
-
-        export_to_csv(
-            extracted_iocs,
-        )
-
-        logger.info(
-            "CSV report exported successfully."
+            "Application completed successfully."
         )
 
     except SOCIQError as error:

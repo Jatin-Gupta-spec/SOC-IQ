@@ -36,4 +36,22 @@ def parse_arguments() -> Namespace:
         help="Path to the malware report to analyze.",
     )
 
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Export results as JSON.",
+    )
+
+    parser.add_argument(
+        "--csv",
+        action="store_true",
+        help="Export results as CSV.",
+    )
+
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Display detailed runtime logging in the terminal.",
+    )
+
     return parser.parse_args()
