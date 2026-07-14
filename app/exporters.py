@@ -11,7 +11,11 @@ from app.exceptions import ExportError
 
 def export_to_json(results: dict) -> None:
     """
-    Export extracted IOCs to a JSON report.
+    Export analysis results to a JSON report.
+
+    Supports:
+    - IOC extraction results
+    - Threat intelligence enrichment results
     """
 
     try:
@@ -27,7 +31,11 @@ def export_to_json(results: dict) -> None:
                 indent=4,
             )
 
-    except (OSError, TypeError, ValueError) as error:
+    except (
+        OSError,
+        TypeError,
+        ValueError,
+    ) as error:
 
         raise ExportError(
             "Failed to export JSON report."
@@ -36,7 +44,8 @@ def export_to_json(results: dict) -> None:
 
 def export_to_csv(results: dict) -> None:
     """
-    Export extracted IOCs to a CSV report.
+    Export IOC and threat intelligence results
+    to a CSV report.
     """
 
     try:
@@ -49,6 +58,15 @@ def export_to_csv(results: dict) -> None:
 
             writer = csv.writer(file)
 
+            # --------------------------------
+            # IOC Export Section
+            # --------------------------------
+
+            iocs = results.get(
+                "iocs",
+                results,
+            )
+
             writer.writerow(
                 [
                     "IOC Type",
@@ -56,7 +74,7 @@ def export_to_csv(results: dict) -> None:
                 ]
             )
 
-            for ioc_type, values in results.items():
+            for ioc_type, values in iocs.items():
 
                 if not values:
                     continue
@@ -70,7 +88,68 @@ def export_to_csv(results: dict) -> None:
                         ]
                     )
 
-    except (OSError, csv.Error, TypeError, ValueError) as error:
+            # --------------------------------
+            # Threat Intelligence Section
+            # --------------------------------
+
+            threat_intelligence = results.get(
+                "threat_intelligence",
+                {},
+            )
+
+            hash_results = threat_intelligence.get(
+                "hashes",
+                [],
+            )
+
+            if hash_results:
+
+                writer.writerow([])
+
+                writer.writerow(
+                    [
+                        "Threat Intelligence",
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "SHA256",
+                        "Malicious",
+                        "Suspicious",
+                        "Harmless",
+                    ]
+                )
+
+                for result in hash_results:
+
+                    writer.writerow(
+                        [
+                            result.get(
+                                "sha256",
+                                "-",
+                            ),
+                            result.get(
+                                "malicious",
+                                "-",
+                            ),
+                            result.get(
+                                "suspicious",
+                                "-",
+                            ),
+                            result.get(
+                                "harmless",
+                                "-",
+                            ),
+                        ]
+                    )
+
+    except (
+        OSError,
+        csv.Error,
+        TypeError,
+        ValueError,
+    ) as error:
 
         raise ExportError(
             "Failed to export CSV report."
