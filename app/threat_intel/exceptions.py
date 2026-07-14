@@ -23,6 +23,10 @@ class MissingAPIKeyError(VirusTotalError):
     Raised when the VirusTotal API key is missing.
     """
 
+class InvalidHashError(VirusTotalError):
+    """
+    Raised when an invalid SHA-256 hash is provided.
+    """
 
 class InvalidAPIKeyError(VirusTotalError):
     """
