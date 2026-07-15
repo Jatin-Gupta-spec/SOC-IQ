@@ -9,6 +9,7 @@ BASE_DIR: Path = Path(__file__).resolve().parent.parent
 SAMPLES_DIR: Path = BASE_DIR / "samples"
 OUTPUT_DIR: Path = BASE_DIR / "output"
 LOGS_DIR: Path = BASE_DIR / "logs"
+DATABASE_DIR: Path = BASE_DIR / "database"
 
 # ==========================================================
 # Default Files
@@ -20,6 +21,9 @@ JSON_EXPORT_FILE: Path = OUTPUT_DIR / "ioc_report.json"
 CSV_EXPORT_FILE: Path = OUTPUT_DIR / "ioc_report.csv"
 
 LOG_FILE: Path = LOGS_DIR / "soc_iq.log"
+
+DATABASE_FILE: str = "soc_iq.db"
+DATABASE_PATH: Path = DATABASE_DIR / DATABASE_FILE
 
 # ==========================================================
 # Supported IOC Types

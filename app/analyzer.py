@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.database.models import Investigation
+from app.database.service import InvestigationService
 from app.extractor import (
     COMPILED_PATTERNS,
     extract_iocs,
@@ -16,8 +21,9 @@ def analyze_report(
 ) -> dict[str, Any]:
     """
     Analyze a malware report, extract IOCs,
-    and enrich extracted indicators using
-    threat intelligence providers.
+    enrich extracted indicators using
+    threat intelligence providers,
+    and persist the investigation.
     """
 
     logger.info(
@@ -42,7 +48,7 @@ def analyze_report(
     )
 
     threat_intelligence: dict[str, Any] = {
-        "hashes": []
+        "hashes": [],
     }
 
     try:
@@ -55,7 +61,7 @@ def analyze_report(
 
             threat_intelligence = (
                 threat_service.enrich_results(
-                    extracted_iocs
+                    extracted_iocs,
                 )
             )
 
@@ -77,7 +83,35 @@ def analyze_report(
             error,
         )
 
+    # ----------------------------------------
+    # Persist Investigation
+    # ----------------------------------------
+
+    logger.info(
+        "Saving investigation to database."
+    )
+
+    investigation = Investigation(
+        report_name=report_path.name,
+        analyzed_at=datetime.now(),
+        status="COMPLETED",
+        iocs=extracted_iocs,
+        threat_intelligence=threat_intelligence,
+    )
+
+    service = InvestigationService()
+
+    investigation_id = service.save(
+        investigation,
+    )
+
+    logger.info(
+        "Investigation stored with ID %d",
+        investigation_id,
+    )
+
     return {
+        "investigation_id": investigation_id,
         "iocs": extracted_iocs,
         "threat_intelligence": threat_intelligence,
     }
