@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import UTC, datetime
 from types import TracebackType
 from typing import Any, Self
 
@@ -13,17 +14,17 @@ import requests
 
 from app.settings import (
     VIRUSTOTAL_API_KEY,
-    VIRUSTOTAL_TIMEOUT,
     VIRUSTOTAL_BASE_URL,
+    VIRUSTOTAL_TIMEOUT,
 )
 
 from app.threat_intel.exceptions import (
-    MissingAPIKeyError,
-    InvalidHashError,
     InvalidAPIKeyError,
+    InvalidHashError,
+    MissingAPIKeyError,
     RateLimitExceededError,
-    ThreatIntelTimeoutError,
     ThreatIntelConnectionError,
+    ThreatIntelTimeoutError,
     UnexpectedAPIResponseError,
 )
 
@@ -36,7 +37,7 @@ _SHA256_PATTERN = re.compile(
 
 class VirusTotalClient:
     """
-    Production-grade client for the VirusTotal v3 API.
+    Production-grade VirusTotal v3 API client.
     """
 
     def __init__(
@@ -46,6 +47,9 @@ class VirusTotalClient:
         base_url: str | None = None,
         session: requests.Session | None = None,
     ) -> None:
+        """
+        Initialize the VirusTotal client.
+        """
 
         self._api_key = api_key or VIRUSTOTAL_API_KEY
 
@@ -69,12 +73,21 @@ class VirusTotalClient:
             base_url
             or VIRUSTOTAL_BASE_URL
         ).rstrip("/")
-        self._owns_session = session is None
+
+        self._owns_session = (
+            session is None
+        )
 
         if self._owns_session:
-            self._session = requests.Session()
+
+            self._session = (
+                requests.Session()
+            )
+
         else:
+
             assert session is not None
+
             self._session = session
 
         self._session.headers.update(
@@ -86,7 +99,7 @@ class VirusTotalClient:
         )
 
         logger.debug(
-            "VirusTotalClient initialized successfully."
+            "VirusTotal client initialized."
         )
 
     def _validate_sha256(
@@ -94,20 +107,21 @@ class VirusTotalClient:
         sha256: str,
     ) -> None:
         """
-        Validate a SHA256 hash.
+        Validate SHA256 hash format.
         """
 
         if (
             not isinstance(sha256, str)
-            or not _SHA256_PATTERN.fullmatch(sha256)
+            or not _SHA256_PATTERN.fullmatch(
+                sha256
+            )
         ):
             logger.error(
-                "Hash validation failed: %s",
+                "Invalid SHA256 hash: %s",
                 sha256,
             )
 
             raise InvalidHashError(
-                f"The provided string "
                 f"{sha256!r} "
                 "is not a valid SHA256 hash."
             )
@@ -117,7 +131,7 @@ class VirusTotalClient:
         endpoint: str,
     ) -> requests.Response:
         """
-        Send a GET request to VirusTotal.
+        Execute a GET request.
         """
 
         url = (
@@ -126,19 +140,19 @@ class VirusTotalClient:
         )
 
         logger.debug(
-            "Dispatching GET request to %s",
+            "GET %s",
             url,
         )
 
         try:
-            response = self._session.get(
+
+            return self._session.get(
                 url,
                 timeout=self._timeout,
             )
 
-            return response
-
         except requests.exceptions.Timeout as error:
+
             logger.exception(
                 "VirusTotal request timed out."
             )
@@ -149,22 +163,23 @@ class VirusTotalClient:
             ) from error
 
         except requests.exceptions.ConnectionError as error:
+
             logger.exception(
                 "Unable to connect to VirusTotal."
             )
 
             raise ThreatIntelConnectionError(
-                "Unable to connect to "
-                "VirusTotal."
+                "Unable to connect to VirusTotal."
             ) from error
 
         except requests.exceptions.RequestException as error:
+
             logger.exception(
                 "Unexpected HTTP error."
             )
 
             raise ThreatIntelConnectionError(
-                f"Unexpected request error: {error}"
+                str(error)
             ) from error
 
     def lookup_sha256(
@@ -175,7 +190,9 @@ class VirusTotalClient:
         Query VirusTotal using a SHA256 hash.
         """
 
-        self._validate_sha256(sha256)
+        self._validate_sha256(
+            sha256,
+        )
 
         response = self._request(
             f"files/{sha256}"
@@ -183,28 +200,28 @@ class VirusTotalClient:
 
         status_code = response.status_code
         if status_code == 200:
-            try:
-                payload = response.json()
-                return self._parse_success_response(
-                    sha256,
-                    payload,
-                )
 
-            except (
-                ValueError,
-                KeyError,
-                TypeError,
-            ) as error:
+            try:
+
+                payload = response.json()
+
+            except ValueError as error:
+
                 logger.exception(
-                    "Malformed JSON payload received."
+                    "VirusTotal returned invalid JSON."
                 )
 
                 raise UnexpectedAPIResponseError(
-                    "Threat intelligence response body "
-                    "processing failed."
+                    "VirusTotal returned an invalid JSON response."
                 ) from error
 
+            return self._parse_success_response(
+                sha256,
+                payload,
+            )
+
         if status_code == 404:
+
             logger.info(
                 "SHA256 not found in VirusTotal: %s",
                 sha256,
@@ -215,16 +232,17 @@ class VirusTotalClient:
             )
 
         if status_code in (401, 403):
+
             logger.error(
-                "VirusTotal rejected API key."
+                "VirusTotal API key rejected."
             )
 
             raise InvalidAPIKeyError(
-                "Configured VirusTotal API key "
-                "is invalid or unauthorized."
+                "Configured VirusTotal API key is invalid."
             )
 
         if status_code == 429:
+
             logger.warning(
                 "VirusTotal API rate limit exceeded."
             )
@@ -234,18 +252,19 @@ class VirusTotalClient:
             )
 
         if status_code >= 500:
+
             logger.error(
-                "VirusTotal server error: %s",
+                "VirusTotal server error (%d).",
                 status_code,
             )
 
             raise UnexpectedAPIResponseError(
-                f"VirusTotal server returned "
-                f"HTTP {status_code}."
+                f"VirusTotal server returned HTTP "
+                f"{status_code}."
             )
 
         logger.error(
-            "Unexpected VirusTotal response: %s",
+            "Unexpected VirusTotal response (%d).",
             status_code,
         )
 
@@ -259,8 +278,8 @@ class VirusTotalClient:
         sha256: str,
     ) -> dict[str, Any]:
         """
-        Build a normalized response for hashes that
-        are not present in VirusTotal.
+        Build a normalized response for hashes
+        that are not present in VirusTotal.
         """
 
         return {
@@ -270,7 +289,7 @@ class VirusTotalClient:
             "suspicious": 0,
             "harmless": 0,
             "undetected": 0,
-            "reputation": 0,
+            "reputation": None,
             "last_analysis_date": None,
             "permalink": (
                 f"https://www.virustotal.com/"
@@ -284,39 +303,128 @@ class VirusTotalClient:
         payload: dict[str, Any],
     ) -> dict[str, Any]:
         """
-        Normalize a successful VirusTotal response.
+        Validate and normalize a successful
+        VirusTotal response.
         """
 
-        attributes = (
-            payload.get("data", {})
-            .get("attributes", {})
+        if not isinstance(
+            payload,
+            dict,
+        ):
+            raise UnexpectedAPIResponseError(
+                "VirusTotal response is not a JSON object."
+            )
+
+        try:
+
+            data = payload["data"]
+
+            if not isinstance(
+                data,
+                dict,
+            ):
+                raise TypeError(
+                    "Invalid data section."
+                )
+
+            attributes = data["attributes"]
+
+            if not isinstance(
+                attributes,
+                dict,
+            ):
+                raise TypeError(
+                    "Invalid attributes section."
+                )
+
+            stats = attributes[
+                "last_analysis_stats"
+            ]
+
+            if not isinstance(
+                stats,
+                dict,
+            ):
+                raise TypeError(
+                    "Invalid analysis statistics."
+                )
+
+            required_keys = (
+                "malicious",
+                "suspicious",
+                "harmless",
+                "undetected",
+            )
+
+            missing_keys = [
+                key
+                for key in required_keys
+                if key not in stats
+            ]
+
+            if missing_keys:
+
+                raise KeyError(
+                    f"Missing analysis fields: "
+                    f"{', '.join(missing_keys)}"
+                )
+
+        except (
+            KeyError,
+            TypeError,
+        ) as error:
+
+            logger.exception(
+                "VirusTotal response schema validation failed."
+            )
+
+            raise UnexpectedAPIResponseError(
+                "VirusTotal returned an unexpected response format."
+            ) from error
+
+        last_analysis_timestamp = attributes.get(
+            "last_analysis_date"
         )
 
-        stats = attributes.get(
-            "last_analysis_stats",
-            {},
-        )
+        if (
+            last_analysis_timestamp
+            is not None
+        ):
 
+            last_analysis_date = (
+                datetime.fromtimestamp(
+                    last_analysis_timestamp,
+                    UTC,
+                ).isoformat()
+            )
+
+        else:
+
+            last_analysis_date = None
         return {
             "sha256": sha256,
             "found": True,
             "malicious": int(
-                stats.get("malicious", 0)
+                stats["malicious"]
             ),
             "suspicious": int(
-                stats.get("suspicious", 0)
+                stats["suspicious"]
             ),
             "harmless": int(
-                stats.get("harmless", 0)
+                stats["harmless"]
             ),
             "undetected": int(
-                stats.get("undetected", 0)
+                stats["undetected"]
             ),
-            "reputation": int(
-                attributes.get("reputation") or 0
+            "reputation": (
+                int(attributes["reputation"])
+                if attributes.get(
+                    "reputation"
+                ) is not None
+                else None
             ),
-            "last_analysis_date": attributes.get(
-                "last_analysis_date"
+            "last_analysis_date": (
+                last_analysis_date
             ),
             "permalink": (
                 f"https://www.virustotal.com/"
@@ -326,19 +434,28 @@ class VirusTotalClient:
 
     def close(self) -> None:
         """
-        Close the underlying HTTP session.
+        Close the HTTP session if this client
+        created it.
         """
 
-        if self._owns_session:
-            self._session.close()
+        if (
+            self._owns_session
+            and self._session is not None
+        ):
 
             logger.debug(
-                "VirusTotal session closed."
+                "Closing VirusTotal HTTP session."
             )
 
-    def __enter__(self) -> Self:
+            self._session.close()
+
+            self._session = None
+
+    def __enter__(
+        self,
+    ) -> Self:
         """
-        Context manager entry.
+        Enter the runtime context.
         """
 
         return self
@@ -350,7 +467,7 @@ class VirusTotalClient:
         traceback: TracebackType | None,
     ) -> None:
         """
-        Context manager exit.
+        Exit the runtime context.
         """
 
         self.close()
