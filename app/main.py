@@ -1,36 +1,40 @@
+"""
+Main entry point for the SOC-IQ application.
+"""
+
+from __future__ import annotations
+
 from pathlib import Path
 
-from app.initializer import initialize_application
-
-from app.display import (
-    print_banner,
-    display_summary,
-    display_iocs,
-)
-
 from app.analyzer import analyze_report
-
-from app.exporters import (
-    export_to_json,
-    export_to_csv,
-)
-
-from app.logger import (
-    logger,
-    configure_logger,
-)
-
-from app.exceptions import SOCIQError
-
 from app.cli import parse_arguments
+from app.database.service import InvestigationService
+from app.display import (
+    display_investigation_details,
+    display_investigation_history,
+    display_iocs,
+    display_summary,
+    print_banner,
+)
+from app.exceptions import SOCIQError
+from app.exporters import (
+    export_to_csv,
+    export_to_json,
+)
+from app.initializer import initialize_application
+from app.logger import (
+    configure_logger,
+    logger,
+)
 
 
 def main() -> None:
     """
-    Main entry point for the SOC-IQ application.
+    Main application entry point.
     """
 
     try:
+
         initialize_application()
 
         arguments = parse_arguments()
@@ -39,31 +43,72 @@ def main() -> None:
             verbose=arguments.verbose,
         )
 
-        logger.info("Application started.")
+        logger.info(
+            "Application started."
+        )
 
         print_banner()
+
+        service = InvestigationService()
+
+        # ----------------------------------
+        # Investigation History
+        # ----------------------------------
+
+        if arguments.history:
+
+            investigations = service.list_all()
+
+            display_investigation_history(
+                investigations,
+            )
+
+            return
+
+        # ----------------------------------
+        # Investigation by ID
+        # ----------------------------------
+
+        if arguments.history_id is not None:
+
+            investigation = service.get_by_id(
+                arguments.history_id,
+            )
+
+            if investigation is None:
+
+                logger.warning(
+                    "Investigation %d not found.",
+                    arguments.history_id,
+                )
+
+                return
+
+            display_investigation_details(
+                investigation,
+            )
+
+            return
+
+        # ----------------------------------
+        # Malware Analysis
+        # ----------------------------------
 
         logger.info(
             "Analyzing report: %s",
             arguments.input,
         )
 
-        extracted_iocs = analyze_report(
+        analysis = analyze_report(
             Path(arguments.input),
         )
 
-        logger.info(
-            "IOC extraction completed successfully."
-        )
-
-        logger.info("Displaying results...")
-
         display_summary(
-            extracted_iocs,
+            analysis,
         )
 
         display_iocs(
-            extracted_iocs,
+            analysis,
         )
 
         export_json = (
@@ -84,30 +129,14 @@ def main() -> None:
 
         if export_json:
 
-            logger.info(
-                "Exporting JSON report..."
-            )
-
             export_to_json(
-                extracted_iocs,
-            )
-
-            logger.info(
-                "JSON report exported successfully."
+                analysis,
             )
 
         if export_csv:
 
-            logger.info(
-                "Exporting CSV report..."
-            )
-
             export_to_csv(
-                extracted_iocs,
-            )
-
-            logger.info(
-                "CSV report exported successfully."
+                analysis,
             )
 
         logger.info(
@@ -115,12 +144,17 @@ def main() -> None:
         )
 
     except SOCIQError as error:
-        logger.error(str(error))
+
+        logger.error(
+            str(error),
+        )
 
     except Exception:
+
         logger.exception(
-            "Application terminated unexpectedly."
+            "Application terminated unexpectedly.",
         )
+
         raise
 
 

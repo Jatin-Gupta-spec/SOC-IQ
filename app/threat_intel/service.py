@@ -75,10 +75,19 @@ class ThreatIntelService:
             ),
         )
 
-        return {
-            "hashes": self._enrich_sha256_hashes(
-                hashes
+        enriched_hashes = (
+            self._enrich_sha256_hashes(
+                hashes,
             )
+        )
+
+        logger.info(
+            "Successfully enriched %d SHA256 hash(es).",
+            len(enriched_hashes),
+        )
+
+        return {
+            "hashes": enriched_hashes,
         }
 
     def _enrich_sha256_hashes(
@@ -96,18 +105,22 @@ class ThreatIntelService:
             List of VirusTotal enrichment results.
         """
 
-        enriched: list[dict[str, Any]] = []
+        enriched: list[
+            dict[str, Any]
+        ] = []
 
         for sha256 in hashes:
 
             try:
 
-                result = self._virustotal.lookup_sha256(
-                    sha256
+                result = (
+                    self._virustotal.lookup_sha256(
+                        sha256,
+                    )
                 )
 
                 enriched.append(
-                    result
+                    result,
                 )
 
             except InvalidHashError:
@@ -141,12 +154,18 @@ class ThreatIntelService:
 
         return enriched
 
-    def close(self) -> None:
+    def close(
+        self,
+    ) -> None:
         """
-        Close underlying threat intelligence clients.
+        Close underlying threat intelligence client.
         """
 
         self._virustotal.close()
+
+        logger.debug(
+            "Threat intelligence service closed."
+        )
 
     def __enter__(
         self,

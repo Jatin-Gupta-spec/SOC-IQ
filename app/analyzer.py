@@ -1,6 +1,9 @@
+"""
+SOC-IQ analysis engine.
+"""
+
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +15,7 @@ from app.extractor import (
     read_report,
 )
 from app.logger import logger
+from app.scoring.engine import RiskScoringEngine
 from app.threat_intel.exceptions import MissingAPIKeyError
 from app.threat_intel.service import ThreatIntelService
 
@@ -20,14 +24,19 @@ def analyze_report(
     report_path: Path,
 ) -> dict[str, Any]:
     """
-    Analyze a malware report, extract IOCs,
-    enrich extracted indicators using
-    threat intelligence providers,
-    and persist the investigation.
+    Analyze a malware report.
+
+    Workflow:
+    1. Read report
+    2. Extract IOCs
+    3. Enrich using VirusTotal
+    4. Calculate risk score
+    5. Save investigation
+    6. Return complete analysis
     """
 
     logger.info(
-        "Reading malware report..."
+        "Reading malware report."
     )
 
     report_text = read_report(
@@ -35,7 +44,7 @@ def analyze_report(
     )
 
     logger.info(
-        "Extracting IOCs..."
+        "Extracting IOCs."
     )
 
     extracted_iocs = extract_iocs(
@@ -44,7 +53,7 @@ def analyze_report(
     )
 
     logger.info(
-        "IOC extraction completed successfully."
+        "IOC extraction completed."
     )
 
     threat_intelligence: dict[str, Any] = {
@@ -53,14 +62,14 @@ def analyze_report(
 
     try:
 
-        with ThreatIntelService() as threat_service:
+        with ThreatIntelService() as service:
 
             logger.info(
                 "Starting threat intelligence enrichment."
             )
 
             threat_intelligence = (
-                threat_service.enrich_results(
+                service.enrich_results(
                     extracted_iocs,
                 )
             )
@@ -73,36 +82,53 @@ def analyze_report(
 
         logger.warning(
             "VirusTotal API key not configured. "
-            "Threat intelligence enrichment skipped."
+            "Skipping enrichment."
         )
 
     except Exception as error:
 
         logger.exception(
-            "Threat intelligence enrichment failed: %s",
+            "Threat intelligence failed: %s",
             error,
         )
 
-    # ----------------------------------------
-    # Persist Investigation
-    # ----------------------------------------
+    logger.info(
+        "Calculating investigation risk."
+    )
+
+    scoring_engine = RiskScoringEngine()
+
+    risk = scoring_engine.calculate(
+        extracted_iocs,
+        threat_intelligence,
+    )
 
     logger.info(
-        "Saving investigation to database."
+        "Risk Score: %d (%s)",
+        risk.score,
+        risk.severity,
     )
 
     investigation = Investigation(
         report_name=report_path.name,
-        analyzed_at=datetime.now(),
-        status="COMPLETED",
         iocs=extracted_iocs,
         threat_intelligence=threat_intelligence,
+        risk_score=risk.score,
+        severity=risk.severity,
     )
 
-    service = InvestigationService()
+    logger.info(
+        "Saving investigation."
+    )
 
-    investigation_id = service.save(
-        investigation,
+    investigation_service = (
+        InvestigationService()
+    )
+
+    investigation_id = (
+        investigation_service.save(
+            investigation,
+        )
     )
 
     logger.info(
@@ -113,5 +139,10 @@ def analyze_report(
     return {
         "investigation_id": investigation_id,
         "iocs": extracted_iocs,
-        "threat_intelligence": threat_intelligence,
+        "threat_intelligence": (
+            threat_intelligence
+        ),
+        "risk": scoring_engine.summarize(
+            risk,
+        ),
     }

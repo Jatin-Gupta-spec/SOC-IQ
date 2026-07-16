@@ -1,12 +1,22 @@
+"""
+IOC extraction engine for SOC-IQ.
+"""
+
+from __future__ import annotations
+
 import re
+from pathlib import Path
 
 from app.exceptions import (
     IOCExtractionError,
     ReportReadError,
 )
 
+# ==========================================================
+# IOC Regular Expressions
+# ==========================================================
 
-IOC_PATTERNS = {
+IOC_PATTERNS: dict[str, str] = {
     "IPv4": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
 
     "Domains": (
@@ -51,8 +61,14 @@ IOC_PATTERNS = {
     ),
 }
 
+# ==========================================================
+# Precompiled Patterns
+# ==========================================================
 
-COMPILED_PATTERNS = {
+COMPILED_PATTERNS: dict[
+    str,
+    re.Pattern[str],
+] = {
     name: re.compile(
         pattern,
         re.IGNORECASE,
@@ -60,10 +76,27 @@ COMPILED_PATTERNS = {
     for name, pattern in IOC_PATTERNS.items()
 }
 
+# ==========================================================
+# Report Reader
+# ==========================================================
 
-def read_report(report_path) -> str:
+
+def read_report(
+    report_path: Path,
+) -> str:
     """
-    Read the malware report and return its contents.
+    Read a malware report.
+
+    Args:
+        report_path:
+            Path to the malware report.
+
+    Returns:
+        Report contents.
+
+    Raises:
+        ReportReadError:
+            If the report cannot be read.
     """
 
     try:
@@ -82,26 +115,53 @@ def read_report(report_path) -> str:
         ) from error
 
 
+# ==========================================================
+# IOC Extraction
+# ==========================================================
+
+
 def extract_iocs(
     report: str,
-    patterns: dict,
-) -> dict:
+    patterns: dict[
+        str,
+        re.Pattern[str],
+    ],
+) -> dict[
+    str,
+    list[str],
+]:
     """
-    Extract every IOC type from the report.
+    Extract Indicators of Compromise (IOCs)
+    from a malware report.
+
+    Args:
+        report:
+            Malware report text.
+
+        patterns:
+            Compiled IOC regex patterns.
 
     Returns:
-        Dictionary where:
-            key = IOC type
-            value = Sorted list of unique IOCs.
+        Dictionary mapping IOC type to
+        sorted unique IOC values.
+
+    Raises:
+        IOCExtractionError:
+            If extraction fails.
     """
 
     try:
 
-        extracted = {}
+        extracted: dict[
+            str,
+            list[str],
+        ] = {}
 
         for ioc_type, pattern in patterns.items():
 
-            matches = pattern.findall(report)
+            matches = pattern.findall(
+                report,
+            )
 
             extracted[ioc_type] = sorted(
                 set(matches)

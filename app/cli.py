@@ -1,11 +1,17 @@
+"""
+Command-line interface for the SOC-IQ application.
+"""
+
+from __future__ import annotations
+
 from argparse import (
     ArgumentParser,
     Namespace,
 )
 
 from app.config import (
-    APP_NAME,
     APP_DESCRIPTION,
+    APP_NAME,
     APP_VERSION,
     SAMPLE_REPORT,
 )
@@ -13,7 +19,8 @@ from app.config import (
 
 def parse_arguments() -> Namespace:
     """
-    Parse command-line arguments for the SOC-IQ application.
+    Parse command-line arguments for the
+    SOC-IQ application.
     """
 
     parser = ArgumentParser(
@@ -52,6 +59,19 @@ def parse_arguments() -> Namespace:
         "--verbose",
         action="store_true",
         help="Display detailed runtime logging in the terminal.",
+    )
+
+    parser.add_argument(
+        "--history",
+        action="store_true",
+        help="Display all previous investigations.",
+    )
+
+    parser.add_argument(
+        "--history-id",
+        type=int,
+        metavar="ID",
+        help="Display a specific investigation by ID.",
     )
 
     return parser.parse_args()

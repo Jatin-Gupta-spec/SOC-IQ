@@ -29,15 +29,15 @@ class RiskScoringEngine:
  
     IOC_WEIGHTS: dict[str, int] = {
         "IPv4": 1,
-        "Domains": 2,
-        "URLs": 3,
-        "Emails": 1,
+        "Domain": 2,
+        "URL": 3,
+        "Email": 1,
         "MD5": 4,
         "SHA1": 5,
         "SHA256": 6,
         "CVE": 8,
-        "Windows File Paths": 2,
-        "Windows Registry Keys": 3,
+        "Windows File Path": 2,
+        "Windows Registry Key": 3,
     }
  
     # ----------------------------------

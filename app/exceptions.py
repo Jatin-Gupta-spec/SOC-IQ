@@ -6,6 +6,8 @@ and provide clearer error reporting than generic Python
 exceptions.
 """
 
+from __future__ import annotations
+
 
 class SOCIQError(Exception):
     """
@@ -13,6 +15,11 @@ class SOCIQError(Exception):
     """
 
     pass
+
+
+# ==========================================================
+# Report Processing
+# ==========================================================
 
 
 class ReportReadError(SOCIQError):
@@ -31,9 +38,53 @@ class IOCExtractionError(SOCIQError):
     pass
 
 
+# ==========================================================
+# Export
+# ==========================================================
+
+
 class ExportError(SOCIQError):
     """
     Raised when exporting analysis results fails.
+    """
+
+    pass
+
+
+# ==========================================================
+# Database
+# ==========================================================
+
+
+class DatabaseError(SOCIQError):
+    """
+    Raised for database-related failures.
+    """
+
+    pass
+
+
+# ==========================================================
+# Risk Scoring
+# ==========================================================
+
+
+class RiskScoringError(SOCIQError):
+    """
+    Raised when risk score calculation fails.
+    """
+
+    pass
+
+
+# ==========================================================
+# Validation
+# ==========================================================
+
+
+class ValidationError(SOCIQError):
+    """
+    Raised when application validation fails.
     """
 
     pass

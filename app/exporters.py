@@ -2,20 +2,18 @@ import csv
 import json
 
 from app.config import (
-    JSON_EXPORT_FILE,
     CSV_EXPORT_FILE,
+    JSON_EXPORT_FILE,
 )
-
 from app.exceptions import ExportError
 
 
-def export_to_json(results: dict) -> None:
+def export_to_json(
+    results: dict,
+) -> None:
     """
-    Export analysis results to a JSON report.
-
-    Supports:
-    - IOC extraction results
-    - Threat intelligence enrichment results
+    Export complete analysis results
+    to a JSON report.
     """
 
     try:
@@ -42,9 +40,11 @@ def export_to_json(results: dict) -> None:
         ) from error
 
 
-def export_to_csv(results: dict) -> None:
+def export_to_csv(
+    results: dict,
+) -> None:
     """
-    Export IOC and threat intelligence results
+    Export complete analysis results
     to a CSV report.
     """
 
@@ -59,7 +59,7 @@ def export_to_csv(results: dict) -> None:
             writer = csv.writer(file)
 
             # --------------------------------
-            # IOC Export Section
+            # IOC Section
             # --------------------------------
 
             iocs = results.get(
@@ -89,7 +89,7 @@ def export_to_csv(results: dict) -> None:
                     )
 
             # --------------------------------
-            # Threat Intelligence Section
+            # Threat Intelligence
             # --------------------------------
 
             threat_intelligence = results.get(
@@ -97,9 +97,11 @@ def export_to_csv(results: dict) -> None:
                 {},
             )
 
-            hash_results = threat_intelligence.get(
-                "hashes",
-                [],
+            hash_results = (
+                threat_intelligence.get(
+                    "hashes",
+                    [],
+                )
             )
 
             if hash_results:
@@ -143,6 +145,91 @@ def export_to_csv(results: dict) -> None:
                             ),
                         ]
                     )
+
+            # --------------------------------
+            # Risk Summary
+            # --------------------------------
+
+            risk = results.get(
+                "risk",
+            )
+
+            if risk:
+
+                writer.writerow([])
+
+                writer.writerow(
+                    [
+                        "Risk Summary",
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "Metric",
+                        "Value",
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "Risk Score",
+                        risk.get(
+                            "score",
+                            "-",
+                        ),
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "Severity",
+                        risk.get(
+                            "severity",
+                            "-",
+                        ),
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "Confidence",
+                        risk.get(
+                            "confidence",
+                            "-",
+                        ),
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "IOC Score",
+                        risk.get(
+                            "ioc_score",
+                            "-",
+                        ),
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "Threat Intelligence Score",
+                        risk.get(
+                            "threat_intel_score",
+                            "-",
+                        ),
+                    ]
+                )
+
+                writer.writerow(
+                    [
+                        "CVE Score",
+                        risk.get(
+                            "cve_score",
+                            "-",
+                        ),
+                    ]
+                )
 
     except (
         OSError,
