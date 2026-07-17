@@ -9,6 +9,7 @@ import sys
 from PySide6.QtWidgets import QApplication
 
 from app.gui.main_window import MainWindow
+from app.gui.styles.theme import get_stylesheet
 
 
 def main() -> int:
@@ -21,6 +22,8 @@ def main() -> int:
     app.setApplicationName("SOC-IQ")
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("SOC-IQ")
+
+    app.setStyleSheet(get_stylesheet())
 
     window = MainWindow()
     window.show()
