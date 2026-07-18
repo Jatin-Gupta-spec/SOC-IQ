@@ -26,6 +26,10 @@ from app.gui.widgets.ioc_summary_widget import (
     IOCSummaryWidget,
 )
 
+from app.gui.widgets.threat_intelligence_widget import (
+    ThreatIntelligenceWidget,
+)
+
 class InvestigationWorkspacePage(QWidget):
     """
     Main analyst investigation workspace.
@@ -81,9 +85,9 @@ class InvestigationWorkspacePage(QWidget):
 
         self._ioc_summary_widget = IOCSummaryWidget()
 
-        self._threat_summary_label = QLabel(
-            "Waiting for investigation..."
-        )
+        self._threat_summary_widget = (
+    ThreatIntelligenceWidget()
+)
 
         self._risk_summary_label = QLabel(
             "Waiting for investigation..."
@@ -170,7 +174,7 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         threat_section.add_widget(
-            self._threat_summary_label
+            self._threat_summary_widget
         )
 
         layout.addWidget(
@@ -244,9 +248,7 @@ class InvestigationWorkspacePage(QWidget):
 
         self._ioc_summary_widget.reset()
 
-        self._threat_summary_label.setText(
-            "Waiting for investigation..."
-        )
+        self._threat_summary_widget.reset()
 
         self._risk_summary_label.setText(
             "Waiting for investigation..."
@@ -298,14 +300,9 @@ class InvestigationWorkspacePage(QWidget):
     investigation,
 )
 
-        hashes = investigation.threat_intelligence.get(
-            "hashes",
-            [],
-        )
-
-        self._threat_summary_label.setText(
-            f"{len(hashes)} threat intelligence result(s)."
-        )
+        self._threat_summary_widget.load_investigation(
+    investigation,
+)
 
         self._risk_summary_label.setText(
             (
