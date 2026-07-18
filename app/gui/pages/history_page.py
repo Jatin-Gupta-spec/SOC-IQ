@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.gui.controllers.history_controller import HistoryController
+from app.gui.events.application_state import ApplicationState
 from app.gui.models.investigation_table_model import (
     InvestigationTableModel,
 )
@@ -121,9 +122,13 @@ class HistoryPage(QWidget):
         if investigation is None:
             return
 
+        ApplicationState.current_investigation = (
+            investigation
+        )
+
         print(
-            f"Selected investigation: "
-            f"{investigation.report_name}"
+            "Selected investigation:",
+            investigation.report_name,
         )
 
     def refresh(self) -> None:
