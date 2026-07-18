@@ -4,6 +4,7 @@ Analyze Report page for the SOC-IQ desktop application.
 
 from __future__ import annotations
 
+from app.database.models import Investigation
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -27,7 +28,7 @@ class AnalyzePage(QWidget):
     Page used to analyze malware reports.
     """
 
-    analysis_completed = Signal(dict)
+    analysis_completed = Signal(object)
 
     def __init__(self) -> None:
         super().__init__()
@@ -67,6 +68,7 @@ class AnalyzePage(QWidget):
         )
 
         self._report_path.setReadOnly(True)
+
         self._report_path.setPlaceholderText(
             "No report selected..."
         )
@@ -74,19 +76,47 @@ class AnalyzePage(QWidget):
         self._analyze_button.setEnabled(False)
 
         button_layout = QHBoxLayout()
-        button_layout.addWidget(self._browse_button)
-        button_layout.addWidget(self._analyze_button)
 
-        layout.addWidget(QLabel("Selected Report"))
-        layout.addWidget(self._report_path)
-        layout.addLayout(button_layout)
+        button_layout.addWidget(
+            self._browse_button,
+        )
+
+        button_layout.addWidget(
+            self._analyze_button,
+        )
+
+        layout.addWidget(
+            QLabel(
+                "Selected Report",
+            )
+        )
+
+        layout.addWidget(
+            self._report_path,
+        )
+
+        layout.addLayout(
+            button_layout,
+        )
+
         layout.addStretch()
 
         root_layout = QVBoxLayout()
-        root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.addWidget(self._container)
 
-        self.setLayout(root_layout)
+        root_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        root_layout.addWidget(
+            self._container,
+        )
+
+        self.setLayout(
+            root_layout,
+        )
 
     def _connect_signals(self) -> None:
         """
@@ -94,11 +124,11 @@ class AnalyzePage(QWidget):
         """
 
         self._browse_button.clicked.connect(
-            self._browse_report
+            self._browse_report,
         )
 
         self._analyze_button.clicked.connect(
-            self._start_analysis
+            self._start_analysis,
         )
 
     def _browse_report(self) -> None:
@@ -116,11 +146,13 @@ class AnalyzePage(QWidget):
         if not report_path:
             return
 
-        self._report_path.setText(report_path)
+        self._report_path.setText(
+            report_path,
+        )
 
         self._analyze_button.setEnabled(
             self._controller.validate_report(
-                report_path
+                report_path,
             )
         )
 
@@ -133,40 +165,44 @@ class AnalyzePage(QWidget):
 
         self._thread = QThread(self)
 
-        self._worker = AnalysisWorker(report_path)
+        self._worker = AnalysisWorker(
+            report_path,
+        )
 
-        self._worker.moveToThread(self._thread)
+        self._worker.moveToThread(
+            self._thread,
+        )
 
         self._thread.started.connect(
-            self._worker.run
+            self._worker.run,
         )
 
         self._worker.started.connect(
-            self._on_analysis_started
+            self._on_analysis_started,
         )
 
         self._worker.finished.connect(
-            self._on_analysis_finished
+            self._on_analysis_finished,
         )
 
         self._worker.failed.connect(
-            self._on_analysis_failed
+            self._on_analysis_failed,
         )
 
         self._worker.finished.connect(
-            self._thread.quit
+            self._thread.quit,
         )
 
         self._worker.failed.connect(
-            self._thread.quit
+            self._thread.quit,
         )
 
         self._thread.finished.connect(
-            self._worker.deleteLater
+            self._worker.deleteLater,
         )
 
         self._thread.finished.connect(
-            self._thread.deleteLater
+            self._thread.deleteLater,
         )
 
         self._thread.start()
@@ -177,26 +213,33 @@ class AnalyzePage(QWidget):
         """
 
         self._browse_button.setEnabled(False)
+
         self._analyze_button.setEnabled(False)
 
     def _on_analysis_finished(
         self,
-        result: dict,
+        investigation: Investigation,
     ) -> None:
         """
         Handle successful analysis.
         """
 
         self._browse_button.setEnabled(True)
+
         self._analyze_button.setEnabled(True)
 
         QMessageBox.information(
             self,
             "Analysis Complete",
-            "Report analyzed successfully.",
+            (
+                f"Report '{investigation.report_name}' "
+                "analyzed successfully."
+            ),
         )
 
-        self.analysis_completed.emit(result)
+        self.analysis_completed.emit(
+            investigation,
+        )
 
     def _on_analysis_failed(
         self,
@@ -207,6 +250,7 @@ class AnalyzePage(QWidget):
         """
 
         self._browse_button.setEnabled(True)
+
         self._analyze_button.setEnabled(True)
 
         QMessageBox.critical(

@@ -7,12 +7,13 @@ without blocking the GUI.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QObject, Signal, Slot
 
-from app.analyzer import analyze_report
+from app.gui.controllers.analyze_controller import (
+    AnalyzeController,
+)
 
 
 class AnalysisWorker(QObject):
@@ -22,7 +23,7 @@ class AnalysisWorker(QObject):
 
     started = Signal()
 
-    finished = Signal(dict)
+    finished = Signal(object)
 
     failed = Signal(str)
 
@@ -34,6 +35,8 @@ class AnalysisWorker(QObject):
 
         self._report_path = report_path
 
+        self._controller = AnalyzeController()
+
     @Slot()
     def run(self) -> None:
         """
@@ -44,12 +47,18 @@ class AnalysisWorker(QObject):
 
         try:
 
-            result: dict[str, Any] = analyze_report(
-                Path(self._report_path)
+            investigation = (
+                self._controller.analyze(
+                    self._report_path,
+                )
             )
 
-            self.finished.emit(result)
+            self.finished.emit(
+                investigation,
+            )
 
         except Exception as error:
 
-            self.failed.emit(str(error))
+            self.failed.emit(
+                str(error),
+            )
