@@ -22,6 +22,9 @@ from app.gui.widgets.detail_section import DetailSection
 from app.gui.widgets.key_value_row import KeyValueRow
 from app.gui.widgets.page_container import PageContainer
 
+from app.gui.widgets.ioc_summary_widget import (
+    IOCSummaryWidget,
+)
 
 class InvestigationWorkspacePage(QWidget):
     """
@@ -76,9 +79,7 @@ class InvestigationWorkspacePage(QWidget):
         # Section Labels
         # ------------------------------------------
 
-        self._ioc_summary_label = QLabel(
-            "Waiting for investigation..."
-        )
+        self._ioc_summary_widget = IOCSummaryWidget()
 
         self._threat_summary_label = QLabel(
             "Waiting for investigation..."
@@ -152,7 +153,7 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         ioc_section.add_widget(
-            self._ioc_summary_label
+            self._ioc_summary_widget
         )
 
         layout.addWidget(
@@ -241,9 +242,7 @@ class InvestigationWorkspacePage(QWidget):
             "0"
         )
 
-        self._ioc_summary_label.setText(
-            "Waiting for investigation..."
-        )
+        self._ioc_summary_widget.reset()
 
         self._threat_summary_label.setText(
             "Waiting for investigation..."
@@ -295,14 +294,9 @@ class InvestigationWorkspacePage(QWidget):
             )
         )
 
-        total_iocs = sum(
-            len(values)
-            for values in investigation.iocs.values()
-        )
-
-        self._ioc_summary_label.setText(
-            f"{total_iocs} indicator(s) extracted."
-        )
+        self._ioc_summary_widget.load_investigation(
+    investigation,
+)
 
         hashes = investigation.threat_intelligence.get(
             "hashes",
