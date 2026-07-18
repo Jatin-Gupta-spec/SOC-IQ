@@ -19,9 +19,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.gui.events.application_state import ApplicationState
+from app.gui.events.event_bus import event_bus
 from app.gui.pages.analyze_page import AnalyzePage
 from app.gui.pages.dashboard_page import DashboardPage
 from app.gui.pages.history_page import HistoryPage
+from app.gui.pages.investigation_workspace import (
+    InvestigationWorkspacePage,
+)
 from app.gui.widgets.sidebar import SidebarWidget
 
 
@@ -29,6 +34,8 @@ class MainWindow(QMainWindow):
     """
     Primary application window.
     """
+
+    WORKSPACE_PAGE_INDEX = 7
 
     def __init__(self) -> None:
         super().__init__()
@@ -161,6 +168,10 @@ class MainWindow(QMainWindow):
 
         self.settings_page = QWidget()
 
+        self.workspace_page = (
+            InvestigationWorkspacePage()
+        )
+
         self.page_stack.addWidget(
             self.dashboard_page,
         )
@@ -189,6 +200,10 @@ class MainWindow(QMainWindow):
             self.settings_page,
         )
 
+        self.page_stack.addWidget(
+            self.workspace_page,
+        )
+
     def _connect_signals(self) -> None:
         """
         Connect GUI signals.
@@ -196,6 +211,34 @@ class MainWindow(QMainWindow):
 
         self.sidebar.page_selected.connect(
             self.page_stack.setCurrentIndex
+        )
+
+        event_bus.investigation_selected.connect(
+            self._open_workspace
+        )
+
+    def _open_workspace(self) -> None:
+        """
+        Open the Investigation Workspace.
+        """
+
+        investigation = (
+            ApplicationState.current_investigation
+        )
+
+        if investigation is None:
+            return
+
+        self.workspace_page.load_investigation(
+            investigation
+        )
+
+        self.page_stack.setCurrentIndex(
+            self.WORKSPACE_PAGE_INDEX
+        )
+
+        self.statusBar().showMessage(
+            f"Viewing: {investigation.report_name}"
         )
 
     def _create_status_bar(self) -> None:
