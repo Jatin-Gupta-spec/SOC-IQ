@@ -7,13 +7,13 @@ review completed investigations.
 
 from __future__ import annotations
 
-from app.database.models import Investigation
 from PySide6.QtWidgets import (
     QLabel,
     QVBoxLayout,
     QWidget,
 )
 
+from app.database.models import Investigation
 from app.gui.events.application_state import (
     ApplicationState,
 )
@@ -39,8 +39,22 @@ class InvestigationWorkspacePage(QWidget):
             ),
         )
 
+        # ------------------------------------------
+        # Investigation Summary
+        # ------------------------------------------
+
+        self._investigation_id_row = KeyValueRow(
+            "Investigation ID",
+            "Waiting...",
+        )
+
         self._report_name_row = KeyValueRow(
             "Report Name",
+            "Waiting...",
+        )
+
+        self._analysis_time_row = KeyValueRow(
+            "Analysis Time",
             "Waiting...",
         )
 
@@ -57,6 +71,10 @@ class InvestigationWorkspacePage(QWidget):
         self._severity_badge = Badge(
             "Waiting...",
         )
+
+        # ------------------------------------------
+        # Section Labels
+        # ------------------------------------------
 
         self._ioc_summary_label = QLabel(
             "Waiting for investigation..."
@@ -91,7 +109,15 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         summary.add_widget(
+            self._investigation_id_row
+        )
+
+        summary.add_widget(
             self._report_name_row
+        )
+
+        summary.add_widget(
+            self._analysis_time_row
         )
 
         summary.add_widget(
@@ -100,7 +126,6 @@ class InvestigationWorkspacePage(QWidget):
 
         severity_row = KeyValueRow(
             "Severity",
-            "",
         )
 
         severity_row.layout().addWidget(
@@ -130,7 +155,9 @@ class InvestigationWorkspacePage(QWidget):
             self._ioc_summary_label
         )
 
-        layout.addWidget(ioc_section)
+        layout.addWidget(
+            ioc_section
+        )
 
         # --------------------------------------------------
         # Threat Intelligence
@@ -145,7 +172,9 @@ class InvestigationWorkspacePage(QWidget):
             self._threat_summary_label
         )
 
-        layout.addWidget(threat_section)
+        layout.addWidget(
+            threat_section
+        )
 
         # --------------------------------------------------
         # Risk Assessment
@@ -160,7 +189,9 @@ class InvestigationWorkspacePage(QWidget):
             self._risk_summary_label
         )
 
-        layout.addWidget(risk_section)
+        layout.addWidget(
+            risk_section
+        )
 
         layout.addStretch()
 
@@ -181,6 +212,47 @@ class InvestigationWorkspacePage(QWidget):
             root_layout
         )
 
+    def _reset_workspace(self) -> None:
+        """
+        Reset the workspace to its default state.
+        """
+
+        self._investigation_id_row.set_value(
+            "Waiting..."
+        )
+
+        self._report_name_row.set_value(
+            "Waiting..."
+        )
+
+        self._analysis_time_row.set_value(
+            "Waiting..."
+        )
+
+        self._status_row.set_value(
+            "Waiting..."
+        )
+
+        self._severity_badge.set_text(
+            "Waiting..."
+        )
+
+        self._risk_score_row.set_value(
+            "0"
+        )
+
+        self._ioc_summary_label.setText(
+            "Waiting for investigation..."
+        )
+
+        self._threat_summary_label.setText(
+            "Waiting for investigation..."
+        )
+
+        self._risk_summary_label.setText(
+            "Waiting for investigation..."
+        )
+
     def load_investigation(
         self,
         investigation: Investigation,
@@ -189,8 +261,24 @@ class InvestigationWorkspacePage(QWidget):
         Display an investigation in the workspace.
         """
 
+        investigation_id = (
+            str(investigation.investigation_id)
+            if investigation.investigation_id is not None
+            else "N/A"
+        )
+
+        self._investigation_id_row.set_value(
+            investigation_id,
+        )
+
         self._report_name_row.set_value(
             investigation.report_name,
+        )
+
+        self._analysis_time_row.set_value(
+            investigation.analyzed_at.strftime(
+                "%Y-%m-%d %H:%M:%S UTC",
+            )
         )
 
         self._status_row.set_value(
@@ -243,6 +331,7 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         if investigation is None:
+            self._reset_workspace()
             return
 
         self.load_investigation(
