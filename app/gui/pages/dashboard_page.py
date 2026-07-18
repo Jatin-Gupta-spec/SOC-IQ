@@ -129,6 +129,17 @@ class DashboardPage(QWidget):
             root_layout,
         )
 
+    def refresh(self) -> None:
+        """
+        Refresh the dashboard with the latest application data.
+
+        This public method is used by the MainWindow after a
+        successful investigation so the dashboard always reflects
+        the current state of the database.
+        """
+
+        self._load_dashboard()
+
     def _load_dashboard(self) -> None:
         """
         Load dashboard information from the controller.

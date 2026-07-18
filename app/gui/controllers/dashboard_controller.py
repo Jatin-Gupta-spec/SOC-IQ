@@ -6,6 +6,7 @@ This controller prepares dashboard data for presentation.
 
 from __future__ import annotations
 
+from app.database.models import Investigation
 from app.database.service import InvestigationService
 
 
@@ -66,3 +67,27 @@ class DashboardController:
             "high_risk": str(high_risk),
             "database": "Connected",
         }
+
+    def get_latest_investigation(
+        self,
+    ) -> Investigation | None:
+        """
+        Return the most recently analyzed investigation.
+
+        Returns
+        -------
+        Investigation | None
+            The latest investigation if one exists,
+            otherwise None.
+        """
+
+        investigations = (
+            self._investigation_service.find_recent(
+                limit=1,
+            )
+        )
+
+        if not investigations:
+            return None
+
+        return investigations[0]

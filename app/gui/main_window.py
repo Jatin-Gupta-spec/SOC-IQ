@@ -19,15 +19,27 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.gui.events.application_state import ApplicationState
-from app.gui.events.event_bus import event_bus
-from app.gui.pages.analyze_page import AnalyzePage
-from app.gui.pages.dashboard_page import DashboardPage
-from app.gui.pages.history_page import HistoryPage
+from app.gui.events.application_state import (
+    ApplicationState,
+)
+from app.gui.events.event_bus import (
+    event_bus,
+)
+from app.gui.pages.analyze_page import (
+    AnalyzePage,
+)
+from app.gui.pages.dashboard_page import (
+    DashboardPage,
+)
+from app.gui.pages.history_page import (
+    HistoryPage,
+)
 from app.gui.pages.investigation_workspace import (
     InvestigationWorkspacePage,
 )
-from app.gui.widgets.sidebar import SidebarWidget
+from app.gui.widgets.sidebar import (
+    SidebarWidget,
+)
 
 
 class MainWindow(QMainWindow):
@@ -45,11 +57,17 @@ class MainWindow(QMainWindow):
         self.sidebar = SidebarWidget()
 
         self._configure_window()
+
         self._create_menu_bar()
+
         self._create_tool_bar()
+
         self._create_central_widget()
+
         self._create_status_bar()
+
         self._create_pages()
+
         self._connect_signals()
 
     def _configure_window(self) -> None:
@@ -57,13 +75,23 @@ class MainWindow(QMainWindow):
         Configure the main application window.
         """
 
-        self.setWindowTitle("SOC-IQ")
+        self.setWindowTitle(
+            "SOC-IQ"
+        )
 
-        self.resize(1400, 900)
+        self.resize(
+            1400,
+            900,
+        )
 
-        self.setMinimumSize(1100, 700)
+        self.setMinimumSize(
+            1100,
+            700,
+        )
 
-        self.setUnifiedTitleAndToolBarOnMac(False)
+        self.setUnifiedTitleAndToolBarOnMac(
+            False,
+        )
 
     def _create_menu_bar(self) -> None:
         """
@@ -73,8 +101,11 @@ class MainWindow(QMainWindow):
         menu_bar = self.menuBar()
 
         menu_bar.addMenu("File")
+
         menu_bar.addMenu("View")
+
         menu_bar.addMenu("Tools")
+
         menu_bar.addMenu("Help")
 
     def _create_tool_bar(self) -> None:
@@ -82,9 +113,13 @@ class MainWindow(QMainWindow):
         Create the main application toolbar.
         """
 
-        toolbar = QToolBar("Main Toolbar")
+        toolbar = QToolBar(
+            "Main Toolbar",
+        )
 
-        toolbar.setMovable(False)
+        toolbar.setMovable(
+            False,
+        )
 
         self.addToolBar(
             Qt.ToolBarArea.TopToolBarArea,
@@ -116,9 +151,13 @@ class MainWindow(QMainWindow):
             0,
         )
 
-        main_layout.setSpacing(0)
+        main_layout.setSpacing(
+            0,
+        )
 
-        self.sidebar.setFixedWidth(240)
+        self.sidebar.setFixedWidth(
+            240,
+        )
 
         main_layout.addWidget(
             self.sidebar,
@@ -210,12 +249,17 @@ class MainWindow(QMainWindow):
         """
 
         self.sidebar.page_selected.connect(
-            self.page_stack.setCurrentIndex
+            self.page_stack.setCurrentIndex,
         )
 
         event_bus.investigation_selected.connect(
-            self._open_workspace
+            self._open_workspace,
         )
+
+        self.analyze_page.analysis_completed.connect(
+            self._analysis_completed,
+        )
+        
 
     def _open_workspace(self) -> None:
         """
@@ -230,15 +274,53 @@ class MainWindow(QMainWindow):
             return
 
         self.workspace_page.load_investigation(
-            investigation
+            investigation,
         )
 
         self.page_stack.setCurrentIndex(
-            self.WORKSPACE_PAGE_INDEX
+            self.WORKSPACE_PAGE_INDEX,
         )
 
         self.statusBar().showMessage(
-            f"Viewing: {investigation.report_name}"
+            (
+                f"Viewing investigation: "
+                f"{investigation.report_name}"
+            )
+        )
+
+    def _analysis_completed(
+        self,
+        investigation,
+    ) -> None:
+        """
+        Handle a completed analysis.
+        """
+
+        ApplicationState.current_investigation = (
+            investigation
+        )
+
+        self.workspace_page.load_investigation(
+            investigation,
+        )
+
+        self.history_page.refresh()
+
+        if hasattr(
+            self.dashboard_page,
+            "refresh",
+        ):
+            self.dashboard_page.refresh()
+
+        self.page_stack.setCurrentIndex(
+            self.WORKSPACE_PAGE_INDEX,
+        )
+
+        self.statusBar().showMessage(
+            (
+                f"Analysis completed: "
+                f"{investigation.report_name}"
+            )
         )
 
     def _create_status_bar(self) -> None:
