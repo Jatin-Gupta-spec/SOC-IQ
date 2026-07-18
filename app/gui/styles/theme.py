@@ -13,20 +13,24 @@ def get_stylesheet() -> str:
     """
 
     return """
-    /* ============================
-       Global
-       ============================ */
+    /* ==========================================================
+       GLOBAL
+       ========================================================== */
 
     QWidget {
         background-color: #1E1E1E;
-        color: #F0F0F0;
+        color: #F3F4F6;
         font-family: "Segoe UI";
         font-size: 10pt;
     }
 
-    /* ============================
-       Menu Bar
-       ============================ */
+    QLabel {
+        background: transparent;
+    }
+
+    /* ==========================================================
+       MENU BAR
+       ========================================================== */
 
     QMenuBar {
         background-color: #252526;
@@ -41,12 +45,12 @@ def get_stylesheet() -> str:
         background-color: #3E3E42;
     }
 
-    /* ============================
-       Menu
-       ============================ */
+    /* ==========================================================
+       MENUS
+       ========================================================== */
 
     QMenu {
-        background-color: #2D2D30;
+        background-color: #252526;
         border: 1px solid #3C3C3C;
     }
 
@@ -58,9 +62,9 @@ def get_stylesheet() -> str:
         background-color: #007ACC;
     }
 
-    /* ============================
-       Tool Bar
-       ============================ */
+    /* ==========================================================
+       TOOL BAR
+       ========================================================== */
 
     QToolBar {
         background-color: #252526;
@@ -69,14 +73,14 @@ def get_stylesheet() -> str:
         padding: 6px;
     }
 
-    /* ============================
-       Push Buttons
-       ============================ */
+    /* ==========================================================
+       PUSH BUTTONS
+       ========================================================== */
 
     QPushButton {
         background-color: #2D2D30;
         border: 1px solid #3C3C3C;
-        border-radius: 6px;
+        border-radius: 8px;
         padding: 10px;
         text-align: left;
     }
@@ -89,26 +93,152 @@ def get_stylesheet() -> str:
         background-color: #007ACC;
     }
 
-    /* ============================
-       Labels
-       ============================ */
-
-    QLabel {
-        background: transparent;
+    QPushButton:disabled {
+        color: #808080;
+        background-color: #252526;
     }
 
-    /* ============================
-       Status Bar
-       ============================ */
+    /* ==========================================================
+       PAGE CONTAINER
+       ========================================================== */
+
+    QFrame#pageContainer {
+        background-color: transparent;
+        border: none;
+    }
+
+    QLabel#pageTitle {
+        font-size: 22pt;
+        font-weight: 700;
+        color: #FFFFFF;
+    }
+
+    QLabel#pageDescription {
+        font-size: 10pt;
+        color: #A1A1AA;
+        margin-bottom: 10px;
+    }
+
+    /* ==========================================================
+       SECTION HEADER
+       ========================================================== */
+
+    QLabel#sectionHeaderTitle {
+        font-size: 15pt;
+        font-weight: 600;
+        color: #FFFFFF;
+    }
+
+    QLabel#sectionHeaderDescription {
+        font-size: 10pt;
+        color: #A1A1AA;
+    }
+
+    /* ==========================================================
+       PANEL
+       ========================================================== */
+
+    QFrame#panel {
+        background-color: #252526;
+        border: 1px solid #3C3C3C;
+        border-radius: 12px;
+    }
+
+    QFrame#panel:hover {
+        border: 1px solid #4A4A4A;
+    }
+
+    /* ==========================================================
+       BADGE
+       ========================================================== */
+
+    QLabel#badge {
+        background-color: #0E639C;
+        color: #FFFFFF;
+        border: none;
+        border-radius: 10px;
+        padding: 4px 12px;
+        font-size: 9pt;
+        font-weight: 600;
+    }
+
+    /* ==========================================================
+       KEY VALUE ROW
+       ========================================================== */
+
+    QLabel#keyValueKey {
+        color: #A1A1AA;
+        font-size: 10pt;
+        font-weight: 500;
+    }
+
+    QLabel#keyValueValue {
+        color: #FFFFFF;
+        font-size: 10pt;
+        font-weight: 600;
+    }
+
+    /* ==========================================================
+       DASHBOARD
+       ========================================================== */
+
+    QLabel#dashboardEmptyState {
+        background-color: #252526;
+        border: 1px solid #3C3C3C;
+        border-radius: 10px;
+        padding: 24px;
+        font-size: 10pt;
+        color: #BDBDBD;
+    }
+
+    /* ==========================================================
+       SUMMARY CARD
+       ========================================================== */
+
+    QFrame#summaryCard {
+        background-color: #252526;
+        border: 1px solid #3C3C3C;
+        border-radius: 12px;
+    }
+
+    QFrame#summaryCard:hover {
+        border: 1px solid #007ACC;
+    }
+
+    QLabel#summaryCardTitle {
+        font-size: 11pt;
+        font-weight: 600;
+        color: #D4D4D4;
+    }
+
+    QLabel#summaryCardValue {
+        font-size: 28pt;
+        font-weight: 700;
+        color: #FFFFFF;
+    }
+
+    QLabel#summaryCardSubtitle {
+        font-size: 10pt;
+        color: #4FC3F7;
+    }
+
+    QLabel#summaryCardFooter {
+        font-size: 9pt;
+        color: #A1A1AA;
+    }
+
+    /* ==========================================================
+       STATUS BAR
+       ========================================================== */
 
     QStatusBar {
         background-color: #252526;
         border-top: 1px solid #3C3C3C;
     }
 
-    /* ============================
-       Stacked Widget
-       ============================ */
+    /* ==========================================================
+       STACKED WIDGET
+       ========================================================== */
 
     QStackedWidget {
         background-color: #1E1E1E;
