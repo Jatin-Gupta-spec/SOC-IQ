@@ -12,7 +12,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QHBoxLayout,
-    QLabel,
     QMainWindow,
     QStackedWidget,
     QToolBar,
@@ -20,6 +19,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.gui.pages.analyze_page import AnalyzePage
+from app.gui.pages.dashboard_page import DashboardPage
+from app.gui.pages.history_page import HistoryPage
 from app.gui.widgets.sidebar import SidebarWidget
 
 
@@ -32,6 +34,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.page_stack = QStackedWidget()
+
         self.sidebar = SidebarWidget()
 
         self._configure_window()
@@ -76,11 +79,19 @@ class MainWindow(QMainWindow):
 
         toolbar.setMovable(False)
 
-        self.addToolBar(Qt.TopToolBarArea, toolbar)
+        self.addToolBar(
+            Qt.ToolBarArea.TopToolBarArea,
+            toolbar,
+        )
 
-        analyze_action = QAction("Analyze", self)
+        analyze_action = QAction(
+            "Analyze",
+            self,
+        )
 
-        toolbar.addAction(analyze_action)
+        toolbar.addAction(
+            analyze_action,
+        )
 
     def _create_central_widget(self) -> None:
         """
@@ -91,53 +102,92 @@ class MainWindow(QMainWindow):
 
         main_layout = QHBoxLayout()
 
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
 
         main_layout.setSpacing(0)
 
         self.sidebar.setFixedWidth(240)
 
-        main_layout.addWidget(self.sidebar)
+        main_layout.addWidget(
+            self.sidebar,
+        )
 
         page_layout = QVBoxLayout()
 
-        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
 
-        page_layout.addWidget(self.page_stack)
+        page_layout.addWidget(
+            self.page_stack,
+        )
 
-        main_layout.addLayout(page_layout)
+        main_layout.addLayout(
+            page_layout,
+        )
 
-        central_widget.setLayout(main_layout)
+        central_widget.setLayout(
+            main_layout,
+        )
 
-        self.setCentralWidget(central_widget)
+        self.setCentralWidget(
+            central_widget,
+        )
 
     def _create_pages(self) -> None:
         """
-        Create placeholder application pages.
+        Create application pages.
         """
 
-        page_names = (
-            "Dashboard",
-            "Analyze Report",
-            "IOC Viewer",
-            "Threat Intelligence",
-            "Risk Dashboard",
-            "Investigation History",
-            "Settings",
+        self.dashboard_page = DashboardPage()
+
+        self.analyze_page = AnalyzePage()
+
+        self.ioc_page = QWidget()
+
+        self.threat_page = QWidget()
+
+        self.risk_page = QWidget()
+
+        self.history_page = HistoryPage()
+
+        self.settings_page = QWidget()
+
+        self.page_stack.addWidget(
+            self.dashboard_page,
         )
 
-        for page_name in page_names:
-            page = QWidget()
+        self.page_stack.addWidget(
+            self.analyze_page,
+        )
 
-            layout = QVBoxLayout(page)
+        self.page_stack.addWidget(
+            self.ioc_page,
+        )
 
-            label = QLabel(page_name)
+        self.page_stack.addWidget(
+            self.threat_page,
+        )
 
-            label.setAlignment(Qt.AlignCenter)
+        self.page_stack.addWidget(
+            self.risk_page,
+        )
 
-            layout.addWidget(label)
+        self.page_stack.addWidget(
+            self.history_page,
+        )
 
-            self.page_stack.addWidget(page)
+        self.page_stack.addWidget(
+            self.settings_page,
+        )
 
     def _connect_signals(self) -> None:
         """
@@ -153,4 +203,6 @@ class MainWindow(QMainWindow):
         Create the application status bar.
         """
 
-        self.statusBar().showMessage("SOC-IQ Ready")
+        self.statusBar().showMessage(
+            "SOC-IQ Ready"
+        )
