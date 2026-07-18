@@ -14,6 +14,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.gui.events.application_state import (
+    ApplicationState,
+)
 from app.gui.widgets.badge import Badge
 from app.gui.widgets.detail_section import DetailSection
 from app.gui.widgets.key_value_row import KeyValueRow
@@ -68,6 +71,8 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         self._build_ui()
+
+        self.refresh()
 
     def _build_ui(self) -> None:
         """
@@ -225,4 +230,21 @@ class InvestigationWorkspacePage(QWidget):
                 f"Overall Severity: "
                 f"{investigation.severity}"
             )
+        )
+
+    def refresh(self) -> None:
+        """
+        Refresh the workspace using the shared
+        application state.
+        """
+
+        investigation = (
+            ApplicationState.current_investigation
+        )
+
+        if investigation is None:
+            return
+
+        self.load_investigation(
+            investigation,
         )
