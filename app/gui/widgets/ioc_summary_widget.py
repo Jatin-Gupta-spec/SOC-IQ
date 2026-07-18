@@ -7,7 +7,11 @@ for a completed investigation.
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QPlainTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from app.database.models import Investigation
 
@@ -20,7 +24,11 @@ class IOCSummaryWidget(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
-        self._content = QLabel(
+        self._content = QPlainTextEdit()
+
+        self._content.setReadOnly(True)
+
+        self._content.setPlainText(
             "Waiting for investigation..."
         )
 
@@ -78,16 +86,20 @@ class IOCSummaryWidget(QWidget):
             )
 
             lines.append(title)
-            lines.append("-" * len(title))
+            lines.append(
+                "-" * len(title)
+            )
 
             if values:
                 lines.extend(values)
             else:
-                lines.append("None")
+                lines.append(
+                    "None"
+                )
 
             lines.append("")
 
-        self._content.setText(
+        self._content.setPlainText(
             "\n".join(lines)
         )
 
@@ -96,6 +108,6 @@ class IOCSummaryWidget(QWidget):
         Reset the widget.
         """
 
-        self._content.setText(
+        self._content.setPlainText(
             "Waiting for investigation..."
         )
