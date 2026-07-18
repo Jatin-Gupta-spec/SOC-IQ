@@ -108,9 +108,15 @@ class DashboardPage(QWidget):
             "dashboardEmptyState"
         )
 
+        self._recent_activity.setWordWrap(
+            True,
+        )
+
         layout.addWidget(
             self._recent_activity,
         )
+
+        layout.addStretch()
 
         root_layout = QVBoxLayout()
 
@@ -131,11 +137,8 @@ class DashboardPage(QWidget):
 
     def refresh(self) -> None:
         """
-        Refresh the dashboard with the latest application data.
-
-        This public method is used by the MainWindow after a
-        successful investigation so the dashboard always reflects
-        the current state of the database.
+        Refresh the dashboard with the latest
+        application data.
         """
 
         self._load_dashboard()
@@ -163,18 +166,31 @@ class DashboardPage(QWidget):
             value=summary["database"],
         )
 
-        reports = int(summary["reports"])
+        latest = (
+            self._controller.get_latest_investigation()
+        )
 
-        if reports == 0:
+        if latest is None:
+
             self._recent_activity.setText(
                 "Recent Activity\n\n"
                 "No investigations available.\n"
                 "Analyze a report to begin."
             )
-        else:
-            self._recent_activity.setText(
-                "Recent Activity\n\n"
-                f"{reports} investigation(s) available.\n"
-                "Open the Investigation History page "
-                "to review completed analyses."
+
+            return
+
+        analyzed_at = (
+            latest.analyzed_at.strftime(
+                "%Y-%m-%d %H:%M:%S"
             )
+        )
+
+        self._recent_activity.setText(
+            "Recent Activity\n\n"
+            "Latest Investigation\n\n"
+            f"Report Name : {latest.report_name}\n"
+            f"Analyzed    : {analyzed_at}\n"
+            f"Risk Score  : {latest.risk_score}\n"
+            f"Severity    : {latest.severity}"
+        )
