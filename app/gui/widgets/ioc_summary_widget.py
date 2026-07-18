@@ -17,6 +17,9 @@ from PySide6.QtWidgets import (
 )
 
 from app.database.models import Investigation
+from app.gui.widgets.ioc_details_dialog import (
+    IOCDetailsDialog,
+)
 
 
 class IOCSummaryWidget(QWidget):
@@ -53,8 +56,12 @@ class IOCSummaryWidget(QWidget):
             QTableWidget.EditTrigger.NoEditTriggers,
         )
 
+        self._table.setSelectionBehavior(
+            QTableWidget.SelectionBehavior.SelectRows,
+        )
+
         self._table.setSelectionMode(
-            QTableWidget.SelectionMode.NoSelection,
+            QTableWidget.SelectionMode.SingleSelection,
         )
 
         self._table.horizontalHeader().setStretchLastSection(
@@ -156,8 +163,23 @@ class IOCSummaryWidget(QWidget):
         Handle IOC table row selection.
         """
 
+        del column
+
+        ioc_titles = {
+            "ipv4": "IPv4 Addresses",
+            "domains": "Domains",
+            "urls": "URLs",
+            "emails": "Emails",
+            "md5": "MD5 Hashes",
+            "sha1": "SHA1 Hashes",
+            "sha256": "SHA256 Hashes",
+            "cves": "CVEs",
+            "windows_file_paths": "Windows File Paths",
+            "windows_registry_keys": "Registry Keys",
+        }
+
         keys = list(
-            self._ioc_data.keys()
+            ioc_titles.keys()
         )
 
         if row >= len(keys):
@@ -174,6 +196,18 @@ class IOCSummaryWidget(QWidget):
             key,
             values,
         )
+
+        title = ioc_titles.get(
+            key,
+            key,
+        )
+
+        dialog = IOCDetailsDialog(
+            title,
+            values,
+        )
+
+        dialog.exec()
 
     def reset(self) -> None:
         """
