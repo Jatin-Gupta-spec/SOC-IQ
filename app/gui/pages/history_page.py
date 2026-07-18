@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 
 from app.gui.controllers.history_controller import HistoryController
 from app.gui.events.application_state import ApplicationState
+from app.gui.events.event_bus import event_bus
 from app.gui.models.investigation_table_model import (
     InvestigationTableModel,
 )
@@ -125,6 +126,8 @@ class HistoryPage(QWidget):
         ApplicationState.current_investigation = (
             investigation
         )
+
+        event_bus.investigation_selected.emit()
 
         print(
             "Selected investigation:",
