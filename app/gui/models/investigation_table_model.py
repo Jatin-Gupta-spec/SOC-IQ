@@ -198,6 +198,83 @@ class InvestigationTableModel(QAbstractTableModel):
 
         self.endResetModel()
 
+    def sort(
+        self,
+        column: int,
+        order: Qt.SortOrder = Qt.SortOrder.AscendingOrder,
+    ) -> None:
+        """
+        Sort investigations by the selected column.
+        """
+
+        reverse = (
+            order == Qt.SortOrder.DescendingOrder
+        )
+
+        self.layoutAboutToBeChanged.emit()
+
+        if column == 0:
+            self._investigations.sort(
+                key=lambda investigation: (
+                    investigation.investigation_id
+                    or 0
+                ),
+                reverse=reverse,
+            )
+
+        elif column == 1:
+            self._investigations.sort(
+                key=lambda investigation: (
+                    investigation.report_name.lower()
+                ),
+                reverse=reverse,
+            )
+
+        elif column == 2:
+
+            severity_order = {
+                "LOW": 1,
+                "MEDIUM": 2,
+                "HIGH": 3,
+                "CRITICAL": 4,
+            }
+
+            self._investigations.sort(
+                key=lambda investigation: (
+                    severity_order.get(
+                        investigation.severity.upper(),
+                        0,
+                    )
+                ),
+                reverse=reverse,
+            )
+
+        elif column == 3:
+            self._investigations.sort(
+                key=lambda investigation: (
+                    investigation.risk_score
+                ),
+                reverse=reverse,
+            )
+
+        elif column == 4:
+            self._investigations.sort(
+                key=lambda investigation: (
+                    investigation.status.lower()
+                ),
+                reverse=reverse,
+            )
+
+        elif column == 5:
+            self._investigations.sort(
+                key=lambda investigation: (
+                    investigation.analyzed_at
+                ),
+                reverse=reverse,
+            )
+
+        self.layoutChanged.emit()
+
     def investigation_at(
         self,
         row: int,
@@ -213,3 +290,4 @@ class InvestigationTableModel(QAbstractTableModel):
             return None
 
         return self._investigations[row]
+    
