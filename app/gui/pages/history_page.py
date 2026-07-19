@@ -78,30 +78,44 @@ class HistoryPage(QWidget):
             self._search_box,
         )
 
-        self._table.setModel(self._model)
+        self._table.setModel(
+            self._model,
+        )
 
         self._table.setSelectionBehavior(
-            QTableView.SelectionBehavior.SelectRows
+            QTableView.SelectionBehavior.SelectRows,
         )
 
         self._table.setSelectionMode(
-            QTableView.SelectionMode.SingleSelection
+            QTableView.SelectionMode.SingleSelection,
         )
 
-        self._table.setAlternatingRowColors(True)
+        self._table.setAlternatingRowColors(
+            True,
+        )
 
-        self._table.setSortingEnabled(False)
+        self._table.setSortingEnabled(
+            True,
+        )
 
-        self._table.verticalHeader().setVisible(False)
+        self._table.verticalHeader().setVisible(
+            False,
+        )
 
-        self._table.horizontalHeader().setStretchLastSection(True)
+        self._table.horizontalHeader().setStretchLastSection(
+            True,
+        )
+
+        self._table.horizontalHeader().setSortIndicatorShown(
+            True,
+        )
 
         self._table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.ResizeToContents
+            QHeaderView.ResizeMode.ResizeToContents,
         )
 
         layout.addWidget(
-            self._table
+            self._table,
         )
 
         root_layout = QVBoxLayout()
@@ -114,11 +128,11 @@ class HistoryPage(QWidget):
         )
 
         root_layout.addWidget(
-            self._container
+            self._container,
         )
 
         self.setLayout(
-            root_layout
+            root_layout,
         )
 
     def _connect_signals(self) -> None:
@@ -127,7 +141,7 @@ class HistoryPage(QWidget):
         """
 
         self._table.doubleClicked.connect(
-            self._open_investigation
+            self._open_investigation,
         )
 
         self._search_box.textChanged.connect(
@@ -143,7 +157,7 @@ class HistoryPage(QWidget):
         """
 
         investigation = self._model.investigation_at(
-            index.row()
+            index.row(),
         )
 
         if investigation is None:
