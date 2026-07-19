@@ -165,13 +165,13 @@ class HistoryPage(QWidget):
         text: str,
     ) -> None:
         """
-        Filter investigations.
-
-        Implementation will be added
-        in the next step.
+        Filter investigations by report,
+        severity, or status.
         """
 
-        pass
+        self._model.filter(
+            text,
+        )
 
     def refresh(self) -> None:
         """
