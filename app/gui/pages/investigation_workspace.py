@@ -8,7 +8,6 @@ review completed investigations.
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
-    QLabel,
     QVBoxLayout,
     QWidget,
 )
@@ -28,6 +27,10 @@ from app.gui.widgets.ioc_summary_widget import (
 
 from app.gui.widgets.threat_intelligence_widget import (
     ThreatIntelligenceWidget,
+)
+
+from app.gui.widgets.risk_summary_widget import (
+    RiskSummaryWidget,
 )
 
 class InvestigationWorkspacePage(QWidget):
@@ -89,9 +92,9 @@ class InvestigationWorkspacePage(QWidget):
     ThreatIntelligenceWidget()
 )
 
-        self._risk_summary_label = QLabel(
-            "Waiting for investigation..."
-        )
+        self._risk_summary_widget = (
+    RiskSummaryWidget()
+)
 
         self._build_ui()
 
@@ -191,7 +194,7 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         risk_section.add_widget(
-            self._risk_summary_label
+            self._risk_summary_widget
         )
 
         layout.addWidget(
@@ -250,9 +253,7 @@ class InvestigationWorkspacePage(QWidget):
 
         self._threat_summary_widget.reset()
 
-        self._risk_summary_label.setText(
-            "Waiting for investigation..."
-        )
+        self._risk_summary_widget.reset()
 
     def load_investigation(
         self,
@@ -304,12 +305,9 @@ class InvestigationWorkspacePage(QWidget):
     investigation,
 )
 
-        self._risk_summary_label.setText(
-            (
-                f"Overall Severity: "
-                f"{investigation.severity}"
-            )
-        )
+        self._risk_summary_widget.load_investigation(
+    investigation,
+)
 
     def refresh(self) -> None:
         """
