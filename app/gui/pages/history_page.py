@@ -7,6 +7,7 @@ from __future__ import annotations
 from PySide6.QtCore import QModelIndex
 from PySide6.QtWidgets import (
     QFileDialog,
+    QMessageBox,
     QHBoxLayout,
     QHeaderView,
     QLineEdit,
@@ -21,6 +22,9 @@ from app.gui.events.application_state import ApplicationState
 from app.gui.events.event_bus import event_bus
 from app.gui.models.investigation_table_model import (
     InvestigationTableModel,
+)
+from app.gui.utils.csv_exporter import (
+    export_investigations_to_csv,
 )
 from app.gui.widgets.investigation_statistics_widget import (
     InvestigationStatisticsWidget,
@@ -180,6 +184,10 @@ class HistoryPage(QWidget):
             self._filter_investigations,
         )
 
+        self._export_button.clicked.connect(
+            self._export_csv,
+        )
+    
     def _open_investigation(
         self,
         index: QModelIndex,
@@ -218,6 +226,41 @@ class HistoryPage(QWidget):
         self._model.filter(
             text,
         )
+
+    def _export_csv(
+        self,
+    ) -> None:
+        """
+        Export investigations to a CSV file.
+        """
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Investigations",
+            "investigations.csv",
+            "CSV Files (*.csv)",
+        )
+
+        if not file_path:
+            return
+
+        investigations = (
+            self._controller.get_recent_investigations()
+        )
+
+        export_investigations_to_csv(
+            investigations,
+            file_path,
+        )
+
+        QMessageBox.information(
+    self,
+    "Export Complete",
+    (
+        "Investigation history was exported "
+        "successfully."
+    ),
+)
 
     def refresh(self) -> None:
         """
