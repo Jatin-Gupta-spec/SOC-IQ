@@ -7,6 +7,7 @@ from __future__ import annotations
 from PySide6.QtCore import QModelIndex
 from PySide6.QtWidgets import (
     QFileDialog,
+    QHBoxLayout,
     QHeaderView,
     QLineEdit,
     QPushButton,
@@ -91,8 +92,18 @@ class HistoryPage(QWidget):
             )
         )
 
-        layout.addWidget(
+        toolbar_layout = QHBoxLayout()
+
+        toolbar_layout.addWidget(
             self._search_box,
+        )
+
+        toolbar_layout.addWidget(
+            self._export_button,
+        )
+
+        layout.addLayout(
+            toolbar_layout,
         )
 
         layout.addWidget(
