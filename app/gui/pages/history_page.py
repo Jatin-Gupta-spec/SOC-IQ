@@ -187,6 +187,10 @@ class HistoryPage(QWidget):
         self._export_button.clicked.connect(
             self._export_csv,
         )
+
+        event_bus.investigation_created.connect(
+    self.refresh,
+)
     
     def _open_investigation(
         self,
@@ -248,19 +252,31 @@ class HistoryPage(QWidget):
             self._controller.get_recent_investigations()
         )
 
-        export_investigations_to_csv(
-            investigations,
-            file_path,
-        )
+        try:
+
+            export_investigations_to_csv(
+                investigations,
+                file_path,
+            )
+
+        except Exception as error:
+
+            QMessageBox.critical(
+                self,
+                "Export Failed",
+                str(error),
+            )
+
+            return
 
         QMessageBox.information(
-    self,
-    "Export Complete",
-    (
-        "Investigation history was exported "
-        "successfully."
-    ),
-)
+            self,
+            "Export Complete",
+            (
+                "Investigation history was exported "
+                "successfully."
+            ),
+        )
 
     def refresh(self) -> None:
         """

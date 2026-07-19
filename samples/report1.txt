@@ -1,0 +1,55 @@
+SOC-IQ Malware Investigation
+
+Incident Number:
+SOC-IR-2045
+
+Severity:
+CRITICAL
+
+Indicators discovered during investigation:
+
+IPs
+
+8.8.8.8
+103.21.244.0
+172.67.181.18
+
+Domains
+
+login-secure.example
+command-server.example
+
+URLs
+
+http://command-server.example/api
+https://login-secure.example/auth
+
+Email
+
+support@command-server.example
+
+File hashes
+
+MD5
+
+098f6bcd4621d373cade4e832627b4f6
+
+SHA1
+
+2fd4e1c67a2d28fced849ee1bb76e7391b93eb12
+
+SHA256
+
+9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+
+Windows File Path
+
+C:\Windows\Temp\payload.dll
+
+Registry
+
+HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+
+Related Vulnerability
+
+CVE-2023-23397

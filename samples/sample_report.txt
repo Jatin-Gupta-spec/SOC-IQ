@@ -1,0 +1,45 @@
+SOC-IQ Investigation Sample
+
+Incident ID: INC-2026-1001
+Severity: HIGH
+
+The workstation downloaded a suspicious executable from:
+
+https://malicious-download.example/update.exe
+
+The following IPs communicated with the host:
+
+185.220.101.15
+45.77.91.201
+
+Observed domains:
+
+evil-control.example
+malware-host.example
+
+Email used during phishing:
+
+invoice@fake-company.example
+
+Hashes observed:
+
+MD5:
+d41d8cd98f00b204e9800998ecf8427e
+
+SHA1:
+da39a3ee5e6b4b0d3255bfef95601890afd80709
+
+SHA256:
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+Registry modification:
+
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+
+Dropped file:
+
+C:\Users\Public\update.exe
+
+Associated vulnerability:
+
+CVE-2024-3094
