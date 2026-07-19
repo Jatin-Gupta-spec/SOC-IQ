@@ -16,6 +16,9 @@ from PySide6.QtWidgets import (
 )
 
 from app.database.models import Investigation
+from app.gui.widgets.threat_intelligence_details_dialog import (
+    ThreatIntelligenceDetailsDialog,
+)
 
 
 class ThreatIntelligenceWidget(QWidget):
@@ -25,6 +28,8 @@ class ThreatIntelligenceWidget(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
+
+        self._threat_data: list[dict] = []
 
         self._table = QTableWidget()
 
@@ -65,6 +70,10 @@ class ThreatIntelligenceWidget(QWidget):
 
         self._build_ui()
 
+        self._table.cellDoubleClicked.connect(
+            self._open_details,
+        )
+
     def _build_ui(self) -> None:
         """
         Build the widget layout.
@@ -95,16 +104,18 @@ class ThreatIntelligenceWidget(QWidget):
         Display threat intelligence for an investigation.
         """
 
-        hashes = investigation.threat_intelligence.get(
+        self._threat_data = investigation.threat_intelligence.get(
             "hashes",
             [],
         )
 
         self._table.setRowCount(
-            len(hashes),
+            len(self._threat_data),
         )
 
-        for row, result in enumerate(hashes):
+        for row, result in enumerate(
+            self._threat_data
+        ):
 
             sha256 = result.get(
                 "sha256",
@@ -147,12 +158,34 @@ class ThreatIntelligenceWidget(QWidget):
 
         self._table.resizeColumnsToContents()
 
+    def _open_details(
+        self,
+        row: int,
+        column: int,
+    ) -> None:
+        """
+        Open the complete threat intelligence
+        record for the selected row.
+        """
+
+        if row >= len(self._threat_data):
+            return
+
+        dialog = ThreatIntelligenceDetailsDialog(
+            "Threat Intelligence Details",
+            self._threat_data[row],
+        )
+
+        dialog.exec()
+
     def reset(
         self,
     ) -> None:
         """
         Reset the widget.
         """
+
+        self._threat_data.clear()
 
         self._table.setRowCount(
             0,
