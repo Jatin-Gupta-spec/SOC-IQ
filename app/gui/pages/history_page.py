@@ -199,3 +199,7 @@ class HistoryPage(QWidget):
         self._model.set_investigations(
             investigations,
         )
+
+        self._model.filter(
+            self._search_box.text(),
+        )
