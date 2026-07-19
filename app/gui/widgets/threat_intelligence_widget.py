@@ -7,10 +7,10 @@ for a completed investigation.
 
 from __future__ import annotations
 
-from pprint import pformat
-
 from PySide6.QtWidgets import (
-    QPlainTextEdit,
+    QHeaderView,
+    QTableWidget,
+    QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
@@ -26,12 +26,41 @@ class ThreatIntelligenceWidget(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
-        self._content = QPlainTextEdit()
+        self._table = QTableWidget()
 
-        self._content.setReadOnly(True)
+        self._table.setColumnCount(3)
 
-        self._content.setPlainText(
-            "Waiting for investigation..."
+        self._table.setHorizontalHeaderLabels(
+            [
+                "SHA256 Hash",
+                "Verdict",
+                "Detection Ratio",
+            ]
+        )
+
+        self._table.verticalHeader().setVisible(
+            False,
+        )
+
+        self._table.setEditTriggers(
+            QTableWidget.EditTrigger.NoEditTriggers,
+        )
+
+        self._table.setSelectionBehavior(
+            QTableWidget.SelectionBehavior.SelectRows,
+        )
+
+        self._table.setSelectionMode(
+            QTableWidget.SelectionMode.SingleSelection,
+        )
+
+        self._table.horizontalHeader().setStretchLastSection(
+            True,
+        )
+
+        self._table.horizontalHeader().setSectionResizeMode(
+            0,
+            QHeaderView.ResizeMode.Stretch,
         )
 
         self._build_ui()
@@ -51,7 +80,7 @@ class ThreatIntelligenceWidget(QWidget):
         )
 
         layout.addWidget(
-            self._content,
+            self._table,
         )
 
         self.setLayout(
@@ -66,13 +95,57 @@ class ThreatIntelligenceWidget(QWidget):
         Display threat intelligence for an investigation.
         """
 
-        self._content.setPlainText(
-            pformat(
-                investigation.threat_intelligence,
-                indent=4,
-                width=100,
-            )
+        hashes = investigation.threat_intelligence.get(
+            "hashes",
+            [],
         )
+
+        self._table.setRowCount(
+            len(hashes),
+        )
+
+        for row, result in enumerate(hashes):
+
+            sha256 = result.get(
+                "sha256",
+                "Unknown",
+            )
+
+            verdict = result.get(
+                "verdict",
+                "Unknown",
+            )
+
+            detection_ratio = result.get(
+                "detection_ratio",
+                "N/A",
+            )
+
+            self._table.setItem(
+                row,
+                0,
+                QTableWidgetItem(
+                    str(sha256),
+                ),
+            )
+
+            self._table.setItem(
+                row,
+                1,
+                QTableWidgetItem(
+                    str(verdict),
+                ),
+            )
+
+            self._table.setItem(
+                row,
+                2,
+                QTableWidgetItem(
+                    str(detection_ratio),
+                ),
+            )
+
+        self._table.resizeColumnsToContents()
 
     def reset(
         self,
@@ -81,6 +154,6 @@ class ThreatIntelligenceWidget(QWidget):
         Reset the widget.
         """
 
-        self._content.setPlainText(
-            "Waiting for investigation..."
+        self._table.setRowCount(
+            0,
         )
