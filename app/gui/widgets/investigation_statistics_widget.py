@@ -102,6 +102,61 @@ class InvestigationStatisticsWidget(QWidget):
             layout,
         )
 
+    def load_investigations(
+        self,
+        investigations: list,
+    ) -> None:
+        """
+        Load investigation statistics.
+        """
+
+        total = len(
+            investigations,
+        )
+
+        critical = 0
+        high = 0
+        medium = 0
+        low = 0
+
+        for investigation in investigations:
+
+            severity = (
+                investigation.severity.upper()
+            )
+
+            if severity == "CRITICAL":
+                critical += 1
+
+            elif severity == "HIGH":
+                high += 1
+
+            elif severity == "MEDIUM":
+                medium += 1
+
+            elif severity == "LOW":
+                low += 1
+
+        self._total_label.setText(
+            str(total),
+        )
+
+        self._critical_label.setText(
+            str(critical),
+        )
+
+        self._high_label.setText(
+            str(high),
+        )
+
+        self._medium_label.setText(
+            str(medium),
+        )
+
+        self._low_label.setText(
+            str(low),
+        )
+
     def reset(self) -> None:
         """
         Reset all statistics.

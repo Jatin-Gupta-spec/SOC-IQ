@@ -6,8 +6,10 @@ from __future__ import annotations
 
 from PySide6.QtCore import QModelIndex
 from PySide6.QtWidgets import (
+    QFileDialog,
     QHeaderView,
     QLineEdit,
+    QPushButton,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -18,6 +20,9 @@ from app.gui.events.application_state import ApplicationState
 from app.gui.events.event_bus import event_bus
 from app.gui.models.investigation_table_model import (
     InvestigationTableModel,
+)
+from app.gui.widgets.investigation_statistics_widget import (
+    InvestigationStatisticsWidget,
 )
 from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.section_header import SectionHeader
@@ -45,6 +50,14 @@ class HistoryPage(QWidget):
 
         self._search_box.setClearButtonEnabled(
             True,
+        )
+
+        self._export_button = QPushButton(
+            "Export CSV",
+        )
+
+        self._statistics_widget = (
+            InvestigationStatisticsWidget()
         )
 
         self._container = PageContainer(
@@ -80,6 +93,10 @@ class HistoryPage(QWidget):
 
         layout.addWidget(
             self._search_box,
+        )
+
+        layout.addWidget(
+            self._statistics_widget,
         )
 
         self._table.setModel(
@@ -201,6 +218,10 @@ class HistoryPage(QWidget):
         )
 
         self._model.set_investigations(
+            investigations,
+        )
+
+        self._statistics_widget.load_investigations(
             investigations,
         )
 
