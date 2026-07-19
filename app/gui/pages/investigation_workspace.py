@@ -25,6 +25,10 @@ from app.gui.widgets.ioc_summary_widget import (
     IOCSummaryWidget,
 )
 
+from app.gui.widgets.ioc_details_widget import (
+    IOCDetailsWidget,
+)
+
 from app.gui.widgets.threat_intelligence_widget import (
     ThreatIntelligenceWidget,
 )
@@ -88,15 +92,21 @@ class InvestigationWorkspacePage(QWidget):
 
         self._ioc_summary_widget = IOCSummaryWidget()
 
+        self._ioc_details_widget = IOCDetailsWidget()
+
         self._threat_summary_widget = (
-    ThreatIntelligenceWidget()
-)
+            ThreatIntelligenceWidget()
+        )
 
         self._risk_summary_widget = (
-    RiskSummaryWidget()
-)
+            RiskSummaryWidget()
+        )
 
         self._build_ui()
+
+        self._ioc_summary_widget.ioc_selected.connect(
+            self._ioc_details_widget.display_iocs,
+        )
 
         self.refresh()
 
@@ -165,6 +175,23 @@ class InvestigationWorkspacePage(QWidget):
 
         layout.addWidget(
             ioc_section
+        )
+
+        # --------------------------------------------------
+        # IOC Details
+        # --------------------------------------------------
+
+        ioc_details_section = DetailSection(
+            "IOC Details",
+            "Individual IOC values for the selected IOC type.",
+        )
+
+        ioc_details_section.add_widget(
+            self._ioc_details_widget
+        )
+
+        layout.addWidget(
+            ioc_details_section
         )
 
         # --------------------------------------------------
@@ -251,6 +278,8 @@ class InvestigationWorkspacePage(QWidget):
 
         self._ioc_summary_widget.reset()
 
+        self._ioc_details_widget.reset()
+
         self._threat_summary_widget.reset()
 
         self._risk_summary_widget.reset()
@@ -298,16 +327,18 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         self._ioc_summary_widget.load_investigation(
-    investigation,
-)
+            investigation,
+        )
+
+        self._ioc_details_widget.reset()
 
         self._threat_summary_widget.load_investigation(
-    investigation,
-)
+            investigation,
+        )
 
         self._risk_summary_widget.load_investigation(
-    investigation,
-)
+            investigation,
+        )
 
     def refresh(self) -> None:
         """

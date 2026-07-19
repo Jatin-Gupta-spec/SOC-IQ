@@ -40,7 +40,7 @@ class HistoryPage(QWidget):
         self._search_box = QLineEdit()
 
         self._search_box.setPlaceholderText(
-            "Search investigations..."
+            "Search by report, severity or status..."
         )
 
         self._container = PageContainer(

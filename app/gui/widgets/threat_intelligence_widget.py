@@ -114,7 +114,7 @@ class ThreatIntelligenceWidget(QWidget):
         )
 
         for row, result in enumerate(
-            self._threat_data
+            self._threat_data,
         ):
 
             sha256 = result.get(
@@ -167,6 +167,12 @@ class ThreatIntelligenceWidget(QWidget):
         Open the complete threat intelligence
         record for the selected row.
         """
+
+        if not self._threat_data:
+            return
+
+        if row < 0:
+            return
 
         if row >= len(self._threat_data):
             return

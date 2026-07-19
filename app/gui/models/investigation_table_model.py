@@ -36,7 +36,13 @@ class InvestigationTableModel(QAbstractTableModel):
     ) -> None:
         super().__init__()
 
-        self._investigations = investigations or []
+        self._all_investigations = (
+            investigations or []
+        )
+
+        self._investigations = list(
+            self._all_investigations
+        )
 
     def rowCount(
         self,
@@ -151,7 +157,44 @@ class InvestigationTableModel(QAbstractTableModel):
 
         self.beginResetModel()
 
-        self._investigations = investigations
+        self._all_investigations = investigations
+
+        self._investigations = list(
+            investigations,
+        )
+
+        self.endResetModel()
+
+    def filter(
+        self,
+        text: str,
+    ) -> None:
+        """
+        Filter investigations by report name,
+        severity, or status.
+        """
+
+        self.beginResetModel()
+
+        text = text.lower().strip()
+
+        if not text:
+
+            self._investigations = list(
+                self._all_investigations,
+            )
+
+        else:
+
+            self._investigations = [
+                investigation
+                for investigation in self._all_investigations
+                if (
+                    text in investigation.report_name.lower()
+                    or text in investigation.severity.lower()
+                    or text in investigation.status.lower()
+                )
+            ]
 
         self.endResetModel()
 
