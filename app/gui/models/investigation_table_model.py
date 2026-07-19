@@ -11,6 +11,7 @@ from PySide6.QtCore import (
     QModelIndex,
     Qt,
 )
+from PySide6.QtGui import QColor
 
 from app.database.models import Investigation
 
@@ -90,37 +91,53 @@ class InvestigationTableModel(QAbstractTableModel):
         Return the data displayed in each cell.
         """
 
-        if (
-            not index.isValid()
-            or role != Qt.ItemDataRole.DisplayRole
-        ):
+        if not index.isValid():
             return None
 
         investigation = self._investigations[index.row()]
-
         column = index.column()
 
-        if column == 0:
-            return investigation.investigation_id
+        if role == Qt.ItemDataRole.DisplayRole:
 
-        if column == 1:
-            return investigation.report_name
+            if column == 0:
+                return investigation.investigation_id
 
-        if column == 2:
-            return investigation.severity
+            if column == 1:
+                return investigation.report_name
 
-        if column == 3:
-            return investigation.risk_score
+            if column == 2:
+                return investigation.severity
 
-        if column == 4:
-            return investigation.status
+            if column == 3:
+                return investigation.risk_score
 
-        if column == 5:
-            return (
-                investigation.analyzed_at
-                .astimezone()
-                .strftime("%Y-%m-%d %H:%M")
-            )
+            if column == 4:
+                return investigation.status
+
+            if column == 5:
+                return (
+                    investigation.analyzed_at
+                    .astimezone()
+                    .strftime("%Y-%m-%d %H:%M")
+                )
+
+        if (
+            role == Qt.ItemDataRole.ForegroundRole
+            and column == 2
+        ):
+            severity = investigation.severity.upper()
+
+            if severity == "LOW":
+                return QColor("#4CAF50")
+
+            if severity == "MEDIUM":
+                return QColor("#FFC107")
+
+            if severity == "HIGH":
+                return QColor("#FF9800")
+
+            if severity == "CRITICAL":
+                return QColor("#F44336")
 
         return None
 
@@ -144,17 +161,6 @@ class InvestigationTableModel(QAbstractTableModel):
     ) -> Investigation | None:
         """
         Return the investigation stored at the given row.
-
-        Parameters
-        ----------
-        row:
-            Row index.
-
-        Returns
-        -------
-        Investigation | None
-            The investigation if the row is valid,
-            otherwise None.
         """
 
         if row < 0:
