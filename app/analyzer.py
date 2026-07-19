@@ -117,12 +117,21 @@ def analyze_report(
         severity=risk.severity,
     )
 
-    logger.info(
-        "Saving investigation."
-    )
-
     investigation_service = (
         InvestigationService()
+    )
+
+    if investigation_service.investigation_exists(
+        report_path.name,
+    ):
+
+        logger.warning(
+            "Duplicate investigation detected for '%s'.",
+            report_path.name,
+        )
+
+    logger.info(
+        "Saving investigation."
     )
 
     investigation_id = (
