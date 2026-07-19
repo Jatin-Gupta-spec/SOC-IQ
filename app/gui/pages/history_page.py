@@ -7,6 +7,7 @@ from __future__ import annotations
 from PySide6.QtCore import QModelIndex
 from PySide6.QtWidgets import (
     QHeaderView,
+    QLineEdit,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -35,6 +36,12 @@ class HistoryPage(QWidget):
         self._model = InvestigationTableModel()
 
         self._table = QTableView()
+
+        self._search_box = QLineEdit()
+
+        self._search_box.setPlaceholderText(
+            "Search investigations..."
+        )
 
         self._container = PageContainer(
             title="Investigation History",
@@ -67,6 +74,10 @@ class HistoryPage(QWidget):
             )
         )
 
+        layout.addWidget(
+            self._search_box,
+        )
+
         self._table.setModel(self._model)
 
         self._table.setSelectionBehavior(
@@ -89,15 +100,26 @@ class HistoryPage(QWidget):
             QHeaderView.ResizeMode.ResizeToContents
         )
 
-        layout.addWidget(self._table)
+        layout.addWidget(
+            self._table
+        )
 
         root_layout = QVBoxLayout()
 
-        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
 
-        root_layout.addWidget(self._container)
+        root_layout.addWidget(
+            self._container
+        )
 
-        self.setLayout(root_layout)
+        self.setLayout(
+            root_layout
+        )
 
     def _connect_signals(self) -> None:
         """
@@ -106,6 +128,10 @@ class HistoryPage(QWidget):
 
         self._table.doubleClicked.connect(
             self._open_investigation
+        )
+
+        self._search_box.textChanged.connect(
+            self._filter_investigations,
         )
 
     def _open_investigation(
@@ -133,6 +159,19 @@ class HistoryPage(QWidget):
             "Selected investigation:",
             investigation.report_name,
         )
+
+    def _filter_investigations(
+        self,
+        text: str,
+    ) -> None:
+        """
+        Filter investigations.
+
+        Implementation will be added
+        in the next step.
+        """
+
+        pass
 
     def refresh(self) -> None:
         """
