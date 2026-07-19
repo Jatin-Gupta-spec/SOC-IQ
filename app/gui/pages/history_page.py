@@ -43,6 +43,10 @@ class HistoryPage(QWidget):
             "Search by report, severity or status..."
         )
 
+        self._search_box.setClearButtonEnabled(
+            True,
+        )
+
         self._container = PageContainer(
             title="Investigation History",
             description=(
