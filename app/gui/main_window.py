@@ -267,7 +267,7 @@ class MainWindow(QMainWindow):
         """
 
         investigation = (
-            ApplicationState.current_investigation
+            ApplicationState.get_current_investigation()
         )
 
         if investigation is None:
@@ -322,8 +322,8 @@ class MainWindow(QMainWindow):
         Handle a completed analysis.
         """
 
-        ApplicationState.current_investigation = (
-            investigation
+        ApplicationState.set_current_investigation = (
+            investigation,
         )
 
         self.workspace_page.load_investigation(
