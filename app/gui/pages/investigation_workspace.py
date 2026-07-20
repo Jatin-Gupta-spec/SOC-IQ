@@ -245,7 +245,7 @@ class InvestigationWorkspacePage(QWidget):
         """
 
         investigation = (
-            ApplicationState.current_investigation
+            ApplicationState.get_current_investigation()
         )
 
         if investigation is None:
