@@ -126,6 +126,29 @@ class InvestigationHeaderCard(DetailSection):
         Display an investigation.
         """
 
+        print("\n===== HEADER CARD =====")
+        print(
+            "ID:",
+            investigation.investigation_id,
+        )
+        print(
+            "Report:",
+            investigation.report_name,
+        )
+        print(
+            "Severity:",
+            investigation.severity,
+        )
+        print(
+            "Risk:",
+            investigation.risk_score,
+        )
+        print(
+            "Status:",
+            investigation.status,
+        )
+        print("=======================\n")
+
         investigation_id = (
             str(investigation.investigation_id)
             if investigation.investigation_id is not None

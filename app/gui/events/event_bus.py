@@ -19,5 +19,11 @@ class EventBus(QObject):
 
     investigation_created = Signal()
 
+    investigation_updated = Signal()
+
+    investigation_removed = Signal()
+
+    application_state_changed = Signal()
+
 
 event_bus = EventBus()

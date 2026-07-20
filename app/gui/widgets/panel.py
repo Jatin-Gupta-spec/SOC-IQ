@@ -54,11 +54,11 @@ class Panel(QFrame):
         self._content_layout.setSpacing(10)
 
         layout.addLayout(
-            self._content_layout
+            self._content_layout,
         )
 
         self.setLayout(
-            layout
+            layout,
         )
 
     def content_layout(self) -> QVBoxLayout:
@@ -77,6 +77,22 @@ class Panel(QFrame):
         Add a widget to the panel.
         """
 
+        print(
+            "===================================="
+        )
+        print(
+            "ADDING:",
+            type(widget).__name__,
+        )
+
         self._content_layout.addWidget(
-            widget
+            widget,
+        )
+
+        print(
+            "COUNT:",
+            self._content_layout.count(),
+        )
+        print(
+            "===================================="
         )

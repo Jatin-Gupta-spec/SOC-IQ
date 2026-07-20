@@ -271,7 +271,33 @@ class MainWindow(QMainWindow):
         )
 
         if investigation is None:
+            print("\n===== OPEN WORKSPACE =====")
+            print("Current investigation is None")
+            print("==========================\n")
             return
+
+        print("\n===== OPEN WORKSPACE =====")
+        print(
+            "ID:",
+            investigation.investigation_id,
+        )
+        print(
+            "Report:",
+            investigation.report_name,
+        )
+        print(
+            "Severity:",
+            investigation.severity,
+        )
+        print(
+            "Risk:",
+            investigation.risk_score,
+        )
+        print(
+            "Status:",
+            investigation.status,
+        )
+        print("==========================\n")
 
         self.workspace_page.load_investigation(
             investigation,
