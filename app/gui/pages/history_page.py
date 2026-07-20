@@ -207,9 +207,9 @@ class HistoryPage(QWidget):
         if investigation is None:
             return
 
-        ApplicationState.current_investigation = (
-            investigation
-        )
+        ApplicationState.set_current_investigation(
+    investigation,
+)
 
         event_bus.investigation_selected.emit()
 
