@@ -4,6 +4,8 @@ Analyze Report page for the SOC-IQ desktop application.
 
 from __future__ import annotations
 
+from typing import Any
+
 from app.database.models import Investigation
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtWidgets import (
@@ -17,7 +19,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.exceptions import DuplicateInvestigationError
 from app.gui.controllers.analyze_controller import AnalyzeController
 from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.section_header import SectionHeader
@@ -208,35 +209,67 @@ class AnalyzePage(QWidget):
 
         self._thread.start()
 
-    def _on_analysis_started(self) -> None:
+    def _on_analysis_started(
+        self,
+    ) -> None:
         """
         Handle analysis start.
         """
 
-        self._browse_button.setEnabled(False)
+        self._browse_button.setEnabled(
+            False,
+        )
 
-        self._analyze_button.setEnabled(False)
+        self._analyze_button.setEnabled(
+            False,
+        )
 
     def _on_analysis_finished(
         self,
-        investigation: Investigation,
+        result: dict[str, Any],
     ) -> None:
         """
         Handle successful analysis.
         """
 
-        self._browse_button.setEnabled(True)
-
-        self._analyze_button.setEnabled(True)
-
-        QMessageBox.information(
-            self,
-            "Analysis Complete",
-            (
-                f"Report '{investigation.report_name}' "
-                "analyzed successfully."
-            ),
+        self._browse_button.setEnabled(
+            True,
         )
+
+        self._analyze_button.setEnabled(
+            True,
+        )
+
+        investigation = result[
+            "investigation"
+        ]
+
+        existing = result[
+            "existing"
+        ]
+
+        if existing:
+
+            QMessageBox.information(
+                self,
+                "Investigation Already Exists",
+                (
+                    f"Report '{investigation.report_name}' "
+                    "has already been analyzed.\n\n"
+                    "Opening the existing investigation."
+                ),
+            )
+
+        else:
+
+            QMessageBox.information(
+                self,
+                "Analysis Complete",
+                (
+                    f"Report '{investigation.report_name}' "
+                    "analyzed successfully."
+                ),
+            )
 
         self.analysis_completed.emit(
             investigation,
@@ -250,24 +283,13 @@ class AnalyzePage(QWidget):
         Handle analysis failure.
         """
 
-        self._browse_button.setEnabled(True)
+        self._browse_button.setEnabled(
+            True,
+        )
 
-        self._analyze_button.setEnabled(True)
-
-        if "DuplicateInvestigationError" in message:
-
-            QMessageBox.warning(
-                self,
-                "Investigation Already Exists",
-                (
-                    "This malware report has already been "
-                    "analyzed.\n\n"
-                    "SOC-IQ prevents duplicate investigations "
-                    "to maintain investigation integrity."
-                ),
-            )
-
-            return
+        self._analyze_button.setEnabled(
+            True,
+        )
 
         QMessageBox.critical(
             self,

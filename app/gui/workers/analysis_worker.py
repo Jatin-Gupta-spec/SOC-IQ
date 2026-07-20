@@ -47,14 +47,14 @@ class AnalysisWorker(QObject):
 
         try:
 
-            investigation = (
+            result: dict[str, Any] = (
                 self._controller.analyze(
                     self._report_path,
                 )
             )
 
             self.finished.emit(
-                investigation,
+                result,
             )
 
         except Exception as error:

@@ -9,7 +9,6 @@ from typing import Any
 
 from app.database.models import Investigation
 from app.database.service import InvestigationService
-from app.exceptions import DuplicateInvestigationError
 from app.extractor import (
     COMPILED_PATTERNS,
     extract_iocs,
@@ -34,7 +33,7 @@ def analyze_report(
     4. Enrich using VirusTotal
     5. Calculate risk score
     6. Save investigation
-    7. Return complete analysis
+    7. Return investigation
     """
 
     investigation_service = (
@@ -70,14 +69,28 @@ def analyze_report(
         report_path.name,
     ):
 
-        logger.warning(
-            "Duplicate investigation detected for '%s'.",
+        logger.info(
+            "Existing investigation found for '%s'.",
             report_path.name,
         )
 
-        raise DuplicateInvestigationError(
-            report_path.name,
+        existing = (
+            investigation_service.get_latest_by_report_name(
+                report_path.name,
+            )
         )
+
+        if existing is None:
+
+            raise RuntimeError(
+                "Duplicate investigation detected "
+                "but no investigation could be loaded."
+            )
+
+        return {
+            "investigation": existing,
+            "existing": True,
+        }
 
     threat_intelligence: dict[str, Any] = {
         "hashes": [],
@@ -155,13 +168,19 @@ def analyze_report(
         investigation_id,
     )
 
+    loaded = (
+        investigation_service.get_by_id(
+            investigation_id,
+        )
+    )
+
+    if loaded is None:
+
+        raise RuntimeError(
+            "Saved investigation could not be loaded."
+        )
+
     return {
-        "investigation_id": investigation_id,
-        "iocs": extracted_iocs,
-        "threat_intelligence": (
-            threat_intelligence
-        ),
-        "risk": scoring_engine.summarize(
-            risk,
-        ),
+        "investigation": loaded,
+        "existing": False,
     }

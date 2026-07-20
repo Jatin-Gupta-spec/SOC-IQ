@@ -8,8 +8,8 @@ and the application service layer.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
-from app.database.models import Investigation
 from app.gui.services.analysis_service import (
     AnalysisService,
 )
@@ -37,7 +37,7 @@ class AnalyzeController:
     def analyze(
         self,
         report_path: str,
-    ) -> Investigation:
+    ) -> dict[str, Any]:
         """
         Analyze the selected report.
 
@@ -48,9 +48,9 @@ class AnalyzeController:
 
         Returns
         -------
-        Investigation
-            Completed investigation loaded from
-            the database.
+        dict
+            Analysis result returned by the
+            backend analysis service.
         """
 
         return self._analysis_service.analyze(
