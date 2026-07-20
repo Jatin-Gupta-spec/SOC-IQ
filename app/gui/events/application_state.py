@@ -30,6 +30,16 @@ class ApplicationState:
         cls.current_investigation = investigation
 
     @classmethod
+    def get_current_investigation(
+        cls,
+    ) -> Investigation | None:
+        """
+        Return the active investigation.
+        """
+
+        return cls.current_investigation
+
+    @classmethod
     def clear_current_investigation(
         cls,
     ) -> None:
