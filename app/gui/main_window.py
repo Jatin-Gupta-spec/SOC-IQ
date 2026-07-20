@@ -322,11 +322,7 @@ class MainWindow(QMainWindow):
         Handle a completed analysis.
         """
 
-        ApplicationState.set_current_investigation = (
-            investigation,
-        )
-
-        self.workspace_page.load_investigation(
+        ApplicationState.select_investigation(
             investigation,
         )
 
@@ -337,10 +333,6 @@ class MainWindow(QMainWindow):
             "refresh",
         ):
             self.dashboard_page.refresh()
-
-        self.page_stack.setCurrentIndex(
-            self.WORKSPACE_PAGE_INDEX,
-        )
 
         self.statusBar().showMessage(
             (
