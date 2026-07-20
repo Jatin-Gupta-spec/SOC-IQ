@@ -37,6 +37,7 @@ from app.gui.widgets.risk_summary_widget import (
     RiskSummaryWidget,
 )
 
+
 class InvestigationWorkspacePage(QWidget):
     """
     Main analyst investigation workspace.

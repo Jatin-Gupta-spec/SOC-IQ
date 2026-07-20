@@ -38,6 +38,26 @@ class IOCExtractionError(SOCIQError):
     pass
 
 
+class DuplicateInvestigationError(SOCIQError):
+    """
+    Raised when an investigation already exists
+    for the selected report.
+    """
+
+    def __init__(
+        self,
+        report_name: str,
+    ) -> None:
+        super().__init__(
+            (
+                f"An investigation for '{report_name}' "
+                "already exists."
+            )
+        )
+
+        self.report_name = report_name
+
+
 # ==========================================================
 # Export
 # ==========================================================
