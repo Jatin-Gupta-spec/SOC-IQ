@@ -9,6 +9,7 @@ from typing import Any
 
 from app.database.models import Investigation
 from app.database.service import InvestigationService
+from app.exceptions import DuplicateInvestigationError
 from app.extractor import (
     COMPILED_PATTERNS,
     extract_iocs,
@@ -29,11 +30,16 @@ def analyze_report(
     Workflow:
     1. Read report
     2. Extract IOCs
-    3. Enrich using VirusTotal
-    4. Calculate risk score
-    5. Save investigation
-    6. Return complete analysis
+    3. Check duplicate investigation
+    4. Enrich using VirusTotal
+    5. Calculate risk score
+    6. Save investigation
+    7. Return complete analysis
     """
+
+    investigation_service = (
+        InvestigationService()
+    )
 
     logger.info(
         "Reading malware report."
@@ -55,6 +61,23 @@ def analyze_report(
     logger.info(
         "IOC extraction completed."
     )
+
+    logger.info(
+        "Checking for duplicate investigation."
+    )
+
+    if investigation_service.investigation_exists(
+        report_path.name,
+    ):
+
+        logger.warning(
+            "Duplicate investigation detected for '%s'.",
+            report_path.name,
+        )
+
+        raise DuplicateInvestigationError(
+            report_path.name,
+        )
 
     threat_intelligence: dict[str, Any] = {
         "hashes": [],
@@ -116,19 +139,6 @@ def analyze_report(
         risk_score=risk.score,
         severity=risk.severity,
     )
-
-    investigation_service = (
-        InvestigationService()
-    )
-
-    if investigation_service.investigation_exists(
-        report_path.name,
-    ):
-
-        logger.warning(
-            "Duplicate investigation detected for '%s'.",
-            report_path.name,
-        )
 
     logger.info(
         "Saving investigation."
