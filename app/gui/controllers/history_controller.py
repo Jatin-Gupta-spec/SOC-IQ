@@ -1,4 +1,3 @@
-
 """
 History controller for the SOC-IQ desktop application.
 
@@ -41,7 +40,23 @@ class HistoryController:
         Return recent investigations.
         """
 
-        return self._investigation_service.find_recent(limit)
+        return self._investigation_service.find_recent(
+            limit,
+        )
+
+    def search_by_report_name(
+        self,
+        report_name: str,
+    ) -> list[Investigation]:
+        """
+        Search investigations by report name.
+        """
+
+        return (
+            self._investigation_service.find_by_report_name(
+                report_name,
+            )
+        )
 
     def delete_investigation(
         self,
@@ -60,7 +75,7 @@ class HistoryController:
         """
 
         return self._investigation_service.delete(
-            investigation_id
+            investigation_id,
         )
 
     def get_investigation(
@@ -72,7 +87,7 @@ class HistoryController:
         """
 
         return self._investigation_service.get_by_id(
-            investigation_id
+            investigation_id,
         )
 
     def get_total_investigations(
@@ -83,4 +98,3 @@ class HistoryController:
         """
 
         return self._investigation_service.count()
-
