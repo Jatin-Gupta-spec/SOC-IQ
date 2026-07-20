@@ -9,6 +9,7 @@ each other.
 from __future__ import annotations
 
 from app.database.models import Investigation
+from app.gui.events.event_bus import event_bus
 
 
 class ApplicationState:
@@ -28,6 +29,20 @@ class ApplicationState:
         """
 
         cls.current_investigation = investigation
+
+    @classmethod
+    def select_investigation(
+        cls,
+        investigation: Investigation,
+    ) -> None:
+        """
+        Store the active investigation and notify
+        the application that it has changed.
+        """
+
+        cls.current_investigation = investigation
+
+        event_bus.investigation_selected.emit()
 
     @classmethod
     def get_current_investigation(
