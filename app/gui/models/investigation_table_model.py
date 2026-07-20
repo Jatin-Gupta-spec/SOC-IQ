@@ -211,7 +211,7 @@ class InvestigationTableModel(QAbstractTableModel):
             order == Qt.SortOrder.DescendingOrder
         )
 
-        self.layoutAboutToBeChanged.emit()
+        self.beginResetModel()
 
         if column == 0:
             self._investigations.sort(
@@ -273,7 +273,7 @@ class InvestigationTableModel(QAbstractTableModel):
                 reverse=reverse,
             )
 
-        self.layoutChanged.emit()
+        self.endResetModel()
 
     def investigation_at(
         self,
