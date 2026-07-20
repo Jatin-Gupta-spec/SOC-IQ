@@ -16,6 +16,9 @@ from app.database.models import Investigation
 from app.gui.events.application_state import (
     ApplicationState,
 )
+from app.gui.events.event_bus import (
+    event_bus,
+)
 from app.gui.widgets.detail_section import DetailSection
 from app.gui.widgets.investigation_header_card import (
     InvestigationHeaderCard,
@@ -87,6 +90,10 @@ class InvestigationWorkspacePage(QWidget):
 
         self._ioc_summary_widget.ioc_selected.connect(
             self._ioc_details_widget.display_iocs,
+        )
+
+        event_bus.investigation_selected.connect(
+            self.refresh,
         )
 
         self.refresh()
