@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.exceptions import DuplicateInvestigationError
 from app.gui.controllers.analyze_controller import AnalyzeController
 from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.section_header import SectionHeader
@@ -252,6 +253,21 @@ class AnalyzePage(QWidget):
         self._browse_button.setEnabled(True)
 
         self._analyze_button.setEnabled(True)
+
+        if "DuplicateInvestigationError" in message:
+
+            QMessageBox.warning(
+                self,
+                "Investigation Already Exists",
+                (
+                    "This malware report has already been "
+                    "analyzed.\n\n"
+                    "SOC-IQ prevents duplicate investigations "
+                    "to maintain investigation integrity."
+                ),
+            )
+
+            return
 
         QMessageBox.critical(
             self,
