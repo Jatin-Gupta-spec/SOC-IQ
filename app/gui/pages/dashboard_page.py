@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.gui.controllers.dashboard_controller import DashboardController
+from app.gui.events.event_bus import event_bus
 from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.summary_card import SummaryCard
 
@@ -59,6 +60,11 @@ class DashboardPage(QWidget):
         )
 
         self._build_ui()
+
+        # NEW: Refresh whenever the selected investigation changes.
+        event_bus.investigation_selected.connect(
+            self.refresh,
+        )
 
         self._load_dashboard()
 
