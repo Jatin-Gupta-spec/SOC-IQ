@@ -16,9 +16,10 @@ from app.database.models import Investigation
 from app.gui.events.application_state import (
     ApplicationState,
 )
-from app.gui.widgets.badge import Badge
 from app.gui.widgets.detail_section import DetailSection
-from app.gui.widgets.key_value_row import KeyValueRow
+from app.gui.widgets.investigation_header_card import (
+    InvestigationHeaderCard,
+)
 from app.gui.widgets.page_container import PageContainer
 
 from app.gui.widgets.ioc_summary_widget import (
@@ -55,45 +56,24 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         # ------------------------------------------
-        # Investigation Summary
+        # Investigation Header
         # ------------------------------------------
 
-        self._investigation_id_row = KeyValueRow(
-            "Investigation ID",
-            "Waiting...",
-        )
-
-        self._report_name_row = KeyValueRow(
-            "Report Name",
-            "Waiting...",
-        )
-
-        self._analysis_time_row = KeyValueRow(
-            "Analysis Time",
-            "Waiting...",
-        )
-
-        self._status_row = KeyValueRow(
-            "Status",
-            "Waiting...",
-        )
-
-        self._risk_score_row = KeyValueRow(
-            "Risk Score",
-            "0",
-        )
-
-        self._severity_badge = Badge(
-            "Waiting...",
+        self._header_card = (
+            InvestigationHeaderCard()
         )
 
         # ------------------------------------------
-        # Section Labels
+        # Section Widgets
         # ------------------------------------------
 
-        self._ioc_summary_widget = IOCSummaryWidget()
+        self._ioc_summary_widget = (
+            IOCSummaryWidget()
+        )
 
-        self._ioc_details_widget = IOCDetailsWidget()
+        self._ioc_details_widget = (
+            IOCDetailsWidget()
+        )
 
         self._threat_summary_widget = (
             ThreatIntelligenceWidget()
@@ -119,47 +99,12 @@ class InvestigationWorkspacePage(QWidget):
         layout = self._container.content_layout()
 
         # --------------------------------------------------
-        # Investigation Summary
+        # Investigation Header
         # --------------------------------------------------
 
-        summary = DetailSection(
-            "Investigation Summary",
-            "General information about the investigation.",
+        layout.addWidget(
+            self._header_card,
         )
-
-        summary.add_widget(
-            self._investigation_id_row
-        )
-
-        summary.add_widget(
-            self._report_name_row
-        )
-
-        summary.add_widget(
-            self._analysis_time_row
-        )
-
-        summary.add_widget(
-            self._status_row
-        )
-
-        severity_row = KeyValueRow(
-            "Severity",
-        )
-
-        severity_row.layout().addWidget(
-            self._severity_badge
-        )
-
-        summary.add_widget(
-            severity_row
-        )
-
-        summary.add_widget(
-            self._risk_score_row
-        )
-
-        layout.addWidget(summary)
 
         # --------------------------------------------------
         # IOC Summary
@@ -171,11 +116,11 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         ioc_section.add_widget(
-            self._ioc_summary_widget
+            self._ioc_summary_widget,
         )
 
         layout.addWidget(
-            ioc_section
+            ioc_section,
         )
 
         # --------------------------------------------------
@@ -188,11 +133,11 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         ioc_details_section.add_widget(
-            self._ioc_details_widget
+            self._ioc_details_widget,
         )
 
         layout.addWidget(
-            ioc_details_section
+            ioc_details_section,
         )
 
         # --------------------------------------------------
@@ -205,11 +150,11 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         threat_section.add_widget(
-            self._threat_summary_widget
+            self._threat_summary_widget,
         )
 
         layout.addWidget(
-            threat_section
+            threat_section,
         )
 
         # --------------------------------------------------
@@ -222,11 +167,11 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         risk_section.add_widget(
-            self._risk_summary_widget
+            self._risk_summary_widget,
         )
 
         layout.addWidget(
-            risk_section
+            risk_section,
         )
 
         layout.addStretch()
@@ -241,41 +186,21 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         root_layout.addWidget(
-            self._container
+            self._container,
         )
 
         self.setLayout(
-            root_layout
+            root_layout,
         )
 
-    def _reset_workspace(self) -> None:
+    def _reset_workspace(
+        self,
+    ) -> None:
         """
         Reset the workspace to its default state.
         """
 
-        self._investigation_id_row.set_value(
-            "Waiting..."
-        )
-
-        self._report_name_row.set_value(
-            "Waiting..."
-        )
-
-        self._analysis_time_row.set_value(
-            "Waiting..."
-        )
-
-        self._status_row.set_value(
-            "Waiting..."
-        )
-
-        self._severity_badge.set_text(
-            "Waiting..."
-        )
-
-        self._risk_score_row.set_value(
-            "0"
-        )
+        self._header_card.reset()
 
         self._ioc_summary_widget.reset()
 
@@ -293,38 +218,8 @@ class InvestigationWorkspacePage(QWidget):
         Display an investigation in the workspace.
         """
 
-        investigation_id = (
-            str(investigation.investigation_id)
-            if investigation.investigation_id is not None
-            else "N/A"
-        )
-
-        self._investigation_id_row.set_value(
-            investigation_id,
-        )
-
-        self._report_name_row.set_value(
-            investigation.report_name,
-        )
-
-        self._analysis_time_row.set_value(
-            investigation.analyzed_at.strftime(
-                "%Y-%m-%d %H:%M:%S UTC",
-            )
-        )
-
-        self._status_row.set_value(
-            investigation.status,
-        )
-
-        self._severity_badge.set_text(
-            investigation.severity,
-        )
-
-        self._risk_score_row.set_value(
-            str(
-                investigation.risk_score,
-            )
+        self._header_card.load_investigation(
+            investigation,
         )
 
         self._ioc_summary_widget.load_investigation(
@@ -341,7 +236,9 @@ class InvestigationWorkspacePage(QWidget):
             investigation,
         )
 
-    def refresh(self) -> None:
+    def refresh(
+        self,
+    ) -> None:
         """
         Refresh the workspace using the shared
         application state.
@@ -352,7 +249,9 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         if investigation is None:
+
             self._reset_workspace()
+
             return
 
         self.load_investigation(

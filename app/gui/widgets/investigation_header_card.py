@@ -8,8 +8,6 @@ workspace.
 
 from __future__ import annotations
 
-from PySide6.QtWidgets import QVBoxLayout
-
 from app.database.models import Investigation
 from app.gui.widgets.badge import Badge
 from app.gui.widgets.detail_section import DetailSection
