@@ -50,7 +50,7 @@ class HistoryPage(QWidget):
         self._search_box = QLineEdit()
 
         self._search_box.setPlaceholderText(
-            "Search by report name..."
+            "Search by report, severity or status..."
         )
 
         self._search_box.setClearButtonEnabled(
@@ -218,32 +218,13 @@ class HistoryPage(QWidget):
         text: str,
     ) -> None:
         """
-        Search investigations by report name.
+        Filter investigations by report name,
+        severity, or status.
         """
 
-        text = text.strip()
-
-        if text:
-
-            investigations = (
-                self._controller.search_by_report_name(
-                    text,
-                )
-            )
-
-        else:
-
-            investigations = (
-                self._controller.get_recent_investigations()
-            )
-
-        self._model.set_investigations(
-            investigations,
-        )
-
-        self._statistics_widget.load_investigations(
-            investigations,
-        )
+        self._model.filter(
+        text,
+    )
 
     def _export_csv(
         self,
@@ -308,3 +289,7 @@ class HistoryPage(QWidget):
         self._statistics_widget.load_investigations(
             investigations,
         )
+
+        self._model.filter(
+        self._search_box.text(),
+    )
