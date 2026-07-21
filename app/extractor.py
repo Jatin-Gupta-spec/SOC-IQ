@@ -17,45 +17,47 @@ from app.exceptions import (
 # ==========================================================
 
 IOC_PATTERNS: dict[str, str] = {
-    "IPv4": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
+    "ipv4": (
+        r"\b(?:\d{1,3}\.){3}\d{1,3}\b"
+    ),
 
-    "Domains": (
+    "domains": (
         r"\b(?:[a-zA-Z0-9-]+\.)+"
         r"(?:com|net|org|io|co|ru|xyz|info|biz|edu|gov)\b"
     ),
 
-    "URLs": (
+    "urls": (
         r"https?://"
         r"[^\s\"'<>]+"
     ),
 
-    "Emails": (
+    "emails": (
         r"\b[a-zA-Z0-9._%+-]+@"
         r"[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b"
     ),
 
-    "MD5": (
+    "md5": (
         r"\b[a-fA-F0-9]{32}\b"
     ),
 
-    "SHA1": (
+    "sha1": (
         r"\b[a-fA-F0-9]{40}\b"
     ),
 
-    "SHA256": (
+    "sha256": (
         r"\b[a-fA-F0-9]{64}\b"
     ),
 
-    "CVE": (
+    "cves": (
         r"\bCVE-\d{4}-\d{4,7}\b"
     ),
 
-    "Windows File Paths": (
+    "windows_file_paths": (
         r"[A-Za-z]:\\(?:[^\\/:*?\"<>|\r\n]+\\)*"
         r"[^\\/:*?\"<>|\r\n]*"
     ),
 
-    "Windows Registry Keys": (
+    "windows_registry_keys": (
         r"\b(?:HKLM|HKCU|HKCR|HKU|HKCC)"
         r"\\[^\n\r]+"
     ),

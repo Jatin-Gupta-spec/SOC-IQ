@@ -8,6 +8,8 @@ review completed investigations.
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
+    QFrame,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -24,19 +26,15 @@ from app.gui.widgets.investigation_header_card import (
     InvestigationHeaderCard,
 )
 from app.gui.widgets.page_container import PageContainer
-
 from app.gui.widgets.ioc_summary_widget import (
     IOCSummaryWidget,
 )
-
 from app.gui.widgets.ioc_details_widget import (
     IOCDetailsWidget,
 )
-
 from app.gui.widgets.threat_intelligence_widget import (
     ThreatIntelligenceWidget,
 )
-
 from app.gui.widgets.risk_summary_widget import (
     RiskSummaryWidget,
 )
@@ -183,6 +181,24 @@ class InvestigationWorkspacePage(QWidget):
 
         layout.addStretch()
 
+        # --------------------------------------------------
+        # Scroll Area
+        # --------------------------------------------------
+
+        scroll_area = QScrollArea()
+
+        scroll_area.setWidgetResizable(
+            True,
+        )
+
+        scroll_area.setFrameShape(
+            QFrame.Shape.NoFrame,
+        )
+
+        scroll_area.setWidget(
+            self._container,
+        )
+
         root_layout = QVBoxLayout()
 
         root_layout.setContentsMargins(
@@ -193,7 +209,7 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         root_layout.addWidget(
-            self._container,
+            scroll_area,
         )
 
         self.setLayout(

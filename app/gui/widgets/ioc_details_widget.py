@@ -7,8 +7,10 @@ from the IOC Summary table.
 
 from __future__ import annotations
 
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
     QHeaderView,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -26,6 +28,10 @@ class IOCDetailsWidget(QWidget):
         super().__init__()
 
         self._table = QTableWidget()
+
+        self._copy_button = QPushButton(
+            "Copy Selected IOC",
+        )
 
         self._table.setColumnCount(1)
 
@@ -62,6 +68,8 @@ class IOCDetailsWidget(QWidget):
 
         self._build_ui()
 
+        self._connect_signals()
+
     def _build_ui(self) -> None:
         """
         Build the widget layout.
@@ -77,6 +85,10 @@ class IOCDetailsWidget(QWidget):
         )
 
         layout.addWidget(
+            self._copy_button,
+        )
+
+        layout.addWidget(
             self._table,
         )
 
@@ -84,13 +96,47 @@ class IOCDetailsWidget(QWidget):
             layout,
         )
 
+    def _connect_signals(
+        self,
+    ) -> None:
+        """
+        Connect widget signals.
+        """
+
+        self._copy_button.clicked.connect(
+            self._copy_selected_ioc,
+        )
+
+    def _copy_selected_ioc(
+        self,
+    ) -> None:
+        """
+        Copy the selected IOC value to the clipboard.
+        """
+
+        selected_items = self._table.selectedItems()
+
+        if not selected_items:
+            return
+
+        clipboard = QGuiApplication.clipboard()
+
+        clipboard.setText(
+            selected_items[0].text(),
+        )
+
     def display_iocs(
         self,
+        ioc_type: str,
         values: list[str],
     ) -> None:
         """
         Display IOC values.
         """
+
+        del ioc_type
+
+        self._table.clearContents()
 
         self._table.setRowCount(
             len(values),
@@ -106,10 +152,17 @@ class IOCDetailsWidget(QWidget):
 
         self._table.resizeColumnsToContents()
 
-    def reset(self) -> None:
+        if values:
+            self._table.selectRow(0)
+
+    def reset(
+        self,
+    ) -> None:
         """
         Clear the widget.
         """
+
+        self._table.clearContents()
 
         self._table.setRowCount(
             0,

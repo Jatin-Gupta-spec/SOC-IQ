@@ -111,6 +111,10 @@ class IOCSummaryWidget(QWidget):
 
         self._ioc_data = investigation.iocs
 
+        print("\n===== IOC DATA =====")
+        print(investigation.iocs)
+        print("====================\n")
+
         ioc_titles = {
             "ipv4": "IPv4 Addresses",
             "domains": "Domains",
@@ -131,7 +135,7 @@ class IOCSummaryWidget(QWidget):
         for row, (key, title) in enumerate(
             ioc_titles.items()
         ):
-            values = investigation.iocs.get(
+            values = self._ioc_data.get(
                 key,
                 [],
             )
