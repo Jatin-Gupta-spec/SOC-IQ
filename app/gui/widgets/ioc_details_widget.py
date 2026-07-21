@@ -18,6 +18,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
+    QLineEdit,
     QMenu,
     QTableWidget,
     QTableWidgetItem,
@@ -42,6 +43,14 @@ class IOCDetailsWidget(QWidget):
         self._selected_category_label = QLabel(
             "Selected Category: None",
         )
+
+        self._search_box = QLineEdit()
+
+        self._search_box.setPlaceholderText(
+            "Search IOC...",
+        )
+
+        self._all_iocs: list[str] = []
 
         self._table = QTableWidget()
 
@@ -109,6 +118,10 @@ class IOCDetailsWidget(QWidget):
         )
 
         layout.addWidget(
+            self._search_box,
+        )
+
+        layout.addWidget(
             self._table,
         )
 
@@ -125,6 +138,10 @@ class IOCDetailsWidget(QWidget):
 
         self._table.customContextMenuRequested.connect(
             self._show_context_menu,
+        )
+
+        self._search_box.textChanged.connect(
+            self._filter_iocs,
         )
 
     def _show_context_menu(
@@ -267,8 +284,44 @@ class IOCDetailsWidget(QWidget):
         )
 
         self._selected_category_label.setText(
-            f"Selected Category: {ioc_type}"
+            f"Selected Category: {title}"
         )
+
+        self._all_iocs = list(
+            values,
+        )
+
+        self._populate_table(
+            self._all_iocs,
+        )
+
+        for row, value in enumerate(
+            values,
+        ):
+
+            self._table.setItem(
+                row,
+                0,
+                QTableWidgetItem(
+                    value,
+                ),
+            )
+
+        self._table.resizeColumnsToContents()
+
+        if values:
+
+            self._table.selectRow(
+                0,
+            )
+
+    def _populate_table(
+        self,
+        values: list[str],
+    ) -> None:
+        """
+        Populate the IOC table.
+        """
 
         self._table.clearContents()
 
@@ -296,12 +349,48 @@ class IOCDetailsWidget(QWidget):
                 0,
             )
 
+    def _filter_iocs(
+        self,
+        text: str,
+    ) -> None:
+        """
+        Filter IOC values using the search box.
+        """
+
+        search_text = text.lower().strip()
+
+        if not search_text:
+
+            self._populate_table(
+                self._all_iocs,
+            )
+
+            return
+
+        filtered = [
+            value
+            for value in self._all_iocs
+            if search_text in value.lower()
+        ]
+
+        self._populate_table(
+            filtered,
+        )
+  
     def reset(
         self,
     ) -> None:
         """
         Clear the widget.
         """
+
+        self._selected_category_label.setText(
+            "Selected Category: None",
+        )
+
+        self._search_box.clear()
+
+        self._all_iocs.clear()
 
         self._table.clearContents()
 
