@@ -208,10 +208,8 @@ class HistoryPage(QWidget):
             return
 
         ApplicationState.select_investigation(
-    investigation,
-)
-
-        event_bus.investigation_selected.emit()
+            investigation,
+        )
 
     def _filter_investigations(
         self,
