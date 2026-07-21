@@ -328,12 +328,6 @@ class MainWindow(QMainWindow):
 
         self.history_page.refresh()
 
-        if hasattr(
-            self.dashboard_page,
-            "refresh",
-        ):
-            self.dashboard_page.refresh()
-
         self.statusBar().showMessage(
             (
                 f"Analysis completed: "
