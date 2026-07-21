@@ -7,10 +7,14 @@ from the IOC Summary table.
 
 from __future__ import annotations
 
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtCore import Qt
+from PySide6.QtGui import (
+    QAction,
+    QGuiApplication,
+)
 from PySide6.QtWidgets import (
     QHeaderView,
-    QPushButton,
+    QMenu,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -29,11 +33,9 @@ class IOCDetailsWidget(QWidget):
 
         self._table = QTableWidget()
 
-        self._copy_button = QPushButton(
-            "Copy Selected IOC",
+        self._table.setColumnCount(
+            1,
         )
-
-        self._table.setColumnCount(1)
 
         self._table.setHorizontalHeaderLabels(
             [
@@ -66,11 +68,17 @@ class IOCDetailsWidget(QWidget):
             QHeaderView.ResizeMode.Stretch,
         )
 
+        self._table.setContextMenuPolicy(
+            Qt.ContextMenuPolicy.CustomContextMenu,
+        )
+
         self._build_ui()
 
         self._connect_signals()
 
-    def _build_ui(self) -> None:
+    def _build_ui(
+        self,
+    ) -> None:
         """
         Build the widget layout.
         """
@@ -82,10 +90,6 @@ class IOCDetailsWidget(QWidget):
             0,
             0,
             0,
-        )
-
-        layout.addWidget(
-            self._copy_button,
         )
 
         layout.addWidget(
@@ -103,15 +107,70 @@ class IOCDetailsWidget(QWidget):
         Connect widget signals.
         """
 
-        self._copy_button.clicked.connect(
+        self._table.customContextMenuRequested.connect(
+            self._show_context_menu,
+        )
+
+    def _show_context_menu(
+        self,
+        position,
+    ) -> None:
+        """
+        Show the IOC context menu.
+        """
+
+        item = self._table.itemAt(
+            position,
+        )
+
+        if item is None:
+            return
+
+        self._table.selectRow(
+            item.row(),
+        )
+
+        menu = QMenu(
+            self,
+        )
+
+        copy_selected_action = QAction(
+            "Copy Selected IOC",
+            self,
+        )
+
+        copy_all_action = QAction(
+            "Copy All IOCs",
+            self,
+        )
+
+        copy_selected_action.triggered.connect(
             self._copy_selected_ioc,
+        )
+
+        copy_all_action.triggered.connect(
+            self._copy_all_iocs,
+        )
+
+        menu.addAction(
+            copy_selected_action,
+        )
+
+        menu.addAction(
+            copy_all_action,
+        )
+
+        menu.exec(
+            self._table.viewport().mapToGlobal(
+                position,
+            )
         )
 
     def _copy_selected_ioc(
         self,
     ) -> None:
         """
-        Copy the selected IOC value to the clipboard.
+        Copy the selected IOC value.
         """
 
         selected_items = self._table.selectedItems()
@@ -119,10 +178,41 @@ class IOCDetailsWidget(QWidget):
         if not selected_items:
             return
 
-        clipboard = QGuiApplication.clipboard()
-
-        clipboard.setText(
+        QGuiApplication.clipboard().setText(
             selected_items[0].text(),
+        )
+
+    def _copy_all_iocs(
+        self,
+    ) -> None:
+        """
+        Copy every IOC value.
+        """
+
+        values: list[str] = []
+
+        for row in range(
+            self._table.rowCount(),
+        ):
+
+            item = self._table.item(
+                row,
+                0,
+            )
+
+            if item is not None:
+
+                values.append(
+                    item.text(),
+                )
+
+        if not values:
+            return
+
+        QGuiApplication.clipboard().setText(
+            "\n".join(
+                values,
+            )
         )
 
     def display_iocs(
@@ -142,18 +232,25 @@ class IOCDetailsWidget(QWidget):
             len(values),
         )
 
-        for row, value in enumerate(values):
+        for row, value in enumerate(
+            values,
+        ):
 
             self._table.setItem(
                 row,
                 0,
-                QTableWidgetItem(value),
+                QTableWidgetItem(
+                    value,
+                ),
             )
 
         self._table.resizeColumnsToContents()
 
         if values:
-            self._table.selectRow(0)
+
+            self._table.selectRow(
+                0,
+            )
 
     def reset(
         self,

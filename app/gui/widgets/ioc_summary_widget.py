@@ -10,6 +10,7 @@ from __future__ import annotations
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QHeaderView,
+    QSizePolicy,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -38,6 +39,10 @@ class IOCSummaryWidget(QWidget):
         self._ioc_data: dict[str, list[str]] = {}
 
         self._table = QTableWidget()
+        self._table.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
 
         self._table.setColumnCount(2)
 
@@ -95,6 +100,7 @@ class IOCSummaryWidget(QWidget):
 
         layout.addWidget(
             self._table,
+            1,
         )
 
         self.setLayout(
@@ -157,6 +163,12 @@ class IOCSummaryWidget(QWidget):
             )
 
         self._table.resizeColumnsToContents()
+
+        self._table.resizeRowsToContents()
+
+        self._table.updateGeometry()
+
+        self.updateGeometry()
 
     def _row_clicked(
         self,
