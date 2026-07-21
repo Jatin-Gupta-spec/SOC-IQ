@@ -537,8 +537,33 @@ class IOCDetailsWidget(QWidget):
         if not file_path:
             return
 
+        try:
+
+            with open(
+                file_path,
+                "w",
+                encoding="utf-8",
+            ) as export_file:
+
+                export_file.write(
+                    "\n".join(
+                        self._visible_iocs,
+                    )
+                )
+
+        except OSError:
+
+            self.copy_completed.emit(
+                "Failed to export IOC values.",
+            )
+
+            return
+
         self.copy_completed.emit(
-            f"Selected: {file_path}",
+            (
+                f"Exported "
+                f"{len(self._visible_iocs)} IOC value(s)"
+            ),
         )
   
     def reset(
