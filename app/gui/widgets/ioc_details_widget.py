@@ -73,6 +73,8 @@ class IOCDetailsWidget(QWidget):
 
         self._all_iocs: list[str] = []
 
+        self._current_category = "Unknown"
+
         self._visible_iocs: list[str] = []
 
         self._table = QTableWidget()
@@ -383,6 +385,8 @@ class IOCDetailsWidget(QWidget):
             ioc_type,
             ioc_type,
         )
+
+        self._current_category = title
 
         self._selected_category_label.setText(
             f"Selected Category: {title}"
