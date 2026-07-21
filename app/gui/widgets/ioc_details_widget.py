@@ -50,6 +50,10 @@ class IOCDetailsWidget(QWidget):
             "Search IOC...",
         )
 
+        self._statistics_label = QLabel(
+            "Showing 0 IOC values",
+        )
+
         self._all_iocs: list[str] = []
 
         self._table = QTableWidget()
@@ -119,6 +123,10 @@ class IOCDetailsWidget(QWidget):
 
         layout.addWidget(
             self._search_box,
+        )
+
+        layout.addWidget(
+            self._statistics_label,
         )
 
         layout.addWidget(
@@ -295,25 +303,9 @@ class IOCDetailsWidget(QWidget):
             self._all_iocs,
         )
 
-        for row, value in enumerate(
-            values,
-        ):
-
-            self._table.setItem(
-                row,
-                0,
-                QTableWidgetItem(
-                    value,
-                ),
-            )
-
-        self._table.resizeColumnsToContents()
-
-        if values:
-
-            self._table.selectRow(
-                0,
-            )
+        self._update_statistics(
+            len(values),
+        )
 
     def _populate_table(
         self,
@@ -349,6 +341,39 @@ class IOCDetailsWidget(QWidget):
                 0,
             )
 
+    def _update_statistics(
+        self,
+        visible_count: int,
+    ) -> None:
+        """
+        Update the IOC statistics label.
+        """
+
+        total_count = len(
+            self._all_iocs,
+        )
+
+        if visible_count == 0:
+
+            self._statistics_label.setText(
+                "No IOC values found",
+            )
+
+        elif visible_count == total_count:
+
+            self._statistics_label.setText(
+                f"Showing {total_count} IOC value(s)",
+            )
+
+        else:
+
+            self._statistics_label.setText(
+                (
+                    f"Showing {visible_count} "
+                    f"of {total_count} IOC value(s)"
+                ),
+            )
+
     def _filter_iocs(
         self,
         text: str,
@@ -365,6 +390,10 @@ class IOCDetailsWidget(QWidget):
                 self._all_iocs,
             )
 
+            self._update_statistics(
+                len(self._all_iocs),
+            )
+
             return
 
         filtered = [
@@ -376,6 +405,10 @@ class IOCDetailsWidget(QWidget):
         self._populate_table(
             filtered,
         )
+
+        self._update_statistics(
+            len(filtered),
+        )
   
     def reset(
         self,
@@ -386,6 +419,10 @@ class IOCDetailsWidget(QWidget):
 
         self._selected_category_label.setText(
             "Selected Category: None",
+        )
+
+        self._statistics_label.setText(
+            "Showing 0 IOC values",
         )
 
         self._search_box.clear()
