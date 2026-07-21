@@ -166,6 +166,12 @@ class IOCDetailsWidget(QWidget):
             self._filter_iocs,
         )
 
+        self._sort_box.currentIndexChanged.connect(
+            lambda: self._filter_iocs(
+                self._search_box.text(),
+            ),
+        )
+
     def _show_context_menu(
         self,
         position,
@@ -415,6 +421,15 @@ class IOCDetailsWidget(QWidget):
             for value in self._all_iocs
             if search_text in value.lower()
         ]
+
+        reverse = (
+            self._sort_box.currentText()
+            == "Z → A"
+        )
+
+        filtered.sort(
+            reverse=reverse,
+        )
 
         self._populate_table(
             filtered,
