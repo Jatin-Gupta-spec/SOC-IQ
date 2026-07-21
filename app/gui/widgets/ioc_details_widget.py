@@ -516,11 +516,29 @@ class IOCDetailsWidget(QWidget):
         self,
     ) -> None:
         """
-        Placeholder for IOC export.
+        Export the currently visible IOC values.
         """
 
+        if not self._visible_iocs:
+
+            self.copy_completed.emit(
+                "No IOC values to export.",
+            )
+
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export IOC Values",
+            "ioc_values.txt",
+            "Text Files (*.txt)",
+        )
+
+        if not file_path:
+            return
+
         self.copy_completed.emit(
-            "IOC export feature coming next...",
+            f"Selected: {file_path}",
         )
   
     def reset(
