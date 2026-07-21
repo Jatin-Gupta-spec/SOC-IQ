@@ -17,6 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QComboBox,
+    QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
@@ -129,16 +130,34 @@ class IOCDetailsWidget(QWidget):
             0,
         )
 
+        controls_layout = QHBoxLayout()
+
+        controls_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
+        controls_layout.setSpacing(
+            8,
+        )
+
+        controls_layout.addWidget(
+            self._search_box,
+            1,
+        )
+
+        controls_layout.addWidget(
+            self._sort_box,
+        )
+
         layout.addWidget(
             self._selected_category_label,
         )
 
-        layout.addWidget(
-            self._search_box,
-        )
-
-        layout.addWidget(
-            self._sort_box,
+        layout.addLayout(
+            controls_layout,
         )
 
         layout.addWidget(
@@ -450,21 +469,17 @@ class IOCDetailsWidget(QWidget):
 
         if not search_text:
 
-            self._populate_table(
+            filtered = list(
                 self._all_iocs,
             )
 
-            self._update_statistics(
-                len(self._all_iocs),
-            )
+        else:
 
-            return
-
-        filtered = [
-            value
-            for value in self._all_iocs
-            if search_text in value.lower()
-        ]
+            filtered = [
+                value
+                for value in self._all_iocs
+                if search_text in value.lower()
+            ]
 
         reverse = (
             self._sort_box.currentText()
@@ -502,8 +517,14 @@ class IOCDetailsWidget(QWidget):
 
         self._all_iocs.clear()
 
+        self._visible_iocs.clear()
+
         self._table.clearContents()
 
         self._table.setRowCount(
+            0,
+        )
+
+        self._sort_box.setCurrentIndex(
             0,
         )
