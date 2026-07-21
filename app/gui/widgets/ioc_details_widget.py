@@ -203,7 +203,7 @@ class IOCDetailsWidget(QWidget):
         )
 
         self._export_button.clicked.connect(
-            self._export_iocs,
+            self._export_visible_iocs,
         )
 
     def _show_context_menu(
@@ -511,7 +511,7 @@ class IOCDetailsWidget(QWidget):
             len(filtered),
         )
 
-    def _export_iocs(
+    def _export_visible_iocs(
         self,
     ) -> None:
         """
