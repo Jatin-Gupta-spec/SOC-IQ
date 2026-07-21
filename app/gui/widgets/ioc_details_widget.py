@@ -202,6 +202,11 @@ class IOCDetailsWidget(QWidget):
             self,
         )
 
+        copy_filtered_action = QAction(
+            "Copy Search Results",
+            self,
+        )
+
         copy_all_action = QAction(
             "Copy All IOCs",
             self,
@@ -209,6 +214,10 @@ class IOCDetailsWidget(QWidget):
 
         copy_selected_action.triggered.connect(
             self._copy_selected_ioc,
+        )
+
+        copy_filtered_action.triggered.connect(
+            self._copy_filtered_iocs,
         )
 
         copy_all_action.triggered.connect(
@@ -220,6 +229,12 @@ class IOCDetailsWidget(QWidget):
         )
 
         menu.addAction(
+            copy_filtered_action,
+        )
+
+        menu.addSeparator()
+
+        menu.addAction(
             copy_all_action,
         )
 
@@ -227,6 +242,29 @@ class IOCDetailsWidget(QWidget):
             self._table.viewport().mapToGlobal(
                 position,
             )
+        )
+
+    def _copy_filtered_iocs(
+        self,
+    ) -> None:
+        """
+        Copy the currently visible IOC values.
+        """
+
+        if not self._visible_iocs:
+            return
+
+        QGuiApplication.clipboard().setText(
+            "\n".join(
+                self._visible_iocs,
+            )
+        )
+
+        self.copy_completed.emit(
+            (
+                f"{len(self._visible_iocs)} "
+                f"search result(s) copied"
+            ),
         )
 
     def _copy_selected_ioc(
