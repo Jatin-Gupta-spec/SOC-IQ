@@ -202,6 +202,10 @@ class IOCDetailsWidget(QWidget):
             ),
         )
 
+        self._export_button.clicked.connect(
+            self._export_iocs,
+        )
+
     def _show_context_menu(
         self,
         position,
@@ -505,6 +509,17 @@ class IOCDetailsWidget(QWidget):
 
         self._update_statistics(
             len(filtered),
+        )
+
+    def _export_iocs(
+        self,
+    ) -> None:
+        """
+        Placeholder for IOC export.
+        """
+
+        self.copy_completed.emit(
+            "IOC export feature coming next...",
         )
   
     def reset(
