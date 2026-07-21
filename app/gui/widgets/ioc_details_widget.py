@@ -66,6 +66,8 @@ class IOCDetailsWidget(QWidget):
 
         self._all_iocs: list[str] = []
 
+        self._visible_iocs: list[str] = []
+
         self._table = QTableWidget()
 
         self._table.setColumnCount(
@@ -334,6 +336,10 @@ class IOCDetailsWidget(QWidget):
         """
         Populate the IOC table.
         """
+
+        self._visible_iocs = list(
+            values,
+        )
 
         self._table.clearContents()
 
