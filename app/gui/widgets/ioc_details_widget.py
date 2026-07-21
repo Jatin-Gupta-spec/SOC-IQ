@@ -16,6 +16,7 @@ from PySide6.QtGui import (
     QGuiApplication,
 )
 from PySide6.QtWidgets import (
+    QComboBox,
     QHeaderView,
     QLabel,
     QLineEdit,
@@ -48,6 +49,15 @@ class IOCDetailsWidget(QWidget):
 
         self._search_box.setPlaceholderText(
             "Search IOC...",
+        )
+
+        self._sort_box = QComboBox()
+
+        self._sort_box.addItems(
+            [
+                "A → Z",
+                "Z → A",
+            ]
         )
 
         self._statistics_label = QLabel(
@@ -123,6 +133,10 @@ class IOCDetailsWidget(QWidget):
 
         layout.addWidget(
             self._search_box,
+        )
+
+        layout.addWidget(
+            self._sort_box,
         )
 
         layout.addWidget(
