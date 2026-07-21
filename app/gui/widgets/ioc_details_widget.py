@@ -7,7 +7,10 @@ from the IOC Summary table.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import (
+    Qt,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QGuiApplication,
@@ -27,6 +30,10 @@ class IOCDetailsWidget(QWidget):
     Displays the individual IOC values for a
     selected IOC category.
     """
+
+    copy_completed = Signal(
+        str,
+    )
 
     def __init__(self) -> None:
         super().__init__()
@@ -182,6 +189,10 @@ class IOCDetailsWidget(QWidget):
             selected_items[0].text(),
         )
 
+        self.copy_completed.emit(
+            "IOC copied to clipboard",
+        )
+
     def _copy_all_iocs(
         self,
     ) -> None:
@@ -213,6 +224,10 @@ class IOCDetailsWidget(QWidget):
             "\n".join(
                 values,
             )
+        )
+
+        self.copy_completed.emit(
+            f"{len(values)} IOC value(s) copied to clipboard",
         )
 
     def display_iocs(

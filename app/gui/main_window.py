@@ -259,6 +259,10 @@ class MainWindow(QMainWindow):
         self.analyze_page.analysis_completed.connect(
             self._analysis_completed,
         )
+
+        self.workspace_page.status_message.connect(
+            self._show_status_message,
+        )
         
 
     def _open_workspace(self) -> None:
@@ -342,4 +346,17 @@ class MainWindow(QMainWindow):
 
         self.statusBar().showMessage(
             "SOC-IQ Ready"
+        )
+
+    def _show_status_message(
+        self,
+        message: str,
+    ) -> None:
+        """
+        Display a temporary message in the status bar.
+        """
+
+        self.statusBar().showMessage(
+            message,
+            3000,
         )

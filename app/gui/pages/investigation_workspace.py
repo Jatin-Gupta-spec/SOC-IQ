@@ -7,6 +7,7 @@ review completed investigations.
 
 from __future__ import annotations
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QFrame,
     QScrollArea,
@@ -44,6 +45,10 @@ class InvestigationWorkspacePage(QWidget):
     """
     Main analyst investigation workspace.
     """
+
+    status_message = Signal(
+        str,
+    )
 
     def __init__(self) -> None:
         super().__init__()
@@ -88,6 +93,10 @@ class InvestigationWorkspacePage(QWidget):
 
         self._ioc_summary_widget.ioc_selected.connect(
             self._ioc_details_widget.display_iocs,
+        )
+
+        self._ioc_details_widget.copy_completed.connect(
+            self.status_message.emit,
         )
 
         event_bus.investigation_selected.connect(

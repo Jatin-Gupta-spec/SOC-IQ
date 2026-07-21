@@ -18,9 +18,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.database.models import Investigation
-from app.gui.widgets.ioc_details_dialog import (
-    IOCDetailsDialog,
-)
 
 
 class IOCSummaryWidget(QWidget):
@@ -212,18 +209,6 @@ class IOCSummaryWidget(QWidget):
             key,
             values,
         )
-
-        title = ioc_titles.get(
-            key,
-            key,
-        )
-
-        dialog = IOCDetailsDialog(
-            title,
-            values,
-        )
-
-        dialog.exec()
 
     def reset(self) -> None:
         """
