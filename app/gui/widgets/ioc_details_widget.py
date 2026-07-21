@@ -17,6 +17,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QHeaderView,
+    QLabel,
     QMenu,
     QTableWidget,
     QTableWidgetItem,
@@ -37,6 +38,10 @@ class IOCDetailsWidget(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
+
+        self._selected_category_label = QLabel(
+            "Selected Category: None",
+        )
 
         self._table = QTableWidget()
 
@@ -97,6 +102,10 @@ class IOCDetailsWidget(QWidget):
             0,
             0,
             0,
+        )
+
+        layout.addWidget(
+            self._selected_category_label,
         )
 
         layout.addWidget(
@@ -239,7 +248,27 @@ class IOCDetailsWidget(QWidget):
         Display IOC values.
         """
 
-        del ioc_type
+        ioc_titles = {
+            "ipv4": "IPv4 Addresses",
+            "domains": "Domains",
+            "urls": "URLs",
+            "emails": "Emails",
+            "md5": "MD5 Hashes",
+            "sha1": "SHA1 Hashes",
+            "sha256": "SHA256 Hashes",
+            "cves": "CVEs",
+            "windows_file_paths": "Windows File Paths",
+            "windows_registry_keys": "Registry Keys",
+        }
+
+        title = ioc_titles.get(
+            ioc_type,
+            ioc_type,
+        )
+
+        self._selected_category_label.setText(
+            f"Selected Category: {ioc_type}"
+        )
 
         self._table.clearContents()
 
