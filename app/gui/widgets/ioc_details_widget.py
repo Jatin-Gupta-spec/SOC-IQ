@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMenu,
+    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -59,6 +60,10 @@ class IOCDetailsWidget(QWidget):
                 "A → Z",
                 "Z → A",
             ]
+        )
+
+        self._export_button = QPushButton(
+            "Export",
         )
 
         self._statistics_label = QLabel(
@@ -150,6 +155,10 @@ class IOCDetailsWidget(QWidget):
 
         controls_layout.addWidget(
             self._sort_box,
+        )
+
+        controls_layout.addWidget(
+            self._export_button,
         )
 
         layout.addWidget(
