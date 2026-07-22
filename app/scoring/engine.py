@@ -28,17 +28,17 @@ class RiskScoringEngine:
     # ----------------------------------
  
     IOC_WEIGHTS: dict[str, int] = {
-        "IPv4": 1,
-        "Domain": 2,
-        "URL": 3,
-        "Email": 1,
-        "MD5": 4,
-        "SHA1": 5,
-        "SHA256": 6,
-        "CVE": 8,
-        "Windows File Path": 2,
-        "Windows Registry Key": 3,
-    }
+    "ipv4": 1,
+    "domains": 2,
+    "urls": 3,
+    "emails": 1,
+    "md5": 4,
+    "sha1": 5,
+    "sha256": 6,
+    "cves": 8,
+    "windows_file_paths": 2,
+    "windows_registry_keys": 3,
+}
  
     # ----------------------------------
     # Severity Thresholds
@@ -229,7 +229,7 @@ class RiskScoringEngine:
         """
  
         cves = iocs.get(
-            "CVE",
+            "cves",
             [],
         )
  
