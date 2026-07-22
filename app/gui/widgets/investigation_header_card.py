@@ -48,6 +48,11 @@ class InvestigationHeaderCard(DetailSection):
             "Waiting...",
         )
 
+        self._ioc_count_row = KeyValueRow(
+            "IOC Count",
+            "0",
+        )
+
         self._risk_score_row = KeyValueRow(
             "Risk Score",
             "0",
@@ -82,6 +87,10 @@ class InvestigationHeaderCard(DetailSection):
         )
 
         self.add_widget(
+            self._ioc_count_row,
+        )
+
+        self.add_widget(
             severity_row,
         )
 
@@ -110,6 +119,10 @@ class InvestigationHeaderCard(DetailSection):
             "Waiting...",
         )
 
+        self._ioc_count_row.set_value(
+            "0",
+        )
+
         self._severity_badge.set_text(
             "Waiting...",
         )
@@ -125,29 +138,6 @@ class InvestigationHeaderCard(DetailSection):
         """
         Display an investigation.
         """
-
-        print("\n===== HEADER CARD =====")
-        print(
-            "ID:",
-            investigation.investigation_id,
-        )
-        print(
-            "Report:",
-            investigation.report_name,
-        )
-        print(
-            "Severity:",
-            investigation.severity,
-        )
-        print(
-            "Risk:",
-            investigation.risk_score,
-        )
-        print(
-            "Status:",
-            investigation.status,
-        )
-        print("=======================\n")
 
         investigation_id = (
             str(investigation.investigation_id)
@@ -165,12 +155,21 @@ class InvestigationHeaderCard(DetailSection):
 
         self._analysis_time_row.set_value(
             investigation.analyzed_at.strftime(
-                "%Y-%m-%d %H:%M:%S UTC",
+                "%d %b %Y %H:%M",
             ),
         )
 
         self._status_row.set_value(
             investigation.status,
+        )
+
+        total_iocs = sum(
+            len(values)
+            for values in investigation.iocs.values()
+        )
+
+        self._ioc_count_row.set_value(
+            str(total_iocs),
         )
 
         self._severity_badge.set_text(

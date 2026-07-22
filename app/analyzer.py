@@ -151,6 +151,10 @@ def analyze_report(
         threat_intelligence=threat_intelligence,
         risk_score=risk.score,
         severity=risk.severity,
+        confidence=risk.confidence,
+        ioc_score=risk.ioc_score,
+        threat_intel_score=risk.threat_intel_score,
+        cve_score=risk.cve_score,
     )
 
     logger.info(
