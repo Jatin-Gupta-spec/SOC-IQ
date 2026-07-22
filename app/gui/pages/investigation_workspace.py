@@ -8,6 +8,7 @@ review completed investigations.
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
+
 from PySide6.QtWidgets import (
     QFrame,
     QScrollArea,
@@ -16,33 +17,46 @@ from PySide6.QtWidgets import (
 )
 
 from app.database.models import Investigation
+
 from app.gui.events.application_state import (
     ApplicationState,
 )
+
 from app.gui.events.event_bus import (
     event_bus,
 )
+
 from app.gui.widgets.detail_section import DetailSection
+
 from app.gui.widgets.investigation_header_card import (
     InvestigationHeaderCard,
 )
+
 from app.gui.widgets.investigation_timeline_widget import (
     InvestigationTimelineWidget,
 )
+
 from app.gui.widgets.page_container import PageContainer
+
 from app.gui.widgets.ioc_summary_widget import (
     IOCSummaryWidget,
 )
+
 from app.gui.widgets.ioc_details_widget import (
     IOCDetailsWidget,
 )
+
 from app.gui.widgets.threat_intelligence_widget import (
     ThreatIntelligenceWidget,
 )
+
 from app.gui.widgets.risk_summary_widget import (
     RiskSummaryWidget,
 )
 
+from app.gui.widgets.investigation_metrics_widget import (
+    InvestigationMetricsWidget,
+)
 
 class InvestigationWorkspacePage(QWidget):
     """
@@ -90,6 +104,10 @@ class InvestigationWorkspacePage(QWidget):
 
         self._risk_summary_widget = (
             RiskSummaryWidget()
+        )
+
+        self._metrics_widget = (
+            InvestigationMetricsWidget()
         )
 
         self._timeline_widget = (
@@ -196,6 +214,23 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         # --------------------------------------------------
+        # Investigation Metrics
+        # --------------------------------------------------
+
+        metrics_section = DetailSection(
+            "Investigation Metrics",
+            "Detailed scoring breakdown.",
+        )
+
+        metrics_section.add_widget(
+            self._metrics_widget,
+        )
+
+        layout.addWidget(
+            metrics_section,
+        )
+
+        # --------------------------------------------------
         # Investigation Timeline
         # --------------------------------------------------
 
@@ -266,6 +301,8 @@ class InvestigationWorkspacePage(QWidget):
 
         self._risk_summary_widget.reset()
 
+        self._metrics_widget.reset()
+
         self._timeline_widget.reset()
 
     def load_investigation(
@@ -291,6 +328,10 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         self._risk_summary_widget.load_investigation(
+            investigation,
+        )
+
+        self._metrics_widget.load_investigation(
             investigation,
         )
 
