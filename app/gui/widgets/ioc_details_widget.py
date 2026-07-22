@@ -10,11 +10,16 @@ from __future__ import annotations
 from PySide6.QtCore import (
     Qt,
     Signal,
+    QEvent,
 )
+
 from PySide6.QtGui import (
     QAction,
     QGuiApplication,
+    QKeySequence,
+    QShortcut,
 )
+
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -122,6 +127,19 @@ class IOCDetailsWidget(QWidget):
 
         self._connect_signals()
 
+        self._table.installEventFilter(
+            self,
+        )
+
+        self._copy_shortcut = QShortcut(
+            QKeySequence.StandardKey.Copy,
+            self._table,
+        )
+
+        self._copy_shortcut.activated.connect(
+            self._copy_selected_ioc,
+        )
+
     def _build_ui(
         self,
     ) -> None:
@@ -207,6 +225,10 @@ class IOCDetailsWidget(QWidget):
 
         self._export_button.clicked.connect(
             self._export_visible_iocs,
+        )
+
+        self._table.itemDoubleClicked.connect(
+            self._double_click_copy,
         )
 
     def _show_context_menu(
@@ -300,6 +322,22 @@ class IOCDetailsWidget(QWidget):
                 f"{len(self._visible_iocs)} "
                 f"search result(s) copied"
             ),
+        )
+
+    def _double_click_copy(
+        self,
+        item: QTableWidgetItem,
+    ) -> None:
+        """
+        Copy an IOC when it is double-clicked.
+        """
+
+        QGuiApplication.clipboard().setText(
+            item.text(),
+        )
+
+        self.copy_completed.emit(
+            "IOC copied to clipboard",
         )
 
     def _copy_selected_ioc(
@@ -721,6 +759,33 @@ class IOCDetailsWidget(QWidget):
                 export_file,
                 indent=4,
             )
+
+    def eventFilter(
+        self,
+        source,
+        event,
+    ):
+        """
+        Handle keyboard shortcuts for the IOC table.
+        """
+
+        if (
+            source is self._table
+            and event.type() == QEvent.Type.KeyPress
+            and event.key() in (
+                Qt.Key.Key_Return,
+                Qt.Key.Key_Enter,
+            )
+        ):
+
+            self._copy_selected_ioc()
+
+            return True
+
+        return super().eventFilter(
+            source,
+            event,
+        )
   
     def reset(
         self,
