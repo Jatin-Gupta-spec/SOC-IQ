@@ -531,11 +531,15 @@ class IOCDetailsWidget(QWidget):
 
             return
 
-        file_path, _ = QFileDialog.getSaveFileName(
+        file_path, selected_filter = QFileDialog.getSaveFileName(
             self,
             "Export IOC Values",
             "ioc_values.txt",
-            "Text Files (*.txt)",
+            (
+                "Text Files (*.txt);;"
+                "CSV Files (*.csv);;"
+                "JSON Files (*.json)"
+            ),
         )
 
         if not file_path:
