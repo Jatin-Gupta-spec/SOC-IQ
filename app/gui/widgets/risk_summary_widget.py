@@ -34,6 +34,26 @@ class RiskSummaryWidget(QWidget):
             "Waiting...",
         )
 
+        self._confidence_row = KeyValueRow(
+            "Confidence",
+            "Waiting...",
+        )
+
+        self._ioc_score_row = KeyValueRow(
+            "IOC Score",
+            "Waiting...",
+        )
+
+        self._threat_score_row = KeyValueRow(
+            "Threat Intelligence",
+            "Waiting...",
+        )
+
+        self._cve_score_row = KeyValueRow(
+            "CVE Score",
+            "Waiting...",
+        )
+
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -58,6 +78,22 @@ class RiskSummaryWidget(QWidget):
             self._severity_row,
         )
 
+        layout.addWidget(
+            self._confidence_row,
+        )
+
+        layout.addWidget(
+            self._ioc_score_row,
+        )
+
+        layout.addWidget(
+            self._threat_score_row,
+        )
+
+        layout.addWidget(
+            self._cve_score_row,
+        )
+
         self.setLayout(
             layout,
         )
@@ -80,6 +116,28 @@ class RiskSummaryWidget(QWidget):
             investigation.severity,
         )
 
+        self._confidence_row.set_value(
+            f"{investigation.confidence * 100:.0f}%",
+        )
+
+        self._ioc_score_row.set_value(
+            str(
+                investigation.ioc_score,
+            ),
+        )
+
+        self._threat_score_row.set_value(
+            str(
+                investigation.threat_intel_score,
+            ),
+        )
+
+        self._cve_score_row.set_value(
+            str(
+                investigation.cve_score,
+            ),
+        )
+
     def reset(self) -> None:
         """
         Reset the widget.
@@ -90,5 +148,21 @@ class RiskSummaryWidget(QWidget):
         )
 
         self._severity_row.set_value(
+            "Waiting...",
+        )
+
+        self._confidence_row.set_value(
+            "Waiting...",
+        )
+
+        self._ioc_score_row.set_value(
+            "Waiting...",
+        )
+
+        self._threat_score_row.set_value(
+            "Waiting...",
+        )
+
+        self._cve_score_row.set_value(
             "Waiting...",
         )
