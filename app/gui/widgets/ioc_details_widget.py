@@ -76,6 +76,16 @@ class IOCDetailsWidget(QWidget):
             "Showing 0 IOC values",
         )
 
+        self._empty_label = QLabel(
+            "No IOC values available.\nSelect an IOC category to begin.",
+        )
+
+        self._empty_label.setAlignment(
+            Qt.AlignmentFlag.AlignCenter,
+        )
+
+        self._empty_label.hide()
+
         self._all_iocs: list[str] = []
 
         self._current_category = "Unknown"
@@ -90,7 +100,7 @@ class IOCDetailsWidget(QWidget):
 
         self._table.setHorizontalHeaderLabels(
             [
-                "IOC Value",
+                "Indicator of Compromise",
             ]
         )
 
@@ -152,6 +162,10 @@ class IOCDetailsWidget(QWidget):
         self._build_ui()
 
         self._connect_signals()
+
+        self._table.hide()
+
+        self._empty_label.show()
 
         self._table.installEventFilter(
             self,
@@ -218,6 +232,10 @@ class IOCDetailsWidget(QWidget):
 
         layout.addWidget(
             self._statistics_label,
+        )
+
+        layout.addWidget(
+            self._empty_label,
         )
 
         layout.addWidget(
@@ -476,7 +494,11 @@ class IOCDetailsWidget(QWidget):
         self._current_category = title
 
         self._selected_category_label.setText(
-            f"Selected Category: {title}"
+            (
+                f"Selected Category: {title} "
+                f"({len(values)} IOC"
+                f"{'' if len(values) == 1 else 's'})"
+            )
         )
 
         self._all_iocs = list(
@@ -503,6 +525,18 @@ class IOCDetailsWidget(QWidget):
             values,
         )
 
+        if values:
+
+            self._empty_label.hide()
+
+            self._table.show()
+
+        else:
+
+            self._table.hide()
+
+            self._empty_label.show()
+
         self._table.clearContents()
 
         self._table.setRowCount(
@@ -513,12 +547,18 @@ class IOCDetailsWidget(QWidget):
             values,
         ):
 
+            item = QTableWidgetItem(
+                value,
+            )
+
+            item.setToolTip(
+                value,
+            )
+
             self._table.setItem(
                 row,
                 0,
-                QTableWidgetItem(
-                    value,
-                ),
+                item,
             )
 
         self._table.resizeColumnsToContents()
@@ -527,6 +567,13 @@ class IOCDetailsWidget(QWidget):
 
             self._table.selectRow(
                 0,
+            )
+
+            self._table.scrollToItem(
+                self._table.item(
+                    0,
+                    0,
+                ),
             )
 
             self._table.setFocus()
@@ -864,6 +911,10 @@ class IOCDetailsWidget(QWidget):
         self._table.setRowCount(
             0,
         )
+
+        self._table.hide()
+
+        self._empty_label.show()
 
         self._sort_box.setCurrentIndex(
             0,
