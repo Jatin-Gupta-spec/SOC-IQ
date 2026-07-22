@@ -110,13 +110,39 @@ class IOCDetailsWidget(QWidget):
             QTableWidget.SelectionMode.SingleSelection,
         )
 
-        self._table.horizontalHeader().setStretchLastSection(
+        self._table.setAlternatingRowColors(
             True,
         )
 
-        self._table.horizontalHeader().setSectionResizeMode(
+        self._table.setSortingEnabled(
+            False,
+        )
+
+        self._table.setShowGrid(
+            False,
+        )
+
+        self._table.setWordWrap(
+            False,
+        )
+
+        self._table.setCornerButtonEnabled(
+            False,
+        )
+
+        header = self._table.horizontalHeader()
+
+        header.setStretchLastSection(
+            True,
+        )
+
+        header.setSectionResizeMode(
             0,
             QHeaderView.ResizeMode.Stretch,
+        )
+
+        header.setMinimumSectionSize(
+            150,
         )
 
         self._table.setContextMenuPolicy(
@@ -340,6 +366,29 @@ class IOCDetailsWidget(QWidget):
             "IOC copied to clipboard",
         )
 
+    def keyPressEvent(
+        self,
+        event,
+    ) -> None:
+        """
+        Handle keyboard shortcuts.
+        """
+
+        if (
+            event.matches(
+                event.StandardKey.Copy,
+            )
+            and self._table.hasFocus()
+        ):
+
+            self._copy_selected_ioc()
+
+            return
+
+        super().keyPressEvent(
+            event,
+        )
+
     def _copy_selected_ioc(
         self,
     ) -> None:
@@ -479,6 +528,8 @@ class IOCDetailsWidget(QWidget):
             self._table.selectRow(
                 0,
             )
+
+            self._table.setFocus()
 
     def _update_statistics(
         self,
