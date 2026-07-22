@@ -613,6 +613,38 @@ class IOCDetailsWidget(QWidget):
                 f"{len(self._visible_iocs)} IOC value(s)"
             ),
         )
+
+    def _export_txt(
+        self,
+        file_path: str,
+    ) -> None:
+        """
+        Export IOC values as a text report.
+        """
+
+        pass
+
+
+    def _export_csv(
+        self,
+        file_path: str,
+    ) -> None:
+        """
+        Export IOC values as CSV.
+        """
+
+        pass
+
+
+    def _export_json(
+        self,
+        file_path: str,
+    ) -> None:
+        """
+        Export IOC values as JSON.
+        """
+
+        pass
   
     def reset(
         self,
