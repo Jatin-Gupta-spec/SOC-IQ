@@ -119,6 +119,53 @@ class ThreatIntelService:
                     )
                 )
 
+                malicious = result.get(
+                    "malicious",
+                    0,
+                )
+
+                suspicious = result.get(
+                    "suspicious",
+                    0,
+                )
+
+                harmless = result.get(
+                    "harmless",
+                    0,
+                )
+
+                undetected = result.get(
+                    "undetected",
+                    0,
+                )
+
+                total = (
+                    malicious
+                    + suspicious
+                    + harmless
+                    + undetected
+                )
+
+                if malicious > 0:
+
+                    verdict = "Malicious"
+
+                elif suspicious > 0:
+
+                    verdict = "Suspicious"
+
+                else:
+
+                    verdict = "Clean"
+
+                result["verdict"] = verdict
+
+                result["detection_ratio"] = (
+                    f"{malicious}/{total}"
+                    if total > 0
+                    else "N/A"
+                )
+
                 enriched.append(
                     result,
                 )
