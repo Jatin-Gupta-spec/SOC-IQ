@@ -26,6 +26,9 @@ from app.gui.widgets.detail_section import DetailSection
 from app.gui.widgets.investigation_header_card import (
     InvestigationHeaderCard,
 )
+from app.gui.widgets.investigation_timeline_widget import (
+    InvestigationTimelineWidget,
+)
 from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.ioc_summary_widget import (
     IOCSummaryWidget,
@@ -87,6 +90,10 @@ class InvestigationWorkspacePage(QWidget):
 
         self._risk_summary_widget = (
             RiskSummaryWidget()
+        )
+
+        self._timeline_widget = (
+            InvestigationTimelineWidget()
         )
 
         self._build_ui()
@@ -188,6 +195,23 @@ class InvestigationWorkspacePage(QWidget):
             risk_section,
         )
 
+        # --------------------------------------------------
+        # Investigation Timeline
+        # --------------------------------------------------
+
+        timeline_section = DetailSection(
+            "Investigation Timeline",
+            "Timeline information for this investigation.",
+        )
+
+        timeline_section.add_widget(
+            self._timeline_widget,
+        )
+
+        layout.addWidget(
+            timeline_section,
+        )
+
         layout.addStretch()
 
         # --------------------------------------------------
@@ -242,6 +266,8 @@ class InvestigationWorkspacePage(QWidget):
 
         self._risk_summary_widget.reset()
 
+        self._timeline_widget.reset()
+
     def load_investigation(
         self,
         investigation: Investigation,
@@ -265,6 +291,10 @@ class InvestigationWorkspacePage(QWidget):
         )
 
         self._risk_summary_widget.load_investigation(
+            investigation,
+        )
+
+        self._timeline_widget.load_investigation(
             investigation,
         )
 
