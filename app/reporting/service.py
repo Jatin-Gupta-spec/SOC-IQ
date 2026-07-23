@@ -7,6 +7,8 @@ and delegates export operations to exporters.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from pathlib import Path
 
 from app.database.models import Investigation
@@ -23,6 +25,24 @@ class ReportingService:
     Service responsible for exporting
     investigation reports.
     """
+
+    def build_default_filename(
+        self,
+        extension: str = "html",
+    ) -> str:
+        """
+        Build the default filename for
+        exported investigation reports.
+        """
+
+        timestamp = datetime.now().strftime(
+            "%Y-%m-%d_%H-%M-%S",
+        )
+
+        return (
+            f"SOC-IQ_Investigation_"
+            f"{timestamp}.{extension}"
+        )
 
     def export_html(
         self,

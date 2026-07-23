@@ -442,7 +442,7 @@ class MainWindow(QMainWindow):
         selected_file, _ = QFileDialog.getSaveFileName(
             self,
             "Export Investigation Report",
-            str(default_path),
+            self._reporting_service.build_default_filename(),
             "HTML Files (*.html)",
         )
 
