@@ -14,11 +14,21 @@ from PySide6.QtGui import QAction
 
 from pathlib import Path
 
+from PySide6.QtCore import (
+    Qt,
+    QUrl,
+)
+
+from PySide6.QtGui import (
+    QAction,
+    QDesktopServices,
+)
+
 from PySide6.QtWidgets import (
-    QMessageBox,
     QFileDialog,
     QHBoxLayout,
     QMainWindow,
+    QMessageBox,
     QStackedWidget,
     QToolBar,
     QVBoxLayout,
@@ -398,11 +408,34 @@ class MainWindow(QMainWindow):
         )
 
         if not selected_file:
+
+            self.statusBar().showMessage(
+                "Export cancelled.",
+                3000,
+            )
+
             return
 
         output_path = Path(
             selected_file,
         )
+
+        if output_path.exists():
+
+            reply = QMessageBox.question(
+                self,
+                "Overwrite Report",
+                (
+                    "A report with this name already exists.\n\n"
+                    "Do you want to replace it?"
+                ),
+                QMessageBox.StandardButton.Yes
+                | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+
+            if reply != QMessageBox.StandardButton.Yes:
+                return
 
         try:
 
@@ -440,15 +473,55 @@ class MainWindow(QMainWindow):
             5000,
         )
 
-        QMessageBox.information(
-            self,
+        message_box = QMessageBox(self)
+
+        message_box.setWindowTitle(
             "Export Complete",
-            (
-                "The investigation report was exported "
-                "successfully.\n\n"
-                f"Location:\n{exported_file}"
-            ),
         )
+
+        message_box.setIcon(
+            QMessageBox.Icon.Information,
+        )
+
+        message_box.setText(
+            "The investigation report was exported successfully.",
+        )
+
+        message_box.setInformativeText(
+            f"Location:\n{exported_file}"
+        )
+
+        open_button = message_box.addButton(
+            "Open Report",
+            QMessageBox.ButtonRole.ActionRole,
+        )
+
+        open_folder_button = message_box.addButton(
+            "Open Folder",
+            QMessageBox.ButtonRole.ActionRole,
+        )
+
+        message_box.addButton(
+            QMessageBox.StandardButton.Close,
+        )
+
+        message_box.exec()
+
+        if message_box.clickedButton() is open_button:
+
+            QDesktopServices.openUrl(
+                QUrl.fromLocalFile(
+                    str(exported_file),
+                ),
+            )
+
+        elif message_box.clickedButton() is open_folder_button:
+
+            QDesktopServices.openUrl(
+                QUrl.fromLocalFile(
+                    str(exported_file.parent),
+                ),
+            )
 
     def _show_status_message(
         self,
