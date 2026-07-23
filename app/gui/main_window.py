@@ -85,6 +85,8 @@ class MainWindow(QMainWindow):
 
         self._reporting_service = ReportingService()
 
+        self._last_export_directory: Path | None = None
+
         self._configure_window()
 
         self._create_menu_bar()
@@ -415,6 +417,42 @@ class MainWindow(QMainWindow):
 
         return None
 
+    def _select_export_path(
+        self,
+        report_name: str,
+    ) -> Path | None:
+        """
+        Ask the user where the investigation report
+        should be exported.
+
+        Returns:
+            The selected output path, or None if the
+            export is cancelled.
+        """
+
+        default_path = (
+            self._last_export_directory
+            / f"{report_name}.html"
+            if self._last_export_directory is not None
+            else Path(
+                f"{report_name}.html"
+            )
+        )
+
+        selected_file, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Investigation Report",
+            str(default_path),
+            "HTML Files (*.html)",
+        )
+
+        if not selected_file:
+            return None
+
+        return Path(
+            selected_file,
+        )
+
     def _export_report(
         self,
         export_format: str,
@@ -474,14 +512,11 @@ class MainWindow(QMainWindow):
 
             return
 
-        selected_file, _ = QFileDialog.getSaveFileName(
-            self,
-            "Export Investigation Report",
-            f"{investigation.report_name}.html",
-            "HTML Files (*.html)",
+        output_path = self._select_export_path(
+            investigation.report_name,
         )
 
-        if not selected_file:
+        if output_path is None:
 
             self.statusBar().showMessage(
                 "Export cancelled.",
@@ -489,10 +524,6 @@ class MainWindow(QMainWindow):
             )
 
             return
-
-        output_path = Path(
-            selected_file,
-        )
 
         if output_path.exists():
 
@@ -537,6 +568,10 @@ class MainWindow(QMainWindow):
             )
 
             return
+
+        self._last_export_directory = (
+            exported_file.parent
+        )
 
         self.statusBar().showMessage(
             (
