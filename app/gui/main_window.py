@@ -9,7 +9,11 @@ future GUI pages and widgets.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+
 from PySide6.QtGui import QAction
+
+from pathlib import Path
+
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -22,23 +26,33 @@ from PySide6.QtWidgets import (
 from app.gui.events.application_state import (
     ApplicationState,
 )
+
 from app.gui.events.event_bus import (
     event_bus,
 )
+
 from app.gui.pages.analyze_page import (
     AnalyzePage,
 )
+
 from app.gui.pages.dashboard_page import (
     DashboardPage,
 )
+
 from app.gui.pages.history_page import (
     HistoryPage,
 )
+
 from app.gui.pages.investigation_workspace import (
     InvestigationWorkspacePage,
 )
+
 from app.gui.widgets.sidebar import (
     SidebarWidget,
+)
+
+from app.reporting.service import (
+    ReportingService,
 )
 
 
@@ -55,6 +69,8 @@ class MainWindow(QMainWindow):
         self.page_stack = QStackedWidget()
 
         self.sidebar = SidebarWidget()
+
+        self._reporting_service = ReportingService()
 
         self._configure_window()
 
@@ -356,15 +372,61 @@ class MainWindow(QMainWindow):
         self,
     ) -> None:
         """
-        Handle investigation report export requests.
-
-        The HTML export workflow will be connected
-        in the next sprint step.
+        Export the currently selected investigation
+        as an HTML report.
         """
 
+        investigation = (
+            ApplicationState.get_current_investigation()
+        )
+
+        if investigation is None:
+
+            self.statusBar().showMessage(
+                "No investigation selected.",
+                3000,
+            )
+
+            return
+
+        output_directory = Path(
+            "output/reports",
+        )
+
+        output_directory.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        output_path = (
+            output_directory
+            / f"{investigation.report_name}.html"
+        )
+
+        try:
+
+            exported_file = (
+                self._reporting_service.export_html(
+                    investigation,
+                    output_path,
+                )
+            )
+
+        except Exception as error:
+
+            self.statusBar().showMessage(
+                f"Export failed: {error}",
+                5000,
+            )
+
+            return
+
         self.statusBar().showMessage(
-            "Export Investigation Report requested.",
-            3000,
+            (
+                f"Investigation report exported: "
+                f"{exported_file.name}"
+            ),
+            5000,
         )
 
     def _show_status_message(
