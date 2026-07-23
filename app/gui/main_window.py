@@ -15,6 +15,7 @@ from PySide6.QtGui import QAction
 from pathlib import Path
 
 from PySide6.QtWidgets import (
+    QFileDialog,
     QHBoxLayout,
     QMainWindow,
     QStackedWidget,
@@ -284,7 +285,6 @@ class MainWindow(QMainWindow):
             self._export_investigation_report,
         )
         
-
     def _open_workspace(self) -> None:
         """
         Open the Investigation Workspace.
@@ -389,18 +389,18 @@ class MainWindow(QMainWindow):
 
             return
 
-        output_directory = Path(
-            "output/reports",
+        selected_file, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Investigation Report",
+            f"{investigation.report_name}.html",
+            "HTML Files (*.html)",
         )
 
-        output_directory.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        if not selected_file:
+            return
 
-        output_path = (
-            output_directory
-            / f"{investigation.report_name}.html"
+        output_path = Path(
+            selected_file,
         )
 
         try:
