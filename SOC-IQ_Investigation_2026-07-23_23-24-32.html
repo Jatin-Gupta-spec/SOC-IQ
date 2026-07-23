@@ -1,191 +1,4 @@
-"""
-HTML exporter for SOC-IQ.
-
-Exports an InvestigationReport as a
-professional HTML report.
-"""
-
-from __future__ import annotations
-
-from html import escape
-from pathlib import Path
-
-from app.reporting.models import InvestigationReport
-
-import json
-
-class HTMLReportExporter:
-    """
-    Exports InvestigationReport objects
-    as HTML files.
-    """
-
-    @staticmethod
-    def export(
-        report: InvestigationReport,
-        output_path: Path,
-    ) -> Path:
-        """
-        Export an investigation report to HTML.
-
-        Returns:
-            Path to the generated HTML file.
-        """
-
-        try:
-            html = HTMLReportExporter._build_html(
-                report,
-            )
-
-            output_path.parent.mkdir(
-                parents=True,
-                exist_ok=True,
-            )
-
-            output_path.write_text(
-                html,
-                encoding="utf-8",
-            )
-
-            return output_path
-
-        except OSError as error:
-            raise RuntimeError(
-                f"Failed to export HTML report: {error}"
-            ) from error
-
-    @staticmethod
-    def _build_ioc_summary(
-        report: InvestigationReport,
-    ) -> str:
-        """
-        Build the IOC summary table.
-        """
-
-        rows: list[str] = []
-
-        for ioc_type, values in report.iocs.items():
-
-            rows.append(
-                f"""
-    <tr class="clickable-row">
-    <td>{escape(ioc_type.replace("_", " ").title())}</td>
-    <td>{len(values)}</td>
-    </tr>
-    """
-            )
-
-        return "".join(
-            rows,
-        )
-
-    @staticmethod
-    def _build_threat_summary(
-        report: InvestigationReport,
-    ) -> str:
-        """
-        Build the Threat Intelligence summary table.
-        """
-
-        rows: list[str] = []
-
-        hashes = (
-            report.threat_intelligence.get(
-                "hashes",
-                [],
-            )
-        )
-
-        for item in hashes:
-
-            rows.append(
-                f"""
-        <tr>
-        <td>{escape(item.get("sha256", ""))}</td>
-       <td>{escape(item.get("verdict", "Unknown"))}</td>
-       <td>{escape(str(item.get("detection_ratio", "N/A")))}</td>
-        </tr>
-        """
-            )
-
-        if not rows:
-
-            rows.append(
-                """
-        <tr>
-        <td colspan="3">
-        No threat intelligence available.
-        </td>
-        </tr>
-        """
-            )
-
-        return "".join(rows)
-
-    @staticmethod
-    def _build_html(
-        report: InvestigationReport,
-    ) -> str:
-        """
-        Build the HTML document.
-        """
-
-        ioc_summary = (
-            HTMLReportExporter._build_ioc_summary(
-                report,
-            )
-        )
-
-        threat_summary = (
-            HTMLReportExporter._build_threat_summary(
-                report,
-            )
-        )
-
-        severity_class = {
-            "LOW": "badge-low",
-            "MEDIUM": "badge-medium",
-            "HIGH": "badge-high",
-            "CRITICAL": "badge-critical",
-        }.get(
-            report.severity.upper(),
-            "badge-medium",
-        )
-
-        if report.risk_score < 30:
-            risk_class = "risk-low"
-        elif report.risk_score < 60:
-            risk_class = "risk-medium"
-        elif report.risk_score < 80:
-            risk_class = "risk-high"
-        else:
-            risk_class = "risk-critical"
-
-        ioc_labels = json.dumps(
-            [
-                ioc_type.replace("_", " ").title()
-                for ioc_type in report.iocs
-            ]
-        )
-
-        ioc_counts = json.dumps(
-            [
-                len(values)
-                for values in report.iocs.values()
-            ]
-        )
-
-        status_class = {
-            "COMPLETED": "status-success",
-            "FAILED": "status-danger",
-            "PENDING": "status-warning",
-        }.get(
-            report.status.upper(),
-            "",
-        )
-
-        return f"""<!DOCTYPE html>
-        
+<!DOCTYPE html>
 
         <html lang="en">
 
@@ -198,94 +11,73 @@ class HTMLReportExporter:
             content="width=device-width, initial-scale=1.0"
         >
 
-        <meta
-            name="author"
-            content="SOC-IQ"
-        >
-
-        <meta
-            name="generator"
-            content="SOC-IQ Investigation Report"
-        >
-
-        <meta
-            name="description"
-            content="Cybersecurity Investigation Report"
-        >
-
-       <title>
-        SOC-IQ - {escape(report.report_name)}
+        <title>
+        SOC-IQ Investigation Report
         </title>
-
-        <link
-            rel="icon"
-            href="soc_iq.ico"
-            type="image/x-icon"
-        >
 
         <style>
 
-        body {{
+        body {
             font-family: "Segoe UI", Arial, Helvetica, sans-serif;
             background: #0f172a;
             color: #e2e8f0;
             margin: 0;
             padding: 40px;
-        }}
+        }
 
-        .page {{
+        .page {
             display: flex;
             justify-content: center;
-        }}
+        }
 
-        .container {{
+        .container {
             width: 100%;
             max-width: 1200px;
             background: #1e293b;
             border-radius: 14px;
             padding: 40px;
             box-shadow: 0 10px 35px rgba(0,0,0,0.45);
-        }}
+        }
 
-        .report-header {{
+        .report-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 35px;
             padding-bottom: 20px;
             border-bottom: 2px solid #334155;
-        }}
+        }
 
-        .report-brand h1 {{
+        .report-brand h1 {
             margin: 0;
             border: none;
             padding: 0;
-        }}
+        }
 
-        .report-brand p {{
+        .report-brand p {
             margin-top: 8px;
             color: #94a3b8;
             font-size: 14px;
-        }}
+        }
 
-        .report-meta {{
+        .report-meta {
             text-align: right;
             color: #94a3b8;
             font-size: 14px;
-        }}
+        }
 
-        .report-meta strong {{
+        .report-meta strong {
             color: #f8fafc;
-        }}
+        }
 
-        .summary-grid {{
+        .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 18px;
             margin: 30px 0;
-        }}
+        }
 
-        .summary-card {{
+        .summary-card {
             background: #0f172a;
             border: 1px solid #334155;
             border-radius: 12px;
@@ -293,28 +85,28 @@ class HTMLReportExporter:
             text-align: center;
             transition: transform 0.2s ease,
                         box-shadow 0.2s ease;
-        }}
+        }
 
-        .summary-card:hover {{
+        .summary-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-        }}
+        }
 
-        .summary-title {{
+        .summary-title {
             color: #94a3b8;
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 10px;
-        }}
+        }
 
-        .summary-value {{
+        .summary-value {
             color: #38bdf8;
             font-size: 28px;
             font-weight: 700;
-        }}
+        }
 
-        .badge {{
+        .badge {
             display: inline-block;
             padding: 8px 18px;
             border-radius: 999px;
@@ -322,72 +114,72 @@ class HTMLReportExporter:
             font-weight: 700;
             letter-spacing: 0.8px;
             text-transform: uppercase;
-        }}
+        }
 
-        .badge-low {{
+        .badge-low {
             background: #14532d;
             color: #86efac;
-        }}
+        }
 
-        .badge-medium {{
+        .badge-medium {
             background: #78350f;
             color: #fde68a;
-        }}
+        }
 
-        .badge-high {{
+        .badge-high {
             background: #7c2d12;
             color: #fdba74;
-        }}
+        }
 
-        .badge-critical {{
+        .badge-critical {
             background: #7f1d1d;
             color: #fca5a5;
-        }}
+        }
 
-        .risk-low {{
+        .risk-low {
             color: #22c55e;
-        }}
+        }
 
-        .risk-medium {{
+        .risk-medium {
             color: #facc15;
-        }}
+        }
 
-        .risk-high {{
+        .risk-high {
             color: #fb923c;
-        }}
+        }
 
-        .risk-critical {{
+        .risk-critical {
             color: #ef4444;
-        }}
+        }
 
-        .details-panel {{
+        .details-panel {
             background: #0f172a;
             border: 1px solid #334155;
             border-radius: 12px;
             overflow: hidden;
-        }}
+        }
 
-        .detail-row {{
+        .detail-row {
             display: flex;
             justify-content: space-between;
             padding: 14px 20px;
             border-bottom: 1px solid #334155;
-        }}
+        }
 
-        .detail-row:last-child {{
+        .detail-row:last-child {
             border-bottom: none;
-        }}
+        }
 
-        .detail-label {{
+        .detail-label {
             color: #94a3b8;
             font-weight: 600;
-        }}
+        }
 
-        .detail-value {{
+        .detail-value {
             color: #f8fafc;
-        }}
+        }
 
-        h1 {{
+        h1 {
             margin: 0;
             padding-bottom: 18px;
             font-size: 34px;
@@ -395,61 +187,52 @@ class HTMLReportExporter:
             color: #38bdf8;
             border-bottom: 2px solid #334155;
             letter-spacing: 1px;
-        }}
+        }
 
-        .section {{
+        .section {
             margin-top: 30px;
-        }}
+        }
 
-        h2 {{
+        h2 {
             margin-bottom: 18px;
             color: #f8fafc;
             font-size: 22px;
             font-weight: 600;
-        }}
+        }
 
-        table {{
+        table {
             width: 100%;
             border-collapse: collapse;
             overflow: hidden;
             border-radius: 10px;
             background: #0f172a;
-        }}
+        }
 
         th,
-        td {{
+        td {
             padding: 14px 18px;
             text-align: left;
             border-bottom: 1px solid #334155;
-        }}
+        }
 
-        th {{
+        th {
             background: #2563eb;
             color: white;
             font-weight: 600;
             text-transform: uppercase;
             font-size: 13px;
             letter-spacing: 0.8px;
-        }}
+        }
 
-        tr {{
+        tr {
             transition: background-color 0.2s ease;
-        }}
+        }
 
-        tbody tr:hover {{
+        tbody tr:hover {
             background: #1e293b;
-        }}
+        }
 
-        .clickable-row {{
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }}
-
-        .clickable-row:hover {{
-            background: #334155;
-        }}
-
-        .footer {{
+        .footer {
             margin-top: 50px;
             padding-top: 20px;
             border-top: 1px solid #334155;
@@ -457,27 +240,27 @@ class HTMLReportExporter:
             color: #94a3b8;
             font-size: 13px;
             line-height: 1.8;
-        }}
+        }
 
-        .footer strong {{
+        .footer strong {
             color: #38bdf8;
-        }}
+        }
 
-        td {{
+        td {
             color: #e2e8f0;
-        }}
+        }
 
-        .status-success {{
+        .status-success {
             color: #22c55e;
-        }}
+        }
 
-        .status-warning {{
+        .status-warning {
             color: #facc15;
-        }}
+        }
 
-        .status-danger {{
+        .status-danger {
             color: #ef4444;
-        }}
+        }
         
 
         </style>
@@ -512,7 +295,7 @@ class HTMLReportExporter:
 
         <div>
         <strong>Generated:</strong>
-        {report.analyzed_at.strftime("%Y-%m-%d %H:%M:%S")}
+        22 Jul 2026 15:43
         </div>
 
         </div>
@@ -526,8 +309,8 @@ class HTMLReportExporter:
         Risk Score
         </div>
 
-        <div class="summary-value {risk_class}">
-        {report.risk_score}
+        <div class="summary-value risk-critical">
+        100
         </div>
 
         </div>
@@ -537,10 +320,10 @@ class HTMLReportExporter:
         Severity
         </div>
 
-        <div class="summary-value">
+        <div class="summary-value status-success">
 
-        <span class="badge {severity_class}">
-        {escape(report.severity)}
+        <span class="badge badge-critical">
+        CRITICAL
         </span>
 
         </div>
@@ -552,7 +335,7 @@ class HTMLReportExporter:
         Confidence
         </div>
         <div class="summary-value">
-        {report.confidence * 100:.0f}%
+        85%
         </div>
         </div>
 
@@ -560,8 +343,8 @@ class HTMLReportExporter:
         <div class="summary-title">
         Status
         </div>
-       <div class="summary-value {status_class}">
-            {escape(report.status)}
+       <div class="summary-value status-success">
+            COMPLETED
         </div>
         </div>
 
@@ -575,31 +358,27 @@ class HTMLReportExporter:
 
         <div class="detail-row">
         <span class="detail-label">Report Name</span>
-        <span class="detail-value">
-        {escape(report.report_name)}
-        </span>
+        <span class="detail-value">malware_report.txt</span>
         </div>
 
         <div class="detail-row">
         <span class="detail-label">Analyzed At</span>
-        <span class="detail-value">
-        {report.analyzed_at.strftime("%Y-%m-%d %H:%M:%S")}
-        </span>
+        <span class="detail-value">22 Jul 2026 15:43</span>
         </div>
 
         <div class="detail-row">
         <span class="detail-label">IOC Score</span>
-        <span class="detail-value">{report.ioc_score}</span>
+        <span class="detail-value">106</span>
         </div>
 
         <div class="detail-row">
         <span class="detail-label">Threat Intelligence Score</span>
-        <span class="detail-value">{report.threat_intel_score}</span>
+        <span class="detail-value">0</span>
         </div>
 
         <div class="detail-row">
         <span class="detail-label">CVE Score</span>
-        <span class="detail-value">{report.cve_score}</span>
+        <span class="detail-value">30</span>
         </div>
 
         </div>
@@ -624,20 +403,62 @@ class HTMLReportExporter:
 
         <table>
 
-        <thead>
-
         <tr>
         <th>IOC Type</th>
         <th>Count</th>
         </tr>
 
-        </thead>
-
-        <tbody>
-
-        {ioc_summary}
-
-        </tbody>
+        
+    <tr>
+    <td>Ipv4</td>
+    <td>4</td>
+    </tr>
+    
+    <tr>
+    <td>Domains</td>
+    <td>5</td>
+    </tr>
+    
+    <tr>
+    <td>Urls</td>
+    <td>3</td>
+    </tr>
+    
+    <tr>
+    <td>Emails</td>
+    <td>2</td>
+    </tr>
+    
+    <tr>
+    <td>Md5</td>
+    <td>2</td>
+    </tr>
+    
+    <tr>
+    <td>Sha1</td>
+    <td>2</td>
+    </tr>
+    
+    <tr>
+    <td>Sha256</td>
+    <td>2</td>
+    </tr>
+    
+    <tr>
+    <td>Cves</td>
+    <td>3</td>
+    </tr>
+    
+    <tr>
+    <td>Windows File Paths</td>
+    <td>6</td>
+    </tr>
+    
+    <tr>
+    <td>Windows Registry Keys</td>
+    <td>5</td>
+    </tr>
+    
 
         </table>
 
@@ -649,21 +470,25 @@ class HTMLReportExporter:
 
         <table>
 
-        <thead>
-
         <tr>
         <th>SHA256</th>
         <th>Verdict</th>
         <th>Detection Ratio</th>
         </tr>
 
-        </thead>
-
-        <tbody>
-
-        {threat_summary}
-
-        </tbody>
+        
+        <tr>
+        <td>3f786850e387550fdab836ed7e6dc881de23001b4fb5d6fcb5b8f8f9d4f6b6c5</td>
+        <td>Clean</td>
+        <td>N/A</td>
+        </tr>
+        
+        <tr>
+        <td>d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2</td>
+        <td>Clean</td>
+        <td>N/A</td>
+        </tr>
+        
 
         </table>
 
@@ -679,9 +504,6 @@ class HTMLReportExporter:
 
         Generated automatically by SOC-IQ.<br>
 
-        Generated on:
-        {report.analyzed_at.strftime("%Y-%m-%d %H:%M:%S")}<br>
-
         Confidential - For authorized personnel only.
 
         </div>
@@ -692,15 +514,15 @@ class HTMLReportExporter:
 
         <script>
 
-        const labels = {ioc_labels};
+        const labels = ['Ipv4', 'Domains', 'Urls', 'Emails', 'Md5', 'Sha1', 'Sha256', 'Cves', 'Windows File Paths', 'Windows Registry Keys'];
 
-        const counts = {ioc_counts};
+        const counts = [4, 5, 3, 2, 2, 2, 2, 3, 6, 5];
 
         const canvas = document.getElementById(
             "iocChart"
         );
 
-        if (canvas) {{
+        if (canvas) {
         
                 const context = canvas.getContext(
             "2d"
@@ -725,14 +547,14 @@ class HTMLReportExporter:
 
             new Chart(
                 canvas,
-                {{
+                {
                     type: "bar",
 
-                    data: {{
+                    data: {
                         labels: labels,
 
                         datasets: [
-                            {{
+                            {
                                 label: "IOC Count",
 
                                 data: counts,
@@ -750,26 +572,26 @@ class HTMLReportExporter:
                                 hoverBorderColor: "#93c5fd",
 
                                 hoverBorderWidth: 2,
-                            }},
+                            },
                         ],
-                    }},
+                    },
 
-                    options: {{
+                    options: {
                         responsive: true,
 
                         maintainAspectRatio: false,
 
-                        animation: {{
+                        animation: {
                             duration: 1000,
                             easing: "easeOutQuart",
-                        }},
+                        },
 
-                        plugins: {{
-                            legend: {{
+                        plugins: {
+                            legend: {
                                 display: false,
-                            }},
+                            },
 
-                            tooltip: {{
+                            tooltip: {
                                 backgroundColor: "#0f172a",
 
                                 titleColor: "#f8fafc",
@@ -784,47 +606,47 @@ class HTMLReportExporter:
 
                                 displayColors: false,
 
-                                callbacks: {{
-                                    label: function(context) {{
+                                callbacks: {
+                                    label: function(context) {
                                         return "Count: " + context.raw;
-                                    }}
-                                }}
-                            }},
-                        }},
+                                    }
+                                }
+                            },
+                        },
 
-                        scales: {{
-                            x: {{
-                                ticks: {{
+                        scales: {
+                            x: {
+                                ticks: {
                                     color: "#e2e8f0",
-                                }},
+                                },
 
-                                grid: {{
+                                grid: {
                                     color: "#334155",
-                                }},
-                            }},
+                                },
+                            },
 
-                            y: {{
+                            y: {
                                 beginAtZero: true,
 
-                                ticks: {{
+                                ticks: {
                                     color: "#e2e8f0",
                                     precision: 0,
-                                }},
+                                },
 
-                                grid: {{
+                                grid: {
                                     color: "#334155",
-                                }},
-                            }},
-                        }},
-                    }},
-                }}
+                                },
+                            },
+                        },
+                    },
+                }
             );
 
-        }}
+        }
 
         </script>
 
         </body>
 
         </html>
-        """
+        
