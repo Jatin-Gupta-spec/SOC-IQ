@@ -263,6 +263,10 @@ class MainWindow(QMainWindow):
         self.workspace_page.status_message.connect(
             self._show_status_message,
         )
+
+        self.workspace_page.export_investigation_requested.connect(
+            self._export_investigation_report,
+        )
         
 
     def _open_workspace(self) -> None:
@@ -346,6 +350,21 @@ class MainWindow(QMainWindow):
 
         self.statusBar().showMessage(
             "SOC-IQ Ready"
+        )
+
+    def _export_investigation_report(
+        self,
+    ) -> None:
+        """
+        Handle investigation report export requests.
+
+        The HTML export workflow will be connected
+        in the next sprint step.
+        """
+
+        self.statusBar().showMessage(
+            "Export Investigation Report requested.",
+            3000,
         )
 
     def _show_status_message(
