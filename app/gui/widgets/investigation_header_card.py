@@ -8,6 +8,9 @@ workspace.
 
 from __future__ import annotations
 
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QPushButton
+
 from app.database.models import Investigation
 from app.gui.widgets.badge import Badge
 from app.gui.widgets.detail_section import DetailSection
@@ -18,6 +21,8 @@ class InvestigationHeaderCard(DetailSection):
     """
     Displays investigation metadata.
     """
+
+    export_requested = Signal()
 
     def __init__(self) -> None:
         super().__init__(
@@ -62,6 +67,14 @@ class InvestigationHeaderCard(DetailSection):
             "Waiting...",
         )
 
+        self._export_button = QPushButton(
+            "Export Investigation Report",
+        )
+
+        self._export_button.clicked.connect(
+            self.export_requested.emit,
+        )
+
         severity_row = KeyValueRow(
             "Severity",
         )
@@ -96,6 +109,10 @@ class InvestigationHeaderCard(DetailSection):
 
         self.add_widget(
             self._risk_score_row,
+        )
+
+        self.add_widget(
+            self._export_button,
         )
 
     def reset(self) -> None:
