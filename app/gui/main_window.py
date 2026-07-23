@@ -27,6 +27,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QMainWindow,
     QMessageBox,
     QStackedWidget,
@@ -379,6 +380,66 @@ class MainWindow(QMainWindow):
             "SOC-IQ Ready"
         )
 
+    def _select_export_format(
+        self,
+    ) -> str | None:
+        """
+        Ask the user which export format
+        should be used.
+
+        Returns:
+            The selected export format identifier,
+            or None if the dialog is cancelled.
+        """
+
+        formats = [
+            "HTML Report (.html)",
+        ]
+
+        selected_format, accepted = (
+            QInputDialog.getItem(
+                self,
+                "Export Investigation Report",
+                "Choose export format:",
+                formats,
+                0,
+                False,
+            )
+        )
+
+        if not accepted:
+            return None
+
+        if selected_format == "HTML Report (.html)":
+            return "html"
+
+        return None
+
+    def _export_report(
+        self,
+        export_format: str,
+        investigation,
+        output_path: Path,
+    ) -> Path:
+        """
+        Export an investigation using the selected
+        export format.
+
+        Returns:
+            The exported report path.
+        """
+
+        if export_format == "html":
+
+            return self._reporting_service.export_html(
+                investigation,
+                output_path,
+            )
+
+        raise ValueError(
+            f"Unsupported export format: {export_format}"
+        )
+
     def _export_investigation_report(
         self,
     ) -> None:
@@ -395,6 +456,19 @@ class MainWindow(QMainWindow):
 
             self.statusBar().showMessage(
                 "No investigation selected.",
+                3000,
+            )
+
+            return
+
+        export_format = (
+            self._select_export_format()
+        )
+
+        if export_format is None:
+
+            self.statusBar().showMessage(
+                "Export cancelled.",
                 3000,
             )
 
@@ -439,11 +513,10 @@ class MainWindow(QMainWindow):
 
         try:
 
-            exported_file = (
-                self._reporting_service.export_html(
-                    investigation,
-                    output_path,
-                )
+            exported_file = self._export_report(
+                export_format,
+                investigation,
+                output_path,
             )
 
         except Exception as error:
