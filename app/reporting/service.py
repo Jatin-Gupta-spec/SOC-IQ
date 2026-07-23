@@ -55,9 +55,7 @@ class ReportingService:
 
         report = InvestigationReport(
             report_name=investigation.report_name,
-            analyzed_at=investigation.analyzed_at.strftime(
-                "%d %b %Y %H:%M",
-            ),
+            analyzed_at=investigation.analyzed_at,
             status=investigation.status,
             severity=investigation.severity,
             risk_score=investigation.risk_score,
