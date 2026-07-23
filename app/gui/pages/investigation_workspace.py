@@ -67,6 +67,8 @@ class InvestigationWorkspacePage(QWidget):
         str,
     )
 
+    export_investigation_requested = Signal()
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -122,6 +124,10 @@ class InvestigationWorkspacePage(QWidget):
 
         self._ioc_details_widget.copy_completed.connect(
             self.status_message.emit,
+        )
+
+        self._header_card.export_requested.connect(
+            self.export_investigation_requested.emit,
         )
 
         event_bus.investigation_selected.connect(
