@@ -415,9 +415,19 @@ class MainWindow(QMainWindow):
 
         except Exception as error:
 
+            message = (
+                f"Export failed: {error}"
+            )
+
             self.statusBar().showMessage(
-                f"Export failed: {error}",
+                message,
                 5000,
+            )
+
+            QMessageBox.critical(
+                self,
+                "Export Failed",
+                message,
             )
 
             return
