@@ -15,6 +15,7 @@ from PySide6.QtGui import QAction
 from pathlib import Path
 
 from PySide6.QtWidgets import (
+    QMessageBox,
     QFileDialog,
     QHBoxLayout,
     QMainWindow,
@@ -427,6 +428,16 @@ class MainWindow(QMainWindow):
                 f"{exported_file.name}"
             ),
             5000,
+        )
+
+        QMessageBox.information(
+            self,
+            "Export Complete",
+            (
+                "The investigation report was exported "
+                "successfully.\n\n"
+                f"Location:\n{exported_file}"
+            ),
         )
 
     def _show_status_message(
