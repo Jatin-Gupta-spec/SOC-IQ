@@ -459,7 +459,41 @@ class HTMLReportExporter:
             background: #334155;
         }}
 
+        .search-box {{
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+            padding: 12px 16px;
 
+            background: #0f172a;
+            color: #e2e8f0;
+
+            border: 1px solid #334155;
+            border-radius: 8px;
+
+            font-size: 14px;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }}
+
+        .search-box:focus {{
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+        }}
+
+        .search-box::placeholder {{
+            color: #94a3b8;
+        }}
+
+        .no-results {{
+            display: none;
+            margin-bottom: 16px;
+            color: #94a3b8;
+            font-style: italic;
+        }}
 
         .footer {{
             margin-top: 50px;
@@ -633,6 +667,21 @@ class HTMLReportExporter:
         <div class="section">
 
         <h2>IOC Summary</h2>
+
+        <input
+            id="iocSearch"
+            type="text"
+            placeholder="Search IOC types..."
+            class="search-box"
+        >
+
+        <p
+            id="noResultsMessage"
+            class="no-results"
+            style="display: none;"
+        >
+            No matching IOC types found.
+        </p>
 
         <table>
 
@@ -843,6 +892,49 @@ class HTMLReportExporter:
                 );
             }};
         }});
+
+        const searchBox = document.getElementById(
+            "iocSearch"
+        );
+
+        const noResultsMessage = document.getElementById(
+            "noResultsMessage"
+        );
+
+        searchBox.addEventListener(
+            "input",
+            function () {{
+
+                const filter = this.value
+                    .toLowerCase()
+                    .trim();
+
+                let visibleRows = 0;
+
+                rows.forEach((row) => {{
+
+                    const text = row.textContent
+                        .toLowerCase();
+
+                    if (text.includes(filter)) {{
+                        row.style.display = "";
+                        visibleRows++;
+                    }}
+                    else {{
+                        row.style.display = "none";
+                    }}
+
+                }});
+
+                if (visibleRows === 0) {{
+                    noResultsMessage.style.display = "block";
+                }}
+                else {{
+                    noResultsMessage.style.display = "none";
+                }}
+
+            }}
+        );
 
         const threatRows = document.querySelectorAll(".clickable-threat-row");
 
