@@ -100,7 +100,7 @@ class HTMLReportExporter:
 
             rows.append(
                 f"""
-        <tr>
+        <tr class="clickable-threat-row">
         <td>{escape(item.get("sha256", ""))}</td>
        <td>{escape(item.get("verdict", "Unknown"))}</td>
        <td>{escape(str(item.get("detection_ratio", "N/A")))}</td>
@@ -450,6 +450,16 @@ class HTMLReportExporter:
         .clickable-row:hover {{
             background: #334155;
         }}
+
+        .clickable-threat-row {{
+            cursor: pointer;
+        }}
+
+        .clickable-threat-row:hover {{
+            background: #334155;
+        }}
+
+
 
         .footer {{
             margin-top: 50px;
@@ -830,6 +840,16 @@ class HTMLReportExporter:
             row.onclick = function () {{
                 alert(
                     "Detailed IOC view will be available in a future SOC-IQ release."
+                );
+            }};
+        }});
+
+        const threatRows = document.querySelectorAll(".clickable-threat-row");
+
+        threatRows.forEach((row) => {{
+            row.onclick = function () {{
+                alert(
+                    "Detailed Threat Intelligence view will be available in a future SOC-IQ release."
                 );
             }};
         }});
