@@ -68,7 +68,10 @@ class HTMLReportExporter:
 
             rows.append(
                 f"""
-    <tr class="clickable-row">
+    <tr
+        class="clickable-row"
+        data-ioc-type="{ioc_type}"
+    >
     <td>{escape(ioc_type.replace("_", " ").title())}</td>
     <td>{len(values)}</td>
     </tr>
@@ -175,6 +178,11 @@ class HTMLReportExporter:
                 len(values)
                 for values in report.iocs.values()
             ]
+        )
+
+        ioc_data = json.dumps(
+            report.iocs,
+            ensure_ascii=False,
         )
 
         status_class = {
@@ -495,6 +503,35 @@ class HTMLReportExporter:
             font-style: italic;
         }}
 
+        .ioc-details-panel {{
+            margin-top: 20px;
+            padding: 20px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+        }}
+
+        .ioc-details-panel h3 {{
+            margin-top: 0;
+            color: #38bdf8;
+        }}
+
+        .ioc-details-panel p {{
+            color: #94a3b8;
+            margin-bottom: 0;
+        }}
+
+        .ioc-details-panel ul {{
+            margin: 10px 0 0;
+            padding-left: 20px;
+        }}
+
+        .ioc-details-panel li {{
+            margin-bottom: 6px;
+            color: #e2e8f0;
+            word-break: break-word;
+        }}
+
         .footer {{
             margin-top: 50px;
             padding-top: 20px;
@@ -525,6 +562,10 @@ class HTMLReportExporter:
             color: #ef4444;
         }}
         
+        .chart-container {{
+            height: 350px;
+            margin-top: 20px;
+        }}
 
         </style>
 
@@ -702,6 +743,17 @@ class HTMLReportExporter:
 
         </table>
 
+        <div
+            id="iocDetails"
+            class="ioc-details-panel"
+        >
+            <h3>IOC Details</h3>
+
+            <p>
+                Click an IOC type above to view its values.
+            </p>
+        </div>
+
         </div>
 
         <div class="section">
@@ -741,7 +793,7 @@ class HTMLReportExporter:
         Generated automatically by SOC-IQ.<br>
 
         Generated on:
-        {generated_at}
+        {generated_at}<br>
 
         Confidential - For authorized personnel only.
 
@@ -753,9 +805,23 @@ class HTMLReportExporter:
 
         <script>
 
+        function escapeHtml(text) {{
+
+            const div = document.createElement(
+                "div"
+            );
+
+            div.textContent = text;
+
+            return div.innerHTML;
+
+        }}
+
         const labels = {ioc_labels};
 
         const counts = {ioc_counts};
+
+        const iocData = {ioc_data};
 
         const canvas = document.getElementById(
             "iocChart"
@@ -885,12 +951,60 @@ class HTMLReportExporter:
 
         const rows = document.querySelectorAll(".clickable-row");
 
+        const detailsPanel =
+            document.getElementById("iocDetails");
+
         rows.forEach((row) => {{
+
             row.onclick = function () {{
-                alert(
-                    "Detailed IOC view will be available in a future SOC-IQ release."
-                );
+
+                const iocType =
+                    row.dataset.iocType;
+
+                const values =
+                    iocData[iocType] || [];
+
+                let html =
+                    "<h3>IOC Details</h3>";
+
+                html +=
+                    "<strong>" +
+                    escapeHtml(
+                        iocType
+                            .replaceAll("_", " ")
+                            .replace(
+                                /\b\w/g,
+                                (character) => character.toUpperCase()
+                            )
+                    ) +
+                    "</strong>";
+
+                if (values.length === 0) {{
+
+                    html +=
+                        "<p>No IOC values available.</p>";
+
+                }}
+                else {{
+
+                    html += "<ul>";
+
+                    values.forEach((value) => {{
+
+                        html +=
+                            "<li>" +
+                            escapeHtml(value) +
+                            "</li>";
+
+                    }});
+
+                    html += "</ul>";
+                }}
+
+                detailsPanel.innerHTML = html;
+
             }};
+
         }});
 
         const searchBox = document.getElementById(
@@ -936,7 +1050,10 @@ class HTMLReportExporter:
             }}
         );
 
-        const threatRows = document.querySelectorAll(".clickable-threat-row");
+        const threatRows =
+            document.querySelectorAll(
+                ".clickable-threat-row"
+            );
 
         threatRows.forEach((row) => {{
             row.onclick = function () {{
