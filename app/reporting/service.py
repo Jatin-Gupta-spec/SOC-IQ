@@ -8,15 +8,10 @@ and delegates export operations to exporters.
 from __future__ import annotations
 
 from datetime import datetime
-
 from pathlib import Path
 
 from app.database.models import Investigation
-
-from app.reporting.html_exporter import (
-    HTMLReportExporter,
-)
-
+from app.reporting.export_manager import ExportManager
 from app.reporting.models import InvestigationReport
 
 
@@ -44,16 +39,16 @@ class ReportingService:
             f"{timestamp}.{extension}"
         )
 
-    def export_html(
+    def _build_report(
         self,
         investigation: Investigation,
-        output_path: Path,
-    ) -> Path:
+    ) -> InvestigationReport:
         """
-        Export an investigation as an HTML report.
+        Build an InvestigationReport
+        from an Investigation.
         """
 
-        report = InvestigationReport(
+        return InvestigationReport(
             report_name=investigation.report_name,
             analyzed_at=investigation.analyzed_at,
             status=investigation.status,
@@ -67,7 +62,56 @@ class ReportingService:
             threat_intelligence=investigation.threat_intelligence,
         )
 
-        return HTMLReportExporter.export(
+    def export_html(
+        self,
+        investigation: Investigation,
+        output_path: Path,
+    ) -> Path:
+        """
+        Export an investigation as an HTML report.
+        """
+
+        report = self._build_report(
+            investigation,
+        )
+
+        return ExportManager.export_html(
+            report,
+            output_path,
+        )
+
+    def export_json(
+        self,
+        investigation: Investigation,
+        output_path: Path,
+    ) -> Path:
+        """
+        Export an investigation as a JSON report.
+        """
+
+        report = self._build_report(
+            investigation,
+        )
+
+        return ExportManager.export_json(
+            report,
+            output_path,
+        )
+
+    def export_markdown(
+        self,
+        investigation: Investigation,
+        output_path: Path,
+    ) -> Path:
+        """
+        Export an investigation as a Markdown report.
+        """
+
+        report = self._build_report(
+            investigation,
+        )
+
+        return ExportManager.export_markdown(
             report,
             output_path,
         )
