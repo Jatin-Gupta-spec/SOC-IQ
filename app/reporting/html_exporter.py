@@ -1475,7 +1475,7 @@ class HTMLReportExporter:
 
         }};
 
-         catch (error) {{
+        }} catch (error) {{
             console.error(
                 "SOC-IQ HTML initialization failed:",
                 error
