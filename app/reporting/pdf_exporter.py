@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
@@ -48,20 +49,58 @@ class PDFReportExporter:
             report.report_name,
         )
 
-        y = height - 60
+        # ==================================================
+        # Header
+        # ==================================================
+
+        pdf.setFillColor(
+            colors.HexColor("#2563EB")
+        )
+
+        pdf.rect(
+            0,
+            height - 70,
+            width,
+            70,
+            fill=True,
+            stroke=False,
+        )
+
+        pdf.setFillColor(
+            colors.white
+        )
 
         pdf.setFont(
             "Helvetica-Bold",
-            22,
+            24,
         )
 
         pdf.drawString(
-            50,
-            y,
+            40,
+            height - 42,
             "SOC-IQ Investigation Report",
         )
 
-        y -= 40
+        pdf.setFont(
+            "Helvetica",
+            11,
+        )
+
+        pdf.drawString(
+            42,
+            height - 60,
+            "Security Operations & Intelligence Platform",
+        )
+
+        pdf.setFillColor(
+            colors.black
+        )
+
+        y = height - 95
+
+        # ==================================================
+        # Report Information
+        # ==================================================
 
         pdf.setFont(
             "Helvetica",
