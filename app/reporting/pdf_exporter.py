@@ -141,13 +141,36 @@ class PDFReportExporter:
             18,
         )
 
+        pdf.setFillColor(
+            colors.HexColor("#1E3A8A"),
+        )
+
         pdf.drawString(
             50,
             y,
             "Executive Summary",
         )
 
-        y -= 30
+        pdf.setStrokeColor(
+            colors.HexColor("#2563EB"),
+        )
+
+        pdf.setLineWidth(
+            1,
+        )
+
+        pdf.line(
+            50,
+            y - 5,
+            width - 50,
+            y - 5,
+        )
+
+        pdf.setFillColor(
+            colors.black,
+        )
+
+        y -= 35
 
         pdf.setFont(
             "Helvetica",
@@ -195,13 +218,36 @@ class PDFReportExporter:
             18,
         )
 
+        pdf.setFillColor(
+            colors.HexColor("#1E3A8A"),
+        )
+
         pdf.drawString(
             50,
             y,
             "Investigation Details",
         )
 
-        y -= 30
+        pdf.setStrokeColor(
+            colors.HexColor("#2563EB"),
+        )
+
+        pdf.setLineWidth(
+            1,
+        )
+
+        pdf.line(
+            50,
+            y - 5,
+            width - 50,
+            y - 5,
+        )
+
+        pdf.setFillColor(
+            colors.black,
+        )
+
+        y -= 35
 
         pdf.setFont(
             "Helvetica",
@@ -257,13 +303,36 @@ class PDFReportExporter:
             18,
         )
 
+        pdf.setFillColor(
+            colors.HexColor("#1E3A8A"),
+        )
+
         pdf.drawString(
             50,
             y,
             "IOC Summary",
         )
 
-        y -= 30
+        pdf.setStrokeColor(
+            colors.HexColor("#2563EB"),
+        )
+
+        pdf.setLineWidth(
+            1,
+        )
+
+        pdf.line(
+            50,
+            y - 5,
+            width - 50,
+            y - 5,
+        )
+
+        pdf.setFillColor(
+            colors.black,
+        )
+
+        y -= 35
 
         table_data = [
             [
