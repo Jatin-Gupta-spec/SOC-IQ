@@ -28,13 +28,14 @@
         >
 
        <title>
-        SOC-IQ - report4.txt
+        SOC-IQ - malware_report.txt
         </title>
 
         <style>
 
         body {
             font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+            scroll-behavior: smooth;
             background:
                 radial-gradient(circle at top left,
                 #1e3a8a 0%,
@@ -295,6 +296,29 @@
             color: #f8fafc;
         }
 
+        .details-panel a {
+
+            display: block;
+            width: 100%;
+
+            color: #38bdf8;
+
+            text-decoration: none;
+
+            transition:
+                color .25s ease,
+                padding-left .25s ease;
+
+        }
+
+        .details-panel a:hover {
+
+            color: white;
+
+            padding-left: 12px;
+
+        }
+
         h1 {
             margin: 0;
             padding-bottom: 18px;
@@ -545,10 +569,74 @@
             margin-top: 20px;
         }
 
-        #backToTop {
+        .floating-actions {
+
             position: fixed;
-            bottom: 30px;
+
             right: 30px;
+            bottom: 30px;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 12px;
+
+            z-index: 1000;
+
+        }
+
+        #printReport {
+
+            border: none;
+
+            padding: 12px 18px;
+
+            border-radius: 10px;
+
+            background: #16a34a;
+
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 4px 12px rgba(0,0,0,.35);
+
+            transition:
+                transform .2s ease,
+                background .2s ease;
+
+        }
+
+        #printReport:hover {
+
+            background:#15803d;
+
+            transform:translateY(-2px);
+
+        }
+
+        .floating-actions {
+
+            position: fixed;
+
+            right: 30px;
+
+            bottom: 30px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+        }
+
+        #backToTop {
 
             width: 48px;
             height: 48px;
@@ -576,6 +664,47 @@
             background: #1d4ed8;
         }
 
+        @media print {       
+
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0;
+            }
+
+            .container {
+                background: white !important;
+                color: black !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            .search-box,
+            #backToTop,
+            #printReport {
+                display: none !important;
+            }
+
+            table,
+            .summary-card,
+            .details-panel {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                box-shadow: none !important;
+            }
+
+            a {
+                color: black !important;
+                text-decoration: none;
+            }
+
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+
+        }
+
         @keyframes fadeIn {
 
             from {
@@ -589,6 +718,8 @@
             }
 
         }
+
+        
 
         </style>
 
@@ -612,7 +743,7 @@
         <h1>SOC-IQ</h1>
 
         <h3 class="report-name">
-            report4.txt
+            malware_report.txt
         </h3>
 
         <p>
@@ -629,7 +760,7 @@
 
         <div>
         <strong>Generated:</strong>
-        2026-07-23 21:07:46.626615+00:00
+        2026-07-22 15:43:34.942796+00:00
         </div>
 
         </div>
@@ -644,12 +775,12 @@
                 Risk Score
             </div>
 
-            <div class="summary-value risk-medium">
-                48
+            <div class="summary-value risk-critical">
+                100
             </div>
 
             <div class="summary-subtitle">
-                Medium Risk
+                Critical Risk
             </div>
 
         </div>
@@ -661,8 +792,8 @@
 
         <div class="summary-value">
 
-        <span class="badge badge-high">
-        HIGH
+        <span class="badge badge-critical">
+        CRITICAL
         </span>
 
         </div>
@@ -674,7 +805,7 @@
         Confidence
         </div>
         <div class="summary-value">
-        30%
+        85%
         </div>
         </div>
 
@@ -689,7 +820,83 @@
 
         </div>
 
+        <div class="section" id="statistics">
+
+        <h2>Report Statistics</h2>
+
+        <div class="summary-grid">
+
+        <div class="summary-card">
+        <div class="summary-title">
+        IOC Types
+        </div>
+        <div class="summary-value">
+        10
+        </div>
+        </div>
+
+        <div class="summary-card">
+        <div class="summary-title">
+        Total IOCs
+        </div>
+        <div class="summary-value">
+        34
+        </div>
+        </div>
+
+        <div class="summary-card">
+        <div class="summary-title">
+        Threat Entries
+        </div>
+        <div class="summary-value">
+        2
+        </div>
+        </div>
+
+        <div class="summary-card">
+        <div class="summary-title">
+        Confidence
+        </div>
+        <div class="summary-value">
+        85%
+        </div>
+        </div>
+
+        </div>
+
+        </div>
+
         <div class="section">
+
+        <h2>Quick Navigation</h2>
+
+        <div class="details-panel">
+
+        <div class="detail-row">
+        <a href="#statistics">📊 Report Statistics</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#details">📄 Investigation Details</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#distribution">📈 IOC Distribution</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#ioc-summary">🛡 IOC Summary</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#threat-summary">🧠 Threat Intelligence</a>
+        </div>
+
+        </div>
+
+        </div>
+
+       <div class="section" id="details">
 
         <h2>Investigation Details</h2>
 
@@ -698,20 +905,20 @@
         <div class="detail-row">
         <span class="detail-label">Report Name</span>
         <span class="detail-value">
-        report4.txt
+        malware_report.txt
         </span>
         </div>
 
         <div class="detail-row">
         <span class="detail-label">Analyzed At</span>
         <span class="detail-value">
-        2026-07-23 21:07:46.626615+00:00
+        2026-07-22 15:43:34.942796+00:00
         </span>
         </div>
 
         <div class="detail-row">
         <span class="detail-label">IOC Score</span>
-        <span class="detail-value">38</span>
+        <span class="detail-value">106</span>
         </div>
 
         <div class="detail-row">
@@ -721,14 +928,14 @@
 
         <div class="detail-row">
         <span class="detail-label">CVE Score</span>
-        <span class="detail-value">10</span>
+        <span class="detail-value">30</span>
         </div>
 
         </div>
 
         </div>
 
-        <div class="section">
+        <div class="section" id="distribution">  
 
         <h2>IOC Distribution</h2>
 
@@ -744,7 +951,7 @@
 
         </div>
 
-        <div class="section">
+        <div class="section" id="ioc-summary">
 
         <h2>IOC Summary</h2>
 
@@ -787,7 +994,7 @@
         data-ioc-type="ipv4"
     >
     <td>Ipv4</td>
-    <td>3</td>
+    <td>4</td>
     </tr>
     
     <tr
@@ -795,7 +1002,7 @@
         data-ioc-type="domains"
     >
     <td>Domains</td>
-    <td>0</td>
+    <td>5</td>
     </tr>
     
     <tr
@@ -803,7 +1010,7 @@
         data-ioc-type="urls"
     >
     <td>Urls</td>
-    <td>2</td>
+    <td>3</td>
     </tr>
     
     <tr
@@ -811,7 +1018,7 @@
         data-ioc-type="emails"
     >
     <td>Emails</td>
-    <td>1</td>
+    <td>2</td>
     </tr>
     
     <tr
@@ -819,7 +1026,7 @@
         data-ioc-type="md5"
     >
     <td>Md5</td>
-    <td>1</td>
+    <td>2</td>
     </tr>
     
     <tr
@@ -827,7 +1034,7 @@
         data-ioc-type="sha1"
     >
     <td>Sha1</td>
-    <td>1</td>
+    <td>2</td>
     </tr>
     
     <tr
@@ -835,7 +1042,7 @@
         data-ioc-type="sha256"
     >
     <td>Sha256</td>
-    <td>1</td>
+    <td>2</td>
     </tr>
     
     <tr
@@ -843,7 +1050,7 @@
         data-ioc-type="cves"
     >
     <td>Cves</td>
-    <td>1</td>
+    <td>3</td>
     </tr>
     
     <tr
@@ -851,7 +1058,7 @@
         data-ioc-type="windows_file_paths"
     >
     <td>Windows File Paths</td>
-    <td>1</td>
+    <td>6</td>
     </tr>
     
     <tr
@@ -859,7 +1066,7 @@
         data-ioc-type="windows_registry_keys"
     >
     <td>Windows Registry Keys</td>
-    <td>1</td>
+    <td>5</td>
     </tr>
     
 
@@ -880,7 +1087,7 @@
 
         </div>
 
-        <div class="section">
+        <div class="section" id="threat-summary">
 
         <h2>Threat Intelligence Summary</h2>
 
@@ -901,13 +1108,24 @@
         
         <tr
             class="clickable-threat-row"
-            data-sha256="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+            data-sha256="3f786850e387550fdab836ed7e6dc881de23001b4fb5d6fcb5b8f8f9d4f6b6c5"
             data-verdict="Clean"
-            data-detection="0/60"
+            data-detection="N/A"
         >
-        <td>9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08</td>
+        <td>3f786850e387550fdab836ed7e6dc881de23001b4fb5d6fcb5b8f8f9d4f6b6c5</td>
        <td>Clean</td>
-       <td>0/60</td>
+       <td>N/A</td>
+        </tr>
+        
+        <tr
+            class="clickable-threat-row"
+            data-sha256="d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2"
+            data-verdict="Clean"
+            data-detection="N/A"
+        >
+        <td>d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2</td>
+       <td>Clean</td>
+       <td>N/A</td>
         </tr>
         
 
@@ -939,7 +1157,7 @@
         Generated automatically by SOC-IQ.<br>
 
         Generated on:
-        2026-07-23 21:07:46.626615+00:00<br>
+        2026-07-22 15:43:34.942796+00:00<br>
 
         Confidential - For authorized personnel only.
 
@@ -949,12 +1167,23 @@
 
         </div>
 
-        <button
-            id="backToTop"
-            title="Back to Top"
-        >
-            ↑
-        </button>
+        <div class="floating-actions">
+
+            <button
+                id="printReport"
+                title="Print Report"
+            >
+                🖨 Print
+            </button>
+
+            <button
+                id="backToTop"
+                title="Back to Top"
+            >
+                ↑
+            </button>
+
+        </div>
 
         <script>
 
@@ -978,21 +1207,15 @@
 
         const labels = ["Ipv4", "Domains", "Urls", "Emails", "Md5", "Sha1", "Sha256", "Cves", "Windows File Paths", "Windows Registry Keys"];
 
-        const counts = [3, 0, 2, 1, 1, 1, 1, 1, 1, 1];
+        const counts = [4, 5, 3, 2, 2, 2, 2, 3, 6, 5];
 
-        const iocData = {"ipv4": ["103.21.244.0", "172.67.181.18", "8.8.8.8"], "domains": [], "urls": ["http://command-server.example/api", "https://login-secure.example/auth"], "emails": ["support@command-server.example"], "md5": ["098f6bcd4621d373cade4e832627b4f6"], "sha1": ["2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"], "sha256": ["9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"], "cves": ["CVE-2023-23397"], "windows_file_paths": ["C:\\Windows\\Temp\\payload.dll"], "windows_registry_keys": ["HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"]};
-
-        console.log("========== SOC-IQ DEBUG ==========");
-        console.log("IOC Data:", iocData);
-        console.log("IOC Labels:", labels);
-        console.log("IOC Counts:", counts);
-        console.log("==================================");
+        const iocData = {"ipv4": ["103.21.244.15", "192.168.1.10", "45.76.123.90", "8.8.8.8"], "domains": ["company.com", "downloads.badserver.io", "evilcorp.com", "malicious-update.net", "secure-login.org"], "urls": ["http://evilcorp.com/login", "https://downloads.badserver.io/payload.zip", "https://malicious-update.net/update.exe"], "emails": ["attacker@evilcorp.com", "employee@company.com"], "md5": ["44d88612fea8a8f36de82e1278abb02f", "5d41402abc4b2a76b9719d911017c592"], "sha1": ["7c4a8d09ca3762af61e59520943dc26494f8941b", "da39a3ee5e6b4b0d3255bfef95601890afd80709"], "sha256": ["3f786850e387550fdab836ed7e6dc881de23001b4fb5d6fcb5b8f8f9d4f6b6c5", "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2"], "cves": ["CVE-2021-44228", "CVE-2023-23397", "CVE-2024-4577"], "windows_file_paths": ["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "C:\\Users\\John\\AppData\\Local\\Temp\\payload.exe", "C:\\Users\\Public\\Downloads\\invoice.pdf.exe", "C:\\Windows\\System32\\cmd.exe", "C:\\Windows\\Temp\\update.dll", "D:\\Malware\\dropper.dll"], "windows_registry_keys": ["HKCR\\txtfile\\shell\\open\\command", "HKCU\\Software\\Malware\\Config", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", "HKLM\\System\\CurrentControlSet\\Services"]};
 
         const canvas = document.getElementById(
             "iocChart"
         );
 
-        if (canvas && typeof Chart !== "undefined") {
+        if (canvas && window.Chart) {
         
                 const context = canvas.getContext(
             "2d"
@@ -1222,39 +1445,15 @@
         });
 
         const ui = {
-
-            searchBox: document.getElementById(
-                "iocSearch"
-            ),
-
-            noResultsMessage: document.getElementById(
-                "noResultsMessage"
-            ),
-
-            threatDetails: document.getElementById(
-                "threatDetails"
-            ),
-
-            detailsPanel: document.getElementById(
-                "iocDetails"
-            ),
-
-             tableBody: document.getElementById(
-                "iocTableBody"
-            ),
-
-             backToTop: document.getElementById(
-                "backToTop"
-            ),
-
-             sortType: document.getElementById(
-                "sortType"
-            ),
-
-            sortCount: document.getElementById(
-                "sortCount"
-            ),
-
+            searchBox: document.getElementById("iocSearch"),
+            noResultsMessage: document.getElementById("noResultsMessage"),
+            threatDetails: document.getElementById("threatDetails"),
+            detailsPanel: document.getElementById("iocDetails"),
+            tableBody: document.getElementById("iocTableBody"),
+            backToTop: document.getElementById("backToTop"),
+            printReport: document.getElementById("printReport"),
+            sortType: document.getElementById("sortType"),
+            sortCount: document.getElementById("sortCount"),
         };
 
         ui.searchBox.addEventListener(
@@ -1476,14 +1675,24 @@
             }
         );
 
-      ui.backToTop.addEventListener("click", function () {
+        ui.printReport.addEventListener("click", function () {
+
+            window.print();
+
+        });
+
+    if (ui.backToTop) {
+
+        ui.backToTop.addEventListener("click", function () {
 
             window.scrollTo({
                 top: 0,
                 behavior: "smooth",
             });
 
-      });
+        });
+
+    }
 
         } catch (error) {
             console.error(

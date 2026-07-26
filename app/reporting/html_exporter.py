@@ -1320,12 +1320,6 @@ class HTMLReportExporter:
 
         const iocData = {ioc_data};
 
-        console.log("========== SOC-IQ DEBUG ==========");
-        console.log("IOC Data:", iocData);
-        console.log("IOC Labels:", labels);
-        console.log("IOC Counts:", counts);
-        console.log("==================================");
-
         const canvas = document.getElementById(
             "iocChart"
         );
