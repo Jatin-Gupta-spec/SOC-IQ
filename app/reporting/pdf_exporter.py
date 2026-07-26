@@ -12,6 +12,7 @@ from pathlib import Path
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
 
 from app.reporting.models import InvestigationReport
 
@@ -243,6 +244,114 @@ class PDFReportExporter:
             60,
             y,
             f"CVE Score: {report.cve_score}",
+        )
+
+        # ==========================================
+        # IOC Summary
+        # ==========================================
+
+        y -= 45
+
+        pdf.setFont(
+            "Helvetica-Bold",
+            18,
+        )
+
+        pdf.drawString(
+            50,
+            y,
+            "IOC Summary",
+        )
+
+        y -= 30
+
+        table_data = [
+            [
+                "IOC Type",
+                "Count",
+            ]
+        ]
+
+        for ioc_type, values in report.iocs.items():
+
+            table_data.append(
+                [
+                    ioc_type.replace(
+                        "_",
+                        " ",
+                    ).title(),
+                    str(len(values)),
+                ]
+            )
+
+        table = Table(
+            table_data,
+            colWidths=[
+                300,
+                100,
+            ],
+        )
+
+        table.setStyle(
+            TableStyle(
+                [
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#2563EB"),
+                    ),
+                    (
+                        "TEXTCOLOR",
+                        (0, 0),
+                        (-1, 0),
+                        colors.white,
+                    ),
+                    (
+                        "GRID",
+                        (0, 0),
+                        (-1, -1),
+                        0.5,
+                        colors.grey,
+                    ),
+                    (
+                        "BACKGROUND",
+                        (0, 1),
+                        (-1, -1),
+                        colors.whitesmoke,
+                    ),
+                    (
+                        "FONTNAME",
+                        (0, 0),
+                        (-1, 0),
+                        "Helvetica-Bold",
+                    ),
+                    (
+                        "BOTTOMPADDING",
+                        (0, 0),
+                        (-1, 0),
+                        8,
+                    ),
+                    (
+                        "TOPPADDING",
+                        (0, 1),
+                        (-1, -1),
+                        6,
+                    ),
+                ]
+            )
+        )
+
+        table.wrapOn(
+            pdf,
+            width,
+            height,
+        )
+
+        table.drawOn(
+            pdf,
+            50,
+            y - (20 * len(table_data)),
         )
 
         pdf.save()
