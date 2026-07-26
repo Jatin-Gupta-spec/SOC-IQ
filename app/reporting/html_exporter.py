@@ -246,6 +246,7 @@ class HTMLReportExporter:
 
         body {{
             font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+            scroll-behavior: smooth;
             background:
                 radial-gradient(circle at top left,
                 #1e3a8a 0%,
