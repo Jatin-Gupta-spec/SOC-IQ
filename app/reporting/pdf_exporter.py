@@ -46,6 +46,8 @@ class PDFReportExporter:
             11 * inch,
         )
 
+        BOTTOM_MARGIN = 60
+
         pdf.setTitle(
             report.report_name,
         )
@@ -417,11 +419,21 @@ class PDFReportExporter:
             height,
         )
 
+        table_height = 20 * len(table_data)
+
         table.drawOn(
             pdf,
             50,
-            y - (20 * len(table_data)),
+            y - table_height,
         )
+
+        y -= table_height
+
+        if y < BOTTOM_MARGIN + 150:
+
+            pdf.showPage()
+
+            y = height - 70
 
         # ==========================================
         # Threat Intelligence Summary
@@ -545,11 +557,21 @@ class PDFReportExporter:
             height,
         )
 
+        table_height = 20 * len(threat_table)
+
         table.drawOn(
             pdf,
             50,
-            y - (20 * len(threat_table)),
+            y - table_height,
         )
+
+        y -= table_height
+
+        if y < BOTTOM_MARGIN:
+
+            pdf.showPage()
+
+            y = height - 70
 
         # ==========================================
         # Footer
