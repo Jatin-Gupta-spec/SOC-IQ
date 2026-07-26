@@ -129,6 +129,60 @@ class PDFReportExporter:
             "Version: 1.0.0",
         )
 
+        # ==========================================
+        # Executive Summary
+        # ==========================================
+
+        y -= 45
+
+        pdf.setFont(
+            "Helvetica-Bold",
+            18,
+        )
+
+        pdf.drawString(
+            50,
+            y,
+            "Executive Summary",
+        )
+
+        y -= 30
+
+        pdf.setFont(
+            "Helvetica",
+            12,
+        )
+
+        pdf.drawString(
+            60,
+            y,
+            f"Risk Score: {report.risk_score}",
+        )
+
+        y -= 20
+
+        pdf.drawString(
+            60,
+            y,
+            f"Severity: {report.severity}",
+        )
+
+        y -= 20
+
+        pdf.drawString(
+            60,
+            y,
+            f"Confidence: {report.confidence * 100:.0f}%",
+        )
+
+        y -= 20
+
+        pdf.drawString(
+            60,
+            y,
+            f"Status: {report.status}",
+        )
+
         pdf.save()
 
         return output_path
