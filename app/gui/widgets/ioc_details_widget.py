@@ -394,7 +394,7 @@ class IOCDetailsWidget(QWidget):
 
         if (
             event.matches(
-                event.StandardKey.Copy,
+                QKeySequence.StandardKey.Copy,
             )
             and self._table.hasFocus()
         ):
