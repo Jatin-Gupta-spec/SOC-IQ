@@ -981,6 +981,52 @@ class HTMLReportExporter:
 
         <div class="section">
 
+        <h2>Report Statistics</h2>
+
+        <div class="summary-grid">
+
+        <div class="summary-card">
+        <div class="summary-title">
+        IOC Types
+        </div>
+        <div class="summary-value">
+        {len(report.iocs)}
+        </div>
+        </div>
+
+        <div class="summary-card">
+        <div class="summary-title">
+        Total IOCs
+        </div>
+        <div class="summary-value">
+        {sum(len(values) for values in report.iocs.values())}
+        </div>
+        </div>
+
+        <div class="summary-card">
+        <div class="summary-title">
+        Threat Entries
+        </div>
+        <div class="summary-value">
+        {len(report.threat_intelligence.get("hashes", []))}
+        </div>
+        </div>
+
+        <div class="summary-card">
+        <div class="summary-title">
+        Confidence
+        </div>
+        <div class="summary-value">
+        {report.confidence * 100:.0f}%
+        </div>
+        </div>
+
+        </div>
+
+        </div>
+
+        <div class="section">
+
         <h2>Investigation Details</h2>
 
         <div class="details-panel">
