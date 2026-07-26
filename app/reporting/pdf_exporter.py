@@ -354,6 +354,134 @@ class PDFReportExporter:
             y - (20 * len(table_data)),
         )
 
+        # ==========================================
+        # Threat Intelligence Summary
+        # ==========================================
+
+        y = y - (20 * len(table_data)) - 50
+
+        pdf.setFont(
+            "Helvetica-Bold",
+            18,
+        )
+
+        pdf.drawString(
+            50,
+            y,
+            "Threat Intelligence Summary",
+        )
+
+        y -= 30
+
+        threat_table = [
+            [
+                "SHA256",
+                "Verdict",
+                "Detection",
+            ]
+        ]
+
+        hashes = report.threat_intelligence.get(
+            "hashes",
+            [],
+        )
+
+        for item in hashes:
+
+            threat_table.append(
+                [
+                    item.get(
+                        "sha256",
+                        "",
+                    )[:24] + "...",
+                    item.get(
+                        "verdict",
+                        "Unknown",
+                    ),
+                    str(
+                        item.get(
+                            "detection_ratio",
+                            "N/A",
+                        )
+                    ),
+                ]
+            )
+
+        if len(threat_table) == 1:
+
+            threat_table.append(
+                [
+                    "-",
+                    "No Threat Intelligence",
+                    "-",
+                ]
+            )
+
+        table = Table(
+            threat_table,
+            colWidths=[
+                250,
+                120,
+                100,
+            ],
+        )
+
+        table.setStyle(
+            TableStyle(
+                [
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#2563EB"),
+                    ),
+                    (
+                        "TEXTCOLOR",
+                        (0, 0),
+                        (-1, 0),
+                        colors.white,
+                    ),
+                    (
+                        "GRID",
+                        (0, 0),
+                        (-1, -1),
+                        0.5,
+                        colors.grey,
+                    ),
+                    (
+                        "BACKGROUND",
+                        (0, 1),
+                        (-1, -1),
+                        colors.whitesmoke,
+                    ),
+                    (
+                        "FONTNAME",
+                        (0, 0),
+                        (-1, 0),
+                        "Helvetica-Bold",
+                    ),
+                    (
+                        "BOTTOMPADDING",
+                        (0, 0),
+                        (-1, 0),
+                        8,
+                    ),
+                ]
+            )
+        )
+
+        table.wrapOn(
+            pdf,
+            width,
+            height,
+        )
+
+        table.drawOn(
+            pdf,
+            50,
+            y - (20 * len(threat_table)),
+        )
+
         pdf.save()
 
         return output_path
