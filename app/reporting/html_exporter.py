@@ -506,6 +506,29 @@ class HTMLReportExporter:
             color: #f8fafc;
         }}
 
+        .details-panel a {{
+
+            display: block;
+            width: 100%;
+
+            color: #38bdf8;
+
+            text-decoration: none;
+
+            transition:
+                color .25s ease,
+                padding-left .25s ease;
+
+        }}
+
+        .details-panel a:hover {{
+
+            color: white;
+
+            padding-left: 12px;
+
+        }}
+
         h1 {{
             margin: 0;
             padding-bottom: 18px;
@@ -979,7 +1002,7 @@ class HTMLReportExporter:
 
         </div>
 
-        <div class="section">
+        <div class="section" id="statistics">
 
         <h2>Report Statistics</h2>
 
@@ -1027,6 +1050,36 @@ class HTMLReportExporter:
 
         <div class="section">
 
+        <h2>Quick Navigation</h2>
+
+        <div class="details-panel">
+
+        <div class="detail-row">
+        <a href="#statistics">📊 Report Statistics</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#details">📄 Investigation Details</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#distribution">📈 IOC Distribution</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#ioc-summary">🛡 IOC Summary</a>
+        </div>
+
+        <div class="detail-row">
+        <a href="#threat-summary">🧠 Threat Intelligence</a>
+        </div>
+
+        </div>
+
+        </div>
+
+       <div class="section" id="details">
+
         <h2>Investigation Details</h2>
 
         <div class="details-panel">
@@ -1064,7 +1117,7 @@ class HTMLReportExporter:
 
         </div>
 
-        <div class="section">
+        <div class="section" id="distribution">  
 
         <h2>IOC Distribution</h2>
 
@@ -1080,7 +1133,7 @@ class HTMLReportExporter:
 
         </div>
 
-        <div class="section">
+        <div class="section" id="ioc-summary">
 
         <h2>IOC Summary</h2>
 
@@ -1136,7 +1189,7 @@ class HTMLReportExporter:
 
         </div>
 
-        <div class="section">
+        <div class="section" id="threat-summary">
 
         <h2>Threat Intelligence Summary</h2>
 
