@@ -831,6 +831,22 @@ class HTMLReportExporter:
 
         }}
 
+        .floating-actions {{
+
+            position: fixed;
+
+            right: 30px;
+
+            bottom: 30px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+        }}
+
         #backToTop {{
 
             width: 48px;
@@ -1773,6 +1789,12 @@ class HTMLReportExporter:
 
             }}
         );
+
+        ui.printReport.addEventListener("click", function () {{
+
+            window.print();
+
+        }});
 
     if (ui.backToTop) {{
 
