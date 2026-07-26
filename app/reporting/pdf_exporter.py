@@ -482,6 +482,42 @@ class PDFReportExporter:
             y - (20 * len(threat_table)),
         )
 
+        # ==========================================
+        # Footer
+        # ==========================================
+
+        pdf.setStrokeColor(
+            colors.grey,
+        )
+
+        pdf.line(
+            40,
+            40,
+            width - 40,
+            40,
+        )
+
+        pdf.setFont(
+            "Helvetica",
+            9,
+        )
+
+        pdf.setFillColor(
+            colors.grey,
+        )
+
+        pdf.drawString(
+            45,
+            25,
+            "SOC-IQ | Security Operations & Intelligence Platform",
+        )
+
+        pdf.drawRightString(
+            width - 45,
+            25,
+            "Page 1",
+        )
+
         pdf.save()
 
         return output_path
