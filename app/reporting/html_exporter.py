@@ -859,7 +859,7 @@ class HTMLReportExporter:
             background: #1d4ed8;
         }}
 
-        @media print {{
+        @media print {{       
 
             body {{
                 background: white !important;
@@ -874,13 +874,23 @@ class HTMLReportExporter:
                 border: none !important;
             }}
 
+            .search-box,
             #backToTop,
             #printReport {{
                 display: none !important;
             }}
 
-            table {{
+            table,
+            .summary-card,
+            .details-panel {{
+                page-break-inside: avoid;
+                break-inside: avoid;
                 box-shadow: none !important;
+            }}
+
+            a {{
+                color: black !important;
+                text-decoration: none;
             }}
 
             * {{
@@ -903,6 +913,8 @@ class HTMLReportExporter:
             }}
 
         }}
+
+        
 
         </style>
 
