@@ -183,6 +183,68 @@ class PDFReportExporter:
             f"Status: {report.status}",
         )
 
+        # ==========================================
+        # Investigation Details
+        # ==========================================
+
+        y -= 45
+
+        pdf.setFont(
+            "Helvetica-Bold",
+            18,
+        )
+
+        pdf.drawString(
+            50,
+            y,
+            "Investigation Details",
+        )
+
+        y -= 30
+
+        pdf.setFont(
+            "Helvetica",
+            12,
+        )
+
+        pdf.drawString(
+            60,
+            y,
+            f"Report Name: {report.report_name}",
+        )
+
+        y -= 20
+
+        pdf.drawString(
+            60,
+            y,
+            f"Analysis Time: {report.analyzed_at}",
+        )
+
+        y -= 20
+
+        pdf.drawString(
+            60,
+            y,
+            f"IOC Score: {report.ioc_score}",
+        )
+
+        y -= 20
+
+        pdf.drawString(
+            60,
+            y,
+            f"Threat Intelligence Score: {report.threat_intel_score}",
+        )
+
+        y -= 20
+
+        pdf.drawString(
+            60,
+            y,
+            f"CVE Score: {report.cve_score}",
+        )
+
         pdf.save()
 
         return output_path
