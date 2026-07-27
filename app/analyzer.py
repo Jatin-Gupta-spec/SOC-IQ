@@ -126,6 +126,13 @@ def analyze_report(
                 "Starting threat intelligence enrichment."
             )
 
+            if progress_callback is not None:
+
+                progress_callback(
+                    60,
+                    "Running Threat Intelligence...",
+                )
+
             threat_intelligence = (
                 service.enrich_results(
                     extracted_iocs,
