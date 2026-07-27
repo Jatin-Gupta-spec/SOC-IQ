@@ -10,11 +10,11 @@ from PySide6.QtCore import (
 )
 
 from PySide6.QtGui import (
+    QAction,
     QColor,
 )
 
 from PySide6.QtWidgets import (
-    QAction,
     QHeaderView,
     QMenu,
     QTableWidget,
