@@ -158,17 +158,17 @@ class PDFReportExporter:
         )
 
         pdf.setFillColor(
-            colors.HexColor("#1E3A8A"),
+            PRIMARY_BLUE,
         )
 
         pdf.drawString(
-            50,
+            PAGE_MARGIN,
             y,
             "Executive Summary",
         )
 
         pdf.setStrokeColor(
-            colors.HexColor("#2563EB"),
+            PRIMARY_BLUE,
         )
 
         pdf.setLineWidth(
@@ -176,10 +176,24 @@ class PDFReportExporter:
         )
 
         pdf.line(
-            50,
+            PAGE_MARGIN,
             y - 5,
-            width - 50,
+            width - PAGE_MARGIN,
             y - 5,
+        )
+
+        pdf.setFillColor(
+            LIGHT_BLUE,
+        )
+
+        pdf.roundRect(
+            PAGE_MARGIN,
+            y - 110,
+            width - (PAGE_MARGIN * 2),
+            100,
+            8,
+            fill=True,
+            stroke=False,
         )
 
         pdf.setFillColor(
@@ -194,7 +208,7 @@ class PDFReportExporter:
         )
 
         pdf.drawString(
-            60,
+            PAGE_MARGIN + 15,
             y,
             f"Risk Score: {report.risk_score}",
         )
@@ -202,7 +216,7 @@ class PDFReportExporter:
         y -= 20
 
         pdf.drawString(
-            60,
+            PAGE_MARGIN + 15,
             y,
             f"Severity: {report.severity}",
         )
@@ -210,7 +224,7 @@ class PDFReportExporter:
         y -= 20
 
         pdf.drawString(
-            60,
+            PAGE_MARGIN + 15,
             y,
             f"Confidence: {report.confidence * 100:.0f}%",
         )
@@ -218,7 +232,7 @@ class PDFReportExporter:
         y -= 20
 
         pdf.drawString(
-            60,
+            PAGE_MARGIN + 15,
             y,
             f"Status: {report.status}",
         )
