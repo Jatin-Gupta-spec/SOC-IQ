@@ -50,6 +50,11 @@ class AnalysisWorker(QObject):
 
         self.started.emit()
 
+        self.progress_changed.emit(
+            10,
+            "Loading report...",
+        )
+
         try:
 
             result: dict[str, Any] = (
