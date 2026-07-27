@@ -13,6 +13,7 @@ from pathlib import Path
 from app.database.models import Investigation
 from app.reporting.export_manager import ExportManager
 from app.reporting.models import InvestigationReport
+from app.reporting.export_manager import ExportManager
 
 
 class ReportingService:
@@ -112,6 +113,24 @@ class ReportingService:
         )
 
         return ExportManager.export_markdown(
+            report,
+            output_path,
+        )
+
+    def export_pdf(
+        self,
+        investigation: Investigation,
+        output_path: Path,
+    ) -> Path:
+        """
+        Export an investigation as a PDF report.
+        """
+
+        report = self._build_report(
+            investigation,
+        )
+
+        return ExportManager.export_pdf(
             report,
             output_path,
         )
