@@ -190,6 +190,10 @@ class AnalyzePage(QWidget):
             self._on_analysis_started,
         )
 
+        self._worker.progress_changed.connect(
+            self._update_progress,
+        )
+
         self._worker.finished.connect(
             self._on_analysis_finished,
         )
