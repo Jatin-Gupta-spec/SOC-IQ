@@ -227,6 +227,13 @@ def analyze_report(
             "Saved investigation could not be loaded."
         )
 
+    if progress_callback is not None:
+
+        progress_callback(
+            100,
+            "Investigation Complete",
+        )
+
     return {
         "investigation": loaded,
         "existing": False,
