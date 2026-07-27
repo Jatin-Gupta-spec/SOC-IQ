@@ -16,6 +16,20 @@ from reportlab.platypus import Table, TableStyle
 
 from app.reporting.models import InvestigationReport
 
+PAGE_MARGIN = 40
+
+HEADER_HEIGHT = 70
+
+LINE_HEIGHT = 20
+
+TABLE_ROW_HEIGHT = 22
+
+PRIMARY_BLUE = colors.HexColor("#2563EB")
+
+LIGHT_BLUE = colors.HexColor("#E0F2FE")
+
+LIGHT_GREY = colors.HexColor("#F3F4F6")
+
 
 class PDFReportExporter:
     """
