@@ -56,6 +56,13 @@ def analyze_report(
         report_path,
     )
 
+    if progress_callback is not None:
+
+        progress_callback(
+            25,
+            "Extracting Indicators of Compromise...",
+        )
+
     logger.info(
         "Extracting IOCs."
     )

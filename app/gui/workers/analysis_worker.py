@@ -50,16 +50,12 @@ class AnalysisWorker(QObject):
 
         self.started.emit()
 
-        self.progress_changed.emit(
-            10,
-            "Loading report...",
-        )
-
         try:
 
             result: dict[str, Any] = (
                 self._controller.analyze(
                     self._report_path,
+                    progress_callback=self.progress_changed.emit,
                 )
             )
 
