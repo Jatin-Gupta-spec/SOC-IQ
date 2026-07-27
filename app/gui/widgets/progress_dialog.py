@@ -6,6 +6,10 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 
+from PySide6.QtGui import (
+    QFont,
+)
+
 from PySide6.QtWidgets import (
     QDialog,
     QLabel,
@@ -52,11 +56,49 @@ class ProgressDialog(QDialog):
             "Analysing Investigation",
         )
 
+        title_font = QFont()
+
+        title_font.setPointSize(
+            15,
+        )
+
+        title_font.setBold(
+            True,
+        )
+
+        self._title_label.setFont(
+            title_font,
+        )
+
+        self._title_label.setAlignment(
+            Qt.AlignmentFlag.AlignCenter,
+        )
+
         self._status_label = QLabel(
             "Preparing analysis...",
         )
 
+        self._status_label.setAlignment(
+            Qt.AlignmentFlag.AlignCenter,
+        )
+
         self._progress_bar = QProgressBar()
+
+        self._progress_bar.setMinimum(
+            0,
+        )
+
+        self._progress_bar.setMaximum(
+            100,
+        )
+
+        self._progress_bar.setValue(
+            0,
+        )
+
+        self._progress_bar.setTextVisible(
+            True,
+        )
 
         self._elapsed_label = QLabel(
             "Elapsed: 00:00",
@@ -64,6 +106,10 @@ class ProgressDialog(QDialog):
 
         self._cancel_button = QPushButton(
             "Cancel",
+        )
+
+        self._cancel_button.setMinimumHeight(
+            36,
         )
 
         # ------------------------------------------
