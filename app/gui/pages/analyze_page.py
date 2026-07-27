@@ -302,6 +302,8 @@ class AnalyzePage(QWidget):
             True,
         )
 
+        self._progress_dialog.hide()
+
         QMessageBox.critical(
             self,
             "Analysis Failed",
