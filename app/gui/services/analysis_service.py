@@ -10,7 +10,7 @@ investigation together with duplicate information.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from app.analyzer import analyze_report
 
@@ -26,6 +26,7 @@ class AnalysisService:
     def analyze(
         self,
         report_path: Path,
+        progress_callback: Callable[[int, str], None] | None = None,
     ) -> dict[str, Any]:
         """
         Analyze a malware report.
@@ -51,4 +52,5 @@ class AnalysisService:
 
         return analyze_report(
             report_path,
+            progress_callback=progress_callback,
         )
