@@ -41,6 +41,13 @@ def analyze_report(
         InvestigationService()
     )
 
+    if progress_callback is not None:
+
+        progress_callback(
+            10,
+            "Loading report...",
+        )
+
     logger.info(
         "Reading malware report."
     )
