@@ -22,6 +22,9 @@ from PySide6.QtWidgets import (
 from app.gui.controllers.analyze_controller import AnalyzeController
 from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.section_header import SectionHeader
+from app.gui.widgets.progress_dialog import (
+    ProgressDialog,
+)
 from app.gui.workers.analysis_worker import AnalysisWorker
 
 
