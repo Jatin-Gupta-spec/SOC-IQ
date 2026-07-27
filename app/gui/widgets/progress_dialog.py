@@ -42,3 +42,25 @@ class ProgressDialog(QDialog):
             Qt.WindowContextHelpButtonHint,
             False,
         )
+
+        # ------------------------------------------
+        # Widgets
+        # ------------------------------------------
+
+        self._title_label = QLabel(
+            "Analysing Investigation",
+        )
+
+        self._status_label = QLabel(
+            "Preparing analysis...",
+        )
+
+        self._progress_bar = QProgressBar()
+
+        self._elapsed_label = QLabel(
+            "Elapsed: 00:00",
+        )
+
+        self._cancel_button = QPushButton(
+            "Cancel",
+        )
