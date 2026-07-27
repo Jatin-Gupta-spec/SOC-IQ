@@ -43,6 +43,10 @@ class AnalyzePage(QWidget):
         self._thread: QThread | None = None
         self._worker: AnalysisWorker | None = None
 
+        self._progress_dialog = ProgressDialog(
+            self,
+        )
+
         self._container = PageContainer(
             title="Analyze Report",
             description=(
