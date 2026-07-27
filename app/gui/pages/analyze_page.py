@@ -290,6 +290,23 @@ class AnalyzePage(QWidget):
             investigation,
         )
 
+    def _update_progress(
+        self,
+        value: int,
+        message: str,
+    ) -> None:
+        """
+        Update the progress dialog.
+        """
+
+        self._progress_dialog.set_progress(
+            value,
+        )
+
+        self._progress_dialog.set_status(
+            message,
+        )
+
     def _on_analysis_failed(
         self,
         message: str,
