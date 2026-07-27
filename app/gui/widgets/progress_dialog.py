@@ -24,3 +24,21 @@ class ProgressDialog(QDialog):
         parent=None,
     ) -> None:
         super().__init__(parent)
+
+        self.setWindowTitle(
+            "SOC-IQ",
+        )
+
+        self.setModal(
+            True,
+        )
+
+        self.setFixedSize(
+            420,
+            240,
+        )
+
+        self.setWindowFlag(
+            Qt.WindowContextHelpButtonHint,
+            False,
+        )
