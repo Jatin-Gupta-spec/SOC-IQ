@@ -162,3 +162,15 @@ class ProgressDialog(QDialog):
         self.setLayout(
             layout,
         )
+
+        def set_progress(
+            self,
+            value: int,
+        ) -> None:
+            """
+            Update the progress bar value.
+            """
+
+            self._progress_bar.setValue(
+                value,
+            )
