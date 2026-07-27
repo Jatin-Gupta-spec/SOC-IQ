@@ -23,6 +23,11 @@ class AnalysisWorker(QObject):
 
     started = Signal()
 
+    progress_changed = Signal(
+        int,
+        str,
+    )
+
     finished = Signal(object)
 
     failed = Signal(str)
