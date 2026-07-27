@@ -39,12 +39,57 @@ class Badge(QLabel):
 
         self.setMinimumWidth(80)
 
+        self.set_text(
+            self.text(),
+        )
+
     def set_text(
         self,
         text: str,
     ) -> None:
         """
-        Update badge text.
+        Update badge text and appearance.
         """
 
-        self.setText(text)
+        self.setText(
+            text.upper(),
+        )
+
+        severity = text.upper()
+
+        if severity == "CRITICAL":
+
+            background = "#DC2626"
+            foreground = "#FFFFFF"
+
+        elif severity == "HIGH":
+
+            background = "#EA580C"
+            foreground = "#FFFFFF"
+
+        elif severity == "MEDIUM":
+
+            background = "#CA8A04"
+            foreground = "#FFFFFF"
+
+        elif severity == "LOW":
+
+            background = "#16A34A"
+            foreground = "#FFFFFF"
+
+        else:
+
+            background = "#4B5563"
+            foreground = "#FFFFFF"
+
+        self.setStyleSheet(
+            f"""
+            QLabel {{
+                background-color: {background};
+                color: {foreground};
+                border-radius: 12px;
+                padding: 4px 12px;
+                font-weight: 700;
+            }}
+            """
+        )

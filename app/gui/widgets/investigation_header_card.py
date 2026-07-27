@@ -63,6 +63,11 @@ class InvestigationHeaderCard(DetailSection):
             "0",
         )
 
+        self._confidence_row = KeyValueRow(
+            "Confidence",
+            "0%",
+        )
+
         self._severity_badge = Badge(
             "Waiting...",
         )
@@ -112,6 +117,10 @@ class InvestigationHeaderCard(DetailSection):
         )
 
         self.add_widget(
+            self._confidence_row,
+        )
+
+        self.add_widget(
             self._export_button,
         )
 
@@ -146,6 +155,10 @@ class InvestigationHeaderCard(DetailSection):
 
         self._risk_score_row.set_value(
             "0",
+        )
+
+        self._confidence_row.set_value(
+            "0%",
         )
 
     def load_investigation(
@@ -197,4 +210,8 @@ class InvestigationHeaderCard(DetailSection):
             str(
                 investigation.risk_score,
             ),
+        )
+
+        self._confidence_row.set_value(
+            f"{investigation.confidence:.0%}",
         )

@@ -13,8 +13,19 @@ from PySide6.QtWidgets import (
 
 from app.gui.controllers.dashboard_controller import DashboardController
 from app.gui.events.event_bus import event_bus
+from app.gui.events.application_state import (
+    ApplicationState,
+)
 from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.summary_card import SummaryCard
+from app.gui.widgets.recent_investigations_widget import (
+    RecentInvestigationsWidget,
+)
+from app.gui.widgets.dashboard_header_widget import (
+    DashboardHeaderWidget,
+)
+from datetime import datetime
+from app.gui.widgets.panel import Panel
 
 
 class DashboardPage(QWidget):
@@ -34,6 +45,8 @@ class DashboardPage(QWidget):
                 "risk assessment, and system status."
             ),
         )
+
+        self._header_widget = DashboardHeaderWidget()
 
         self._reports_card = SummaryCard(
             title="Reports",
@@ -59,11 +72,27 @@ class DashboardPage(QWidget):
             footer="Operational",
         )
 
+        self._recent_table = (
+            RecentInvestigationsWidget()
+        )
+
         self._build_ui()
 
         # NEW: Refresh whenever the selected investigation changes.
         event_bus.investigation_selected.connect(
             self.refresh,
+        )
+
+        self._recent_table.investigation_selected.connect(
+            self._open_investigation,
+        )
+
+        self._recent_table.export_requested.connect(
+            self._export_investigation,
+        )
+
+        self._recent_table.delete_requested.connect(
+            self._delete_investigation,
         )
 
         self._load_dashboard()
@@ -74,6 +103,10 @@ class DashboardPage(QWidget):
         """
 
         layout = self._container.content_layout()
+
+        layout.addWidget(
+            self._header_widget,
+        )
 
         statistics_layout = QGridLayout()
 
@@ -118,8 +151,72 @@ class DashboardPage(QWidget):
             True,
         )
 
-        layout.addWidget(
+        overview_panel = Panel()
+
+        overview_layout = QVBoxLayout(
+            overview_panel,
+        )
+
+        overview_layout.addWidget(
+            QLabel(
+                "Investigation Overview",
+            )
+        )
+
+        overview_layout.addWidget(
             self._recent_activity,
+        )
+
+        layout.addWidget(
+            overview_panel,
+        )
+
+        recent_panel = Panel()
+
+        recent_layout = QVBoxLayout(
+            recent_panel,
+        )
+
+        recent_layout.addWidget(
+            QLabel(
+                "Recent Investigations",
+            )
+        )
+
+        recent_layout.addWidget(
+            self._recent_table,
+        )
+
+        layout.addWidget(
+            recent_panel,
+        )
+
+        status_panel = Panel()
+
+        status_layout = QVBoxLayout(
+            status_panel,
+        )
+
+        status_layout.addWidget(
+            QLabel(
+                "System Status",
+            )
+        )
+
+        self._status_placeholder = QLabel(
+            "All SOC-IQ services are operational."
+        )
+
+        self._status_placeholder.setObjectName(
+            "dashboardEmptyState",
+        )
+
+        status_layout.addWidget(
+            self._status_placeholder,
+        )
+
+        layout.addWidget(
+            status_panel,
         )
 
         layout.addStretch()
@@ -149,12 +246,62 @@ class DashboardPage(QWidget):
 
         self._load_dashboard()
 
+    def _open_investigation(
+        self,
+        investigation,
+    ) -> None:
+        """
+        Open an investigation selected from
+        the recent investigations table.
+        """
+
+        ApplicationState.select_investigation(
+            investigation,
+        )
+
+    def _export_investigation(
+        self,
+        investigation,
+    ) -> None:
+        """
+        Handle export request.
+        """
+
+        print(
+            "Export:",
+            investigation.report_name,
+        )
+
+
+    def _delete_investigation(
+        self,
+        investigation,
+    ) -> None:
+        """
+        Handle delete request.
+        """
+
+        print(
+            "Delete:",
+            investigation.report_name,
+        )
+
     def _load_dashboard(self) -> None:
         """
         Load dashboard information from the controller.
         """
 
         summary = self._controller.get_summary()
+
+        self._header_widget.set_last_refresh(
+            datetime.now().strftime(
+                "%d %b %Y %H:%M:%S",
+            ),
+        )
+
+        self._header_widget.set_database_status(
+            summary["database"],
+        )
 
         self._reports_card.update_card(
             value=summary["reports"],
@@ -170,6 +317,14 @@ class DashboardPage(QWidget):
 
         self._database_card.update_card(
             value=summary["database"],
+        )
+
+        recent = (
+            self._controller.get_recent_investigations()
+        )
+
+        self._recent_table.load_investigations(
+            recent,
         )
 
         latest = (

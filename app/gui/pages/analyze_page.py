@@ -191,7 +191,7 @@ class AnalyzePage(QWidget):
         )
 
         self._worker.progress_changed.connect(
-            self._update_progress,
+            self._on_progress_changed,
         )
 
         self._worker.finished.connect(
@@ -235,7 +235,38 @@ class AnalyzePage(QWidget):
             False,
         )
 
+        self._progress_dialog.reset()
+
         self._progress_dialog.show()
+
+    def _on_progress_changed(
+        self,
+        value: int,
+        message: str,
+    ) -> None:
+        """
+        Update the progress dialog.
+        """
+
+        self._progress_dialog.set_progress(
+            value,
+        )
+
+        self._progress_dialog.set_status(
+            message,
+        )
+
+        if value >= 100:
+
+            self._progress_dialog.finish_activity(
+                message,
+            )
+
+        else:
+
+            self._progress_dialog.add_activity(
+                message,
+            )
 
     def _on_analysis_finished(
         self,
@@ -288,23 +319,6 @@ class AnalyzePage(QWidget):
 
         self.analysis_completed.emit(
             investigation,
-        )
-
-    def _update_progress(
-        self,
-        value: int,
-        message: str,
-    ) -> None:
-        """
-        Update the progress dialog.
-        """
-
-        self._progress_dialog.set_progress(
-            value,
-        )
-
-        self._progress_dialog.set_status(
-            message,
         )
 
     def _on_analysis_failed(

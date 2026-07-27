@@ -196,35 +196,43 @@ def get_stylesheet() -> str:
        ========================================================== */
 
     QFrame#summaryCard {
-        background-color: #252526;
-        border: 1px solid #3C3C3C;
-        border-radius: 12px;
+        background-color: #26282B;
+        border: 1px solid #34373C;
+        border-radius: 16px;
     }
 
     QFrame#summaryCard:hover {
-        border: 1px solid #007ACC;
+        background-color: #2D3035;
+        border: 1px solid #3EA6FF;
     }
 
     QLabel#summaryCardTitle {
-        font-size: 11pt;
-        font-weight: 600;
-        color: #D4D4D4;
+        font-size: 10pt;
+        font-weight: 700;
+        color: #AEB6C2;
+        text-transform: uppercase;
     }
 
     QLabel#summaryCardValue {
-        font-size: 28pt;
-        font-weight: 700;
-        color: #FFFFFF;
+        font-size: 34pt;
+        font-weight: 800;
+        color: white;
     }
 
     QLabel#summaryCardSubtitle {
         font-size: 10pt;
-        color: #4FC3F7;
+        color: #7DD3FC;
     }
 
     QLabel#summaryCardFooter {
         font-size: 9pt;
-        color: #A1A1AA;
+        color: #8A9099;
+    }
+
+    QLabel#summaryCardTrend {
+        font-size: 9pt;
+        font-weight: 600;
+        color: #22C55E;
     }
 
     /* ==========================================================

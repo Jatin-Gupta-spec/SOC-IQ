@@ -8,8 +8,13 @@ for a completed investigation.
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QVBoxLayout,
     QWidget,
+)
+
+from app.gui.widgets.risk_gauge_widget import (
+    RiskGaugeWidget,
 )
 
 from app.database.models import Investigation
@@ -54,6 +59,8 @@ class RiskSummaryWidget(QWidget):
             "Waiting...",
         )
 
+        self._risk_gauge = RiskGaugeWidget()
+
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -61,41 +68,53 @@ class RiskSummaryWidget(QWidget):
         Build the widget layout.
         """
 
-        layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
 
-        layout.setContentsMargins(
+        main_layout.setContentsMargins(
             0,
             0,
             0,
             0,
         )
 
-        layout.addWidget(
+        details_layout = QVBoxLayout()
+
+        details_layout.addWidget(
             self._risk_score_row,
         )
 
-        layout.addWidget(
+        details_layout.addWidget(
             self._severity_row,
         )
 
-        layout.addWidget(
+        details_layout.addWidget(
             self._confidence_row,
         )
 
-        layout.addWidget(
+        details_layout.addWidget(
             self._ioc_score_row,
         )
 
-        layout.addWidget(
+        details_layout.addWidget(
             self._threat_score_row,
         )
 
-        layout.addWidget(
+        details_layout.addWidget(
             self._cve_score_row,
         )
 
+        details_layout.addStretch()
+
+        main_layout.addWidget(
+            self._risk_gauge,
+        )
+
+        main_layout.addLayout(
+            details_layout,
+        )
+
         self.setLayout(
-            layout,
+            main_layout,
         )
 
     def load_investigation(
@@ -110,6 +129,10 @@ class RiskSummaryWidget(QWidget):
             str(
                 investigation.risk_score,
             )
+        )
+
+        self._risk_gauge.set_score(
+            investigation.risk_score,
         )
 
         self._severity_row.set_value(
@@ -145,6 +168,10 @@ class RiskSummaryWidget(QWidget):
 
         self._risk_score_row.set_value(
             "Waiting...",
+        )
+
+        self._risk_gauge.set_score(
+            0,
         )
 
         self._severity_row.set_value(

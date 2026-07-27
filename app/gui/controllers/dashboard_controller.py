@@ -91,3 +91,26 @@ class DashboardController:
             return None
 
         return investigations[0]
+
+    def get_recent_investigations(
+        self,
+        limit: int = 10,
+    ) -> list[Investigation]:
+        """
+        Return the most recent investigations.
+
+        Parameters
+        ----------
+        limit
+            Maximum number of investigations.
+
+        Returns
+        -------
+        list[Investigation]
+            Recent investigations ordered from
+            newest to oldest.
+        """
+
+        return self._investigation_service.find_recent(
+            limit=limit,
+        )

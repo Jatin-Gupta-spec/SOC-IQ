@@ -38,6 +38,21 @@ class SummaryCard(QFrame):
         self._subtitle_label = QLabel(subtitle)
         self._footer_label = QLabel(footer)
 
+        self._trend_label = QLabel()
+
+        self._trend_label.setObjectName(
+            "summaryCardTrend",
+        )
+
+        self._trend_label.hide()
+
+        self._icon_label = QLabel()
+
+        self._icon_label.setFixedSize(
+            24,
+            24,
+        )
+
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -47,18 +62,23 @@ class SummaryCard(QFrame):
 
         self.setObjectName("summaryCard")
 
-        self.setMinimumHeight(180)
+        self.setMinimumSize(
+            320,
+            190,
+        )
 
         layout = QVBoxLayout(self)
 
         layout.setContentsMargins(
-            20,
-            20,
-            20,
-            20,
+            24,
+            22,
+            24,
+            22,
         )
 
-        layout.setSpacing(10)
+        layout.setSpacing(
+            6,
+        )
 
         self._title_label.setObjectName(
             "summaryCardTitle"
@@ -78,6 +98,7 @@ class SummaryCard(QFrame):
 
         self._title_label.setAlignment(
             Qt.AlignmentFlag.AlignLeft
+            | Qt.AlignmentFlag.AlignTop
         )
 
         self._value_label.setAlignment(
@@ -93,23 +114,25 @@ class SummaryCard(QFrame):
         )
 
         layout.addWidget(
-            self._title_label
+            self._title_label,
+        )
+
+        layout.addSpacing(
+            8,
+        )
+
+        layout.addWidget(
+            self._value_label,
+        )
+
+        layout.addWidget(
+            self._subtitle_label,
         )
 
         layout.addStretch()
 
         layout.addWidget(
-            self._value_label
-        )
-
-        layout.addWidget(
-            self._subtitle_label
-        )
-
-        layout.addStretch()
-
-        layout.addWidget(
-            self._footer_label
+            self._footer_label,
         )
 
     def set_title(

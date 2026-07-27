@@ -1,15 +1,12 @@
 import csv
 import json
 
-from app.config import (
-    CSV_EXPORT_FILE,
-    JSON_EXPORT_FILE,
-)
 from app.exceptions import ExportError
 
 
 def export_to_json(
     results: dict,
+    destination,
 ) -> None:
     """
     Export complete analysis results
@@ -18,7 +15,7 @@ def export_to_json(
 
     try:
 
-        with JSON_EXPORT_FILE.open(
+        with destination.open(
             "w",
             encoding="utf-8",
         ) as file:
@@ -42,6 +39,7 @@ def export_to_json(
 
 def export_to_csv(
     results: dict,
+    destination,
 ) -> None:
     """
     Export complete analysis results
@@ -50,7 +48,7 @@ def export_to_csv(
 
     try:
 
-        with CSV_EXPORT_FILE.open(
+        with destination.open(
             "w",
             newline="",
             encoding="utf-8",
