@@ -174,3 +174,15 @@ class ProgressDialog(QDialog):
             self._progress_bar.setValue(
                 value,
             )
+
+        def set_status(
+            self,
+            message: str,
+        ) -> None:
+            """
+            Update the progress status text.
+            """
+
+            self._status_label.setText(
+                message,
+            )
