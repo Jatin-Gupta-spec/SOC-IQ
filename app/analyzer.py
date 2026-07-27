@@ -157,6 +157,13 @@ def analyze_report(
             error,
         )
 
+    if progress_callback is not None:
+
+        progress_callback(
+            80,
+            "Calculating Risk Score...",
+        )
+
     logger.info(
         "Calculating investigation risk."
     )
