@@ -396,6 +396,7 @@ class MainWindow(QMainWindow):
 
         formats = [
             "HTML Report (.html)",
+            "PDF Report (.pdf)",
         ]
 
         selected_format, accepted = (
@@ -414,6 +415,9 @@ class MainWindow(QMainWindow):
 
         if selected_format == "HTML Report (.html)":
             return "html"
+
+        if selected_format == "PDF Report (.pdf)":
+            return "pdf"
 
         return None
 
