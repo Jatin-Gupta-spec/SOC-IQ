@@ -424,6 +424,7 @@ class MainWindow(QMainWindow):
     def _select_export_path(
         self,
         report_name: str,
+        export_format: str,
     ) -> Path | None:
         """
         Ask the user where the investigation report
@@ -443,11 +444,35 @@ class MainWindow(QMainWindow):
             )
         )
 
+        if export_format == "html":
+
+            default_filename = (
+                self._reporting_service.build_default_filename(
+                    "html",
+                )
+            )
+
+            file_filter = (
+                "HTML Files (*.html)"
+            )
+
+        else:
+
+            default_filename = (
+                self._reporting_service.build_default_filename(
+                    "pdf",
+                )
+            )
+
+            file_filter = (
+                "PDF Files (*.pdf)"
+            )
+
         selected_file, _ = QFileDialog.getSaveFileName(
             self,
             "Export Investigation Report",
-            self._reporting_service.build_default_filename(),
-            "HTML Files (*.html)",
+            default_filename,
+            file_filter,
         )
 
         if not selected_file:
@@ -518,6 +543,7 @@ class MainWindow(QMainWindow):
 
         output_path = self._select_export_path(
             investigation.report_name,
+            export_format,
         )
 
         if output_path is None:
