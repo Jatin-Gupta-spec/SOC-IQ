@@ -13,3 +13,14 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+
+class ProgressDialog(QDialog):
+    """
+    Professional progress dialog used by SOC-IQ.
+    """
+
+    def __init__(
+        self,
+        parent=None,
+    ) -> None:
+        super().__init__(parent)
