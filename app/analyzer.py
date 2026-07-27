@@ -193,6 +193,13 @@ def analyze_report(
         cve_score=risk.cve_score,
     )
 
+    if progress_callback is not None:
+
+        progress_callback(
+            90,
+            "Saving Investigation...",
+        )
+
     logger.info(
         "Saving investigation."
     )
