@@ -76,6 +76,13 @@ def analyze_report(
         "IOC extraction completed."
     )
 
+    if progress_callback is not None:
+
+        progress_callback(
+            40,
+            "Checking previous investigations...",
+        )
+
     logger.info(
         "Checking for duplicate investigation."
     )
