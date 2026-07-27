@@ -71,14 +71,14 @@ class PDFReportExporter:
         # ==================================================
 
         pdf.setFillColor(
-            colors.HexColor("#2563EB")
+            PRIMARY_BLUE,
         )
 
         pdf.rect(
             0,
-            height - 70,
+            height - HEADER_HEIGHT,
             width,
-            70,
+            HEADER_HEIGHT,
             fill=True,
             stroke=False,
         )
@@ -93,7 +93,7 @@ class PDFReportExporter:
         )
 
         pdf.drawString(
-            40,
+            PAGE_MARGIN,
             height - 42,
             "SOC-IQ Investigation Report",
         )
@@ -104,7 +104,7 @@ class PDFReportExporter:
         )
 
         pdf.drawString(
-            42,
+            PAGE_MARGIN + 2,
             height - 60,
             "Security Operations & Intelligence Platform",
         )
@@ -113,7 +113,7 @@ class PDFReportExporter:
             colors.black
         )
 
-        y = height - 95
+        y = height - HEADER_HEIGHT - 25
 
         # ==================================================
         # Report Information
@@ -125,23 +125,23 @@ class PDFReportExporter:
         )
 
         pdf.drawString(
-            50,
+            PAGE_MARGIN + 10,
             y,
             f"Report: {report.report_name}",
         )
 
-        y -= 20
+        y -= LINE_HEIGHT
 
         pdf.drawString(
-            50,
+            PAGE_MARGIN + 10,
             y,
             f"Generated: {report.analyzed_at}",
         )
 
-        y -= 20
+        y -= LINE_HEIGHT
 
         pdf.drawString(
-            50,
+            PAGE_MARGIN + 10,
             y,
             "Version: 1.0.0",
         )
