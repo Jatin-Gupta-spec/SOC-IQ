@@ -503,6 +503,13 @@ class MainWindow(QMainWindow):
                 output_path,
             )
 
+        if export_format == "pdf":
+
+            return self._reporting_service.export_pdf(
+                investigation,
+                output_path,
+            )
+
         raise ValueError(
             f"Unsupported export format: {export_format}"
         )
