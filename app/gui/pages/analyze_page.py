@@ -231,6 +231,8 @@ class AnalyzePage(QWidget):
             False,
         )
 
+        self._progress_dialog.show()
+
     def _on_analysis_finished(
         self,
         result: dict[str, Any],
