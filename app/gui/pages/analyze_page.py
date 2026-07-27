@@ -249,6 +249,8 @@ class AnalyzePage(QWidget):
             True,
         )
 
+        self._progress_dialog.hide()
+
         investigation = result[
             "investigation"
         ]
