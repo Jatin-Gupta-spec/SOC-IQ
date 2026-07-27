@@ -5,7 +5,7 @@ SOC-IQ analysis engine.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from app.database.models import Investigation
 from app.database.service import InvestigationService
@@ -22,6 +22,7 @@ from app.threat_intel.service import ThreatIntelService
 
 def analyze_report(
     report_path: Path,
+    progress_callback: Callable[[int, str], None] | None = None,
 ) -> dict[str, Any]:
     """
     Analyze a malware report.
