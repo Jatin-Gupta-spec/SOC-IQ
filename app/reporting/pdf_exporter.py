@@ -237,6 +237,8 @@ class PDFReportExporter:
             f"Status: {report.status}",
         )
 
+        y -= 50
+
         # ==========================================
         # Investigation Details
         # ==========================================
