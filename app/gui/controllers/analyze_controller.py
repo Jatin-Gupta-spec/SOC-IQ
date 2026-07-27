@@ -8,7 +8,7 @@ and the application service layer.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from app.gui.services.analysis_service import (
     AnalysisService,
@@ -37,6 +37,7 @@ class AnalyzeController:
     def analyze(
         self,
         report_path: str,
+        progress_callback: Callable[[int, str], None] | None = None,
     ) -> dict[str, Any]:
         """
         Analyze the selected report.
@@ -55,6 +56,7 @@ class AnalyzeController:
 
         return self._analysis_service.analyze(
             Path(report_path),
+            progress_callback=progress_callback,
         )
 
     def validate_report(
