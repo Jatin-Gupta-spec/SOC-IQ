@@ -11,6 +11,7 @@ stylesheets and future theme switching.
 from __future__ import annotations
 
 from app.gui.design.theme.palette import DEFAULT_PALETTE, Palette
+from app.gui.design.theme.font_factory import FontFactory
 
 
 class ThemeManager:
@@ -33,6 +34,11 @@ class ThemeManager:
         user-defined themes.
         """
         self._palette = palette
+
+    @property
+    def fonts(self) -> FontFactory:
+        """Return the application font factory."""
+        return FontFactory
 
 
 theme_manager = ThemeManager()
