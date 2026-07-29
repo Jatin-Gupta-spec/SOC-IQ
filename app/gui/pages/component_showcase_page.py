@@ -59,8 +59,26 @@ class ComponentShowcasePage(PageContainer):
         self._modern_card = ModernCard()
         self._modern_card.setMinimumWidth(320)
 
+        modern_title = QLabel("Modern Card")
+        modern_description = QLabel(
+            "Base reusable surface used across the SOC-IQ dashboard."
+        )
+
+        self._modern_card.add_widget(modern_title)
+        self._modern_card.add_widget(modern_description)
+        self._modern_card.add_stretch()
+
         self._glass_card = GlassCard()
         self._glass_card.setMinimumWidth(320)
+
+        glass_title = QLabel("Glass Card")
+        glass_description = QLabel(
+            "Elevated translucent surface for premium panels."
+        )
+
+        self._glass_card.add_widget(glass_title)
+        self._glass_card.add_widget(glass_description)
+        self._glass_card.add_stretch()
 
         self._metric_card = MetricCard(
             title="Reports",
