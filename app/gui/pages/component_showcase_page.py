@@ -10,12 +10,15 @@ validate reusable UI components.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QWidget,
 )
 
+from app.gui.components.buttons.animated_button import AnimatedButton
+from app.gui.components.buttons.icon_button import IconButton
 from app.gui.components.cards.glass_card import GlassCard
 from app.gui.components.cards.metric_card import MetricCard
 from app.gui.components.cards.modern_card import ModernCard
@@ -59,6 +62,24 @@ class ComponentShowcasePage(PageContainer):
         self._cards_section = ComponentSection(
             title="Cards",
             description="Reusable card components.",
+        )
+
+        self._buttons_section = ComponentSection(
+            title="Buttons",
+            description="Reusable button components.",
+        )
+
+        self._primary_button = AnimatedButton(
+            "Analyze Report",
+        )
+
+        self._secondary_button = AnimatedButton(
+            "Export Report",
+        )
+
+        self._icon_button = IconButton(
+            QIcon(),
+            tooltip="Settings",
         )
 
         # ------------------------------------------
@@ -145,6 +166,34 @@ class ComponentShowcasePage(PageContainer):
 
         self.content_layout().addWidget(
             self._cards_section,
+        )
+
+        buttons_layout = QHBoxLayout()
+
+        buttons_layout.setSpacing(
+            Spacing.LG,
+        )
+
+        buttons_layout.addWidget(
+            self._primary_button,
+        )
+
+        buttons_layout.addWidget(
+            self._secondary_button,
+        )
+
+        buttons_layout.addWidget(
+            self._icon_button,
+        )
+
+        buttons_layout.addStretch()
+
+        self._buttons_section.add_layout(
+            buttons_layout,
+        )
+
+        self.content_layout().addWidget(
+            self._buttons_section,
         )
 
         self.content_layout().addStretch()

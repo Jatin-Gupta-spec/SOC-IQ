@@ -8,6 +8,7 @@ Reusable card component for the SOC-IQ interface.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import (
     QFrame,
     QVBoxLayout,
@@ -114,7 +115,7 @@ class ModernCard(BaseWidget):
 
         self.content_layout().addWidget(widget)
 
-    def add_layout(self, layout) -> None:
+    def add_layout(self, layout: QLayout) -> None:
         """Add a child layout."""
 
         self.content_layout().addLayout(layout)
