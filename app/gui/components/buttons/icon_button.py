@@ -40,6 +40,9 @@ class IconButton(BaseWidget):
         self._apply_theme()
 
     def _apply_theme(self) -> None:
+        """
+        Apply the current Design System theme.
+        """
         palette = self.theme.palette
 
         self._button.setStyleSheet(
@@ -51,14 +54,15 @@ class IconButton(BaseWidget):
             }}
 
             QPushButton:hover {{
-                background-color: {palette.surface_hover};
+                background-color: {palette.surface_primary};
             }}
 
             QPushButton:pressed {{
-                background-color: {palette.surface_pressed};
+                background-color: {palette.surface_elevated};
             }}
 
             QPushButton:disabled {{
+                background-color: {palette.surface_secondary};
                 color: {palette.text_disabled};
             }}
             """
