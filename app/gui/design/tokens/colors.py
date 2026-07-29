@@ -38,8 +38,12 @@ class Colors:
     class Border:
         """Border colors."""
 
+        SUBTLE = "#262D3A"
+
         DEFAULT = "#313949"
+
         STRONG = "#495365"
+
         FOCUS = "#4F8CFF"
 
     class Text:

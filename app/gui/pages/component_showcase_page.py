@@ -11,10 +11,15 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLabel,
+    QHBoxLayout,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
+
+from app.gui.components.cards.modern_card import ModernCard
+from app.gui.components.cards.glass_card import GlassCard
+from app.gui.components.cards.metric_card import MetricCard
 
 from app.gui.components.layout import SectionHeader
 from app.gui.design.tokens import Spacing
@@ -47,6 +52,24 @@ class ComponentShowcasePage(PageContainer):
             "Reusable card components."
         )
 
+        # ----------------------------------
+        # Demo Components
+        # ----------------------------------
+
+        self._modern_card = ModernCard()
+        self._modern_card.setMinimumWidth(320)
+
+        self._glass_card = GlassCard()
+        self._glass_card.setMinimumWidth(320)
+
+        self._metric_card = MetricCard(
+            title="Reports",
+            value="128",
+            subtitle="Analysed Reports",
+            footer="Updated just now",
+        )
+        self._metric_card.setMinimumWidth(320)
+
         self._build_ui()
         self._apply_theme()
 
@@ -68,16 +91,49 @@ class ComponentShowcasePage(PageContainer):
 
         self._content_layout.setSpacing(Spacing.XL)
 
+        # ----------------------------------
+        # Cards Layout
+        # ----------------------------------
+
+        cards_layout = QHBoxLayout()
+
+        cards_layout.setSpacing(Spacing.LG)
+
+        cards_layout.addWidget(
+            self._modern_card,
+            1,
+        )
+
+        cards_layout.addWidget(
+            self._glass_card,
+            1,
+        )
+
+        cards_layout.addWidget(
+            self._metric_card,
+            1,
+        )
+
         self._title.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         self._description.setWordWrap(True)
 
         self._content_layout.addWidget(self._title)
         self._content_layout.addWidget(self._description)
-        self._content_layout.addWidget(self._cards_header)
+
+        self._content_layout.addWidget(
+            self._cards_header,
+        )
+
+        self._content_layout.addLayout(
+            cards_layout,
+        )
+
         self._content_layout.addStretch()
 
-        self.layout().addWidget(self._scroll_area)
+        self.layout().addWidget(
+            self._scroll_area,
+        )
 
     # --------------------------------------------------
     # Theme

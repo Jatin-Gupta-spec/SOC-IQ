@@ -27,8 +27,12 @@ class Palette:
     surface_elevated: str = Colors.Surface.ELEVATED
 
     # Borders
+    border_subtle: str = Colors.Border.SUBTLE
+
     border_default: str = Colors.Border.DEFAULT
+
     border_strong: str = Colors.Border.STRONG
+
     border_focus: str = Colors.Border.FOCUS
 
     # Text
