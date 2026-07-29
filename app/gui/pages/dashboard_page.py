@@ -8,6 +8,11 @@ from PySide6.QtWidgets import (
     QLabel,
     QVBoxLayout,
     QWidget,
+    QHBoxLayout,
+)
+
+from app.gui.components.timeline.timeline_widget import (
+    TimelineWidget,
 )
 
 from app.gui.controllers.dashboard_controller import DashboardController
@@ -63,6 +68,8 @@ class DashboardPage(QWidget):
         self._recent_table = (
             RecentInvestigationsWidget()
         )
+
+        self._timeline_widget = TimelineWidget()
 
         self._build_ui()
 
@@ -137,8 +144,35 @@ class DashboardPage(QWidget):
             self._recent_activity,
         )
 
-        layout.addWidget(
+        top_row = QHBoxLayout()
+        top_row.setSpacing(24)
+
+        top_row.addWidget(
             overview_panel,
+            1,
+        )
+
+        timeline_panel = Panel()
+
+        timeline_layout = QVBoxLayout(
+            timeline_panel,
+        )
+
+        timeline_layout.addWidget(
+            QLabel("Investigation Timeline"),
+        )
+
+        timeline_layout.addWidget(
+            self._timeline_widget,
+        )
+
+        top_row.addWidget(
+            timeline_panel,
+            1,
+        )
+
+        layout.addLayout(
+            top_row,
         )
 
         recent_panel = Panel()
@@ -272,6 +306,11 @@ class DashboardPage(QWidget):
         self._recent_table.load_investigations(
             recent,
         )
+
+        self._timeline_widget.clear()
+
+        for event in self._controller.get_dashboard_timeline():
+            self._timeline_widget.add_event(event)
 
         latest = (
             self._controller.get_latest_investigation()
