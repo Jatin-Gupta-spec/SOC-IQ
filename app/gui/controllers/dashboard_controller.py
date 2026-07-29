@@ -9,6 +9,10 @@ from __future__ import annotations
 from app.database.models import Investigation
 from app.database.service import InvestigationService
 
+from app.gui.components.timeline.timeline_widget import (
+    TimelineEvent,
+)
+
 
 class DashboardController:
     """
@@ -114,3 +118,37 @@ class DashboardController:
         return self._investigation_service.find_recent(
             limit=limit,
         )
+
+    def get_dashboard_timeline(
+        self,
+        limit: int = 10,
+    ) -> list[TimelineEvent]:
+        """
+        Return timeline events representing the
+        most recent investigations.
+        """
+
+        investigations = (
+            self._investigation_service.find_recent(
+                limit=limit,
+            )
+        )
+
+        timeline: list[TimelineEvent] = []
+
+        for investigation in investigations:
+
+            timeline.append(
+                TimelineEvent(
+                    timestamp=investigation.analyzed_at.strftime(
+                        "%H:%M",
+                    ),
+                    title=investigation.report_name,
+                    description=(
+                        f"Severity: {investigation.severity} | "
+                        f"Risk Score: {investigation.risk_score}"
+                    ),
+                )
+            )
+
+        return timeline
