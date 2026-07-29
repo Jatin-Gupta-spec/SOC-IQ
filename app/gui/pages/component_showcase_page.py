@@ -174,6 +174,42 @@ class ComponentShowcasePage(PageContainer):
         )
 
         # ------------------------------------------
+        # Layout Components
+        # ------------------------------------------
+
+        self._layout_section = ComponentSection(
+            title="Layout",
+            description="Reusable layout and page composition components.",
+        )
+
+        self._layout_card = ModernCard()
+        self._layout_card.setMinimumWidth(700)
+
+        layout_title = QLabel("Layout Architecture")
+
+        layout_description = QLabel(
+            "SOC-IQ pages are built using PageContainer "
+            "as the root layout and ComponentSection "
+            "to organise related UI into reusable groups."
+        )
+
+        layout_description.setWordWrap(True)
+
+        layout_points = QLabel(
+            "• PageContainer provides consistent page spacing.\n"
+            "• ComponentSection groups related widgets.\n"
+            "• Design tokens ensure consistent layout.\n"
+            "• Every page follows the same composition pattern."
+        )
+
+        layout_points.setWordWrap(True)
+
+        self._layout_card.add_widget(layout_title)
+        self._layout_card.add_widget(layout_description)
+        self._layout_card.add_widget(layout_points)
+        self._layout_card.add_stretch()
+
+        # ------------------------------------------
         # Modern Card
         # ------------------------------------------
 
@@ -347,6 +383,24 @@ class ComponentShowcasePage(PageContainer):
             self._feedback_section,
         )
 
+        layout_demo = QVBoxLayout()
+
+        layout_demo.setSpacing(
+            Spacing.MD,
+        )
+
+        layout_demo.addWidget(
+            self._layout_card,
+        )
+
+        self._layout_section.add_layout(
+            layout_demo,
+        )
+
+        self.content_layout().addWidget(
+            self._layout_section,
+        )
+
         self.content_layout().addStretch()
 
     # --------------------------------------------------
@@ -363,6 +417,7 @@ class ComponentShowcasePage(PageContainer):
             if label.text() in (
                 "Modern Card",
                 "Glass Card",
+                "Layout Architecture",
             ):
                 label.setFont(
                     fonts.title()
@@ -375,6 +430,9 @@ class ComponentShowcasePage(PageContainer):
             elif (
                 "surface" in label.text().lower()
                 or "premium" in label.text().lower()
+                or "pagecontainer" in label.text().lower()
+                or "componentsection" in label.text().lower()
+                or "layout" in label.text().lower()
             ):
                 label.setFont(
                     fonts.body()
