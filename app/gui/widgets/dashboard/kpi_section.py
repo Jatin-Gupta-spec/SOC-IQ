@@ -22,12 +22,12 @@ class KPISection(QWidget):
     """
     Dashboard KPI section.
 
-    Displays four primary metrics:
+    Displays the four primary dashboard metrics:
 
-    • Risk Score
-    • Investigations
-    • IOC Count
-    • Threat Intelligence
+    • Reports
+    • IOCs
+    • High Risk
+    • Database
     """
 
     def __init__(
@@ -36,28 +36,32 @@ class KPISection(QWidget):
     ) -> None:
         super().__init__(parent)
 
-        self._risk_card = MetricCard(
-            title="Risk Score",
-            value="72",
-            subtitle="Current posture",
-        )
-
-        self._investigation_card = MetricCard(
-            title="Investigations",
-            value="18",
-            subtitle="Completed analyses",
+        self._reports_card = MetricCard(
+            title="Reports",
+            value="0",
+            subtitle="Analyzed Reports",
+            footer="Ready",
         )
 
         self._ioc_card = MetricCard(
-            title="IOC Count",
-            value="142",
-            subtitle="Indicators extracted",
+            title="IOCs",
+            value="0",
+            subtitle="Indicators Extracted",
+            footer="Ready",
         )
 
-        self._threat_card = MetricCard(
-            title="Threat Intelligence",
-            value="Healthy",
-            subtitle="Provider status",
+        self._risk_card = MetricCard(
+            title="High Risk",
+            value="0",
+            subtitle="Critical Investigations",
+            footer="No Active Alerts",
+        )
+
+        self._database_card = MetricCard(
+            title="Database",
+            value="Disconnected",
+            subtitle="SQLite Repository",
+            footer="Waiting",
         )
 
         self._layout = QGridLayout(self)
@@ -76,35 +80,47 @@ class KPISection(QWidget):
             0,
         )
 
-        self._layout.setHorizontalSpacing(Spacing.LG)
-        self._layout.setVerticalSpacing(Spacing.LG)
+        self._layout.setHorizontalSpacing(
+            Spacing.LG,
+        )
 
-        self._layout.addWidget(
-            self._risk_card,
-            0,
-            0,
+        self._layout.setVerticalSpacing(
+            Spacing.LG,
         )
 
         self._layout.addWidget(
-            self._investigation_card,
+            self._reports_card,
             0,
-            1,
+            0,
         )
 
         self._layout.addWidget(
             self._ioc_card,
             0,
-            2,
+            1,
         )
 
         self._layout.addWidget(
-            self._threat_card,
+            self._risk_card,
+            1,
             0,
-            3,
         )
 
-        for column in range(4):
-            self._layout.setColumnStretch(column, 1)
+        self._layout.addWidget(
+            self._database_card,
+            1,
+            1,
+        )
+
+        self._layout.setColumnStretch(
+            0,
+            1,
+        )
+
+        self._layout.setColumnStretch(
+            1,
+            1,
+        )
 
     # --------------------------------------------------
     # Public API
@@ -113,23 +129,43 @@ class KPISection(QWidget):
     def set_metrics(
         self,
         *,
-        risk_score: str,
-        investigations: str,
+        reports: str,
         iocs: str,
-        threat_status: str,
+        high_risk: str,
+        database: str,
     ) -> None:
         """
-        Update all dashboard metrics.
+        Update all dashboard KPI values.
         """
 
-        self._risk_card.set_value(risk_score)
-
-        self._investigation_card.set_value(
-            investigations
+        self._reports_card.set_value(
+            reports,
         )
 
-        self._ioc_card.set_value(iocs)
-
-        self._threat_card.set_value(
-            threat_status
+        self._ioc_card.set_value(
+            iocs,
         )
+
+        self._risk_card.set_value(
+            high_risk,
+        )
+
+        self._database_card.set_value(
+            database,
+        )
+
+    def reports_card(self) -> MetricCard:
+        """Return the reports metric card."""
+        return self._reports_card
+
+    def ioc_card(self) -> MetricCard:
+        """Return the IOC metric card."""
+        return self._ioc_card
+
+    def risk_card(self) -> MetricCard:
+        """Return the risk metric card."""
+        return self._risk_card
+
+    def database_card(self) -> MetricCard:
+        """Return the database metric card."""
+        return self._database_card

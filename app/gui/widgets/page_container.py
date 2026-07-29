@@ -8,15 +8,17 @@ PageContainer to ensure a consistent layout and appearance.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+
 from PySide6.QtWidgets import (
-    QFrame,
     QLabel,
     QVBoxLayout,
     QWidget,
 )
 
+from app.gui.components.base_widget import BaseWidget
 
-class PageContainer(QFrame):
+
+class PageContainer(BaseWidget):
     """
     Standard container used by all application pages.
     """
@@ -34,7 +36,7 @@ class PageContainer(QFrame):
         self._content_widget = QWidget()
         self._content_layout = QVBoxLayout()
 
-        self._build_ui()
+        PageContainer._build_ui(self)
 
     def _build_ui(self) -> None:
         """

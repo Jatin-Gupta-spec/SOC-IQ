@@ -1,5 +1,6 @@
 """
 SOC-IQ Design System
+
 Page Header
 
 Reusable page header used across all
@@ -12,7 +13,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -25,8 +25,13 @@ class PageHeader(BaseWidget):
     """
     Standard page header.
 
-    Displays a page title, optional subtitle,
-    and action area.
+    Displays:
+
+    • Title
+    • Subtitle
+    • Status information
+    • Last refresh time
+    • Action buttons
     """
 
     def __init__(
@@ -39,6 +44,9 @@ class PageHeader(BaseWidget):
 
         self._title_label = QLabel(title)
         self._subtitle_label = QLabel(subtitle)
+
+        self._status_label = QLabel()
+        self._refresh_label = QLabel()
 
         self._actions_layout = QHBoxLayout()
 
@@ -62,7 +70,20 @@ class PageHeader(BaseWidget):
             f"color: {palette.text_secondary};"
         )
 
+        self._status_label.setFont(fonts.caption())
+        self._status_label.setStyleSheet(
+            f"color: {palette.text_secondary};"
+        )
+        self._status_label.hide()
+
+        self._refresh_label.setFont(fonts.caption())
+        self._refresh_label.setStyleSheet(
+            f"color: {palette.text_secondary};"
+        )
+        self._refresh_label.hide()
+
         title_layout = QVBoxLayout()
+        title_layout.setContentsMargins(0, 0, 0, 0)
         title_layout.setSpacing(Spacing.XS)
 
         title_layout.addWidget(self._title_label)
@@ -70,43 +91,120 @@ class PageHeader(BaseWidget):
         if self._subtitle_label.text():
             title_layout.addWidget(self._subtitle_label)
 
-        actions_container = QWidget()
-        actions_container.setLayout(self._actions_layout)
+        title_layout.addWidget(self._status_label)
+        title_layout.addWidget(self._refresh_label)
 
+        actions_container = QWidget()
+
+        self._actions_layout.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
         self._actions_layout.setSpacing(Spacing.SM)
-        self._actions_layout.setContentsMargins(0, 0, 0, 0)
-        self._actions_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self._actions_layout.setAlignment(
+            Qt.AlignmentFlag.AlignRight
+            | Qt.AlignmentFlag.AlignVCenter
+        )
+
+        actions_container.setLayout(
+            self._actions_layout
+        )
 
         root = QHBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
+
+        root.setContentsMargins(
+            0,
+            0,
+            0,
+            0,
+        )
+
         root.setSpacing(Spacing.LG)
 
         root.addLayout(title_layout)
+
         root.addStretch()
+
         root.addWidget(actions_container)
+
     # --------------------------------------------------
     # Public API
     # --------------------------------------------------
 
-    def set_title(self, title: str) -> None:
+    def set_title(
+        self,
+        title: str,
+    ) -> None:
         """Update the page title."""
         self._title_label.setText(title)
 
-    def set_subtitle(self, subtitle: str) -> None:
+    def set_subtitle(
+        self,
+        subtitle: str,
+    ) -> None:
         """Update the page subtitle."""
         self._subtitle_label.setText(subtitle)
-        self._subtitle_label.setVisible(bool(subtitle))
+        self._subtitle_label.setVisible(
+            bool(subtitle)
+        )
 
-    def add_action(self, widget: QWidget) -> None:
-        """Add an action widget to the header."""
+    def set_status(
+        self,
+        label: str,
+        value: str,
+    ) -> None:
+        """
+        Update status text.
+
+        Example:
+            Database: Connected
+        """
+
+        self._status_label.setText(
+            f"{label}: {value}"
+        )
+        self._status_label.show()
+
+    def clear_status(self) -> None:
+        """Hide the status label."""
+        self._status_label.clear()
+        self._status_label.hide()
+
+    def set_last_refresh(
+        self,
+        timestamp: str,
+    ) -> None:
+        """
+        Update the last refresh timestamp.
+        """
+
+        self._refresh_label.setText(
+            f"Last Refresh: {timestamp}"
+        )
+        self._refresh_label.show()
+
+    def clear_last_refresh(self) -> None:
+        """Hide the refresh label."""
+        self._refresh_label.clear()
+        self._refresh_label.hide()
+
+    def add_action(
+        self,
+        widget: QWidget,
+    ) -> None:
+        """Add an action widget."""
         self._actions_layout.addWidget(widget)
 
     def clear_actions(self) -> None:
         """Remove all action widgets."""
+
         while self._actions_layout.count():
+
             item = self._actions_layout.takeAt(0)
 
             widget = item.widget()
 
-            if widget:
+            if widget is not None:
                 widget.deleteLater()

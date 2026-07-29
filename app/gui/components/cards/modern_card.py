@@ -41,7 +41,7 @@ class ModernCard(BaseWidget):
         self._build_ui()
         self._create_layout()
         self._connect_signals()
-        self._apply_theme()
+        ModernCard._apply_theme(self)
 
     # --------------------------------------------------
     # UI Construction

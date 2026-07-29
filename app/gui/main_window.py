@@ -22,6 +22,8 @@ from PySide6.QtCore import (
 from PySide6.QtGui import (
     QAction,
     QDesktopServices,
+    QKeySequence,
+    QShortcut,
 )
 
 from PySide6.QtWidgets import (
@@ -58,6 +60,10 @@ from app.gui.pages.history_page import (
 
 from app.gui.pages.investigation_workspace import (
     InvestigationWorkspacePage,
+)
+
+from app.gui.pages.component_showcase_page import (
+    ComponentShowcasePage,
 )
 
 from app.gui.widgets.sidebar import (
@@ -100,6 +106,17 @@ class MainWindow(QMainWindow):
         self._create_pages()
 
         self._connect_signals()
+
+        self._showcase_shortcut = QShortcut(
+            QKeySequence("Ctrl+Shift+D"),
+            self,
+        )
+
+        self._showcase_shortcut.activated.connect(
+            lambda: self.page_stack.setCurrentWidget(
+                self.component_showcase_page
+            )
+        )
 
     def _configure_window(self) -> None:
         """
@@ -242,6 +259,10 @@ class MainWindow(QMainWindow):
             InvestigationWorkspacePage()
         )
 
+        self.component_showcase_page = (
+            ComponentShowcasePage()
+        )
+
         self.page_stack.addWidget(
             self.dashboard_page,
         )
@@ -272,6 +293,10 @@ class MainWindow(QMainWindow):
 
         self.page_stack.addWidget(
             self.workspace_page,
+        )
+
+        self.page_stack.addWidget(
+            self.component_showcase_page,
         )
 
     def _connect_signals(self) -> None:

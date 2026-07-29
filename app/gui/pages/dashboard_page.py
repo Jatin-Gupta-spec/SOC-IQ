@@ -5,7 +5,6 @@ Dashboard page for the SOC-IQ desktop application.
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
-    QGridLayout,
     QLabel,
     QVBoxLayout,
     QWidget,
@@ -16,13 +15,18 @@ from app.gui.events.event_bus import event_bus
 from app.gui.events.application_state import (
     ApplicationState,
 )
-from app.gui.widgets.page_container import PageContainer
-from app.gui.widgets.summary_card import SummaryCard
+from app.gui.widgets.dashboard.kpi_section import (
+    KPISection,
+)
 from app.gui.widgets.recent_investigations_widget import (
     RecentInvestigationsWidget,
 )
-from app.gui.widgets.dashboard_header_widget import (
-    DashboardHeaderWidget,
+from app.gui.components.buttons.animated_button import (
+    AnimatedButton,
+)
+
+from app.gui.components.layout.page_header import (
+    PageHeader,
 )
 from datetime import datetime
 from app.gui.widgets.panel import Panel
@@ -38,39 +42,23 @@ class DashboardPage(QWidget):
 
         self._controller = DashboardController()
 
-        self._container = PageContainer(
+        self._header_widget = PageHeader(
             title="Dashboard",
-            description=(
+            subtitle=(
                 "Overview of investigations, IOC analysis, "
                 "risk assessment, and system status."
             ),
         )
 
-        self._header_widget = DashboardHeaderWidget()
-
-        self._reports_card = SummaryCard(
-            title="Reports",
-            subtitle="Analyzed Reports",
-            footer="Ready",
+        self._header_widget.add_action(
+            AnimatedButton("Refresh")
         )
 
-        self._ioc_card = SummaryCard(
-            title="IOCs",
-            subtitle="Indicators Extracted",
-            footer="Ready",
+        self._header_widget.add_action(
+            AnimatedButton("Export")
         )
 
-        self._risk_card = SummaryCard(
-            title="High Risk",
-            subtitle="Critical Investigations",
-            footer="No Active Alerts",
-        )
-
-        self._database_card = SummaryCard(
-            title="Database",
-            subtitle="SQLite Repository",
-            footer="Operational",
-        )
+        self._kpi_section = KPISection()
 
         self._recent_table = (
             RecentInvestigationsWidget()
@@ -102,43 +90,25 @@ class DashboardPage(QWidget):
         Build the dashboard user interface.
         """
 
-        layout = self._container.content_layout()
+        root_layout = QVBoxLayout(self)
+
+        root_layout.setContentsMargins(
+            24,
+            24,
+            24,
+            24,
+        )
+
+        root_layout.setSpacing(24)
+
+        layout = root_layout
 
         layout.addWidget(
             self._header_widget,
         )
 
-        statistics_layout = QGridLayout()
-
-        statistics_layout.setHorizontalSpacing(16)
-        statistics_layout.setVerticalSpacing(16)
-
-        statistics_layout.addWidget(
-            self._reports_card,
-            0,
-            0,
-        )
-
-        statistics_layout.addWidget(
-            self._ioc_card,
-            0,
-            1,
-        )
-
-        statistics_layout.addWidget(
-            self._risk_card,
-            1,
-            0,
-        )
-
-        statistics_layout.addWidget(
-            self._database_card,
-            1,
-            1,
-        )
-
-        layout.addLayout(
-            statistics_layout,
+        layout.addWidget(
+            self._kpi_section,
         )
 
         self._recent_activity = QLabel()
@@ -221,22 +191,6 @@ class DashboardPage(QWidget):
 
         layout.addStretch()
 
-        root_layout = QVBoxLayout()
-
-        root_layout.setContentsMargins(
-            0,
-            0,
-            0,
-            0,
-        )
-
-        root_layout.addWidget(
-            self._container,
-        )
-
-        self.setLayout(
-            root_layout,
-        )
 
     def refresh(self) -> None:
         """
@@ -299,24 +253,16 @@ class DashboardPage(QWidget):
             ),
         )
 
-        self._header_widget.set_database_status(
+        self._header_widget.set_status(
+            "Database",
             summary["database"],
         )
 
-        self._reports_card.update_card(
-            value=summary["reports"],
-        )
-
-        self._ioc_card.update_card(
-            value=summary["iocs"],
-        )
-
-        self._risk_card.update_card(
-            value=summary["high_risk"],
-        )
-
-        self._database_card.update_card(
-            value=summary["database"],
+        self._kpi_section.set_metrics(
+            reports=str(summary["reports"]),
+            iocs=str(summary["iocs"]),
+            high_risk=str(summary["high_risk"]),
+            database=str(summary["database"]),
         )
 
         recent = (
