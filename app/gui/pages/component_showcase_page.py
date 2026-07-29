@@ -31,6 +31,10 @@ from app.gui.components.feedback.toast_notification import (
     ToastNotification,
     ToastType,
 )
+from app.gui.components.timeline.timeline_widget import (
+    TimelineEvent,
+    TimelineWidget,
+)
 from app.gui.components.cards.glass_card import GlassCard
 from app.gui.components.cards.metric_card import MetricCard
 from app.gui.components.cards.modern_card import ModernCard
@@ -260,6 +264,57 @@ class ComponentShowcasePage(PageContainer):
 
         self._metric_card.setMinimumWidth(320)
 
+        # ------------------------------------------
+        # Timeline Components
+        # ------------------------------------------
+
+        self._timeline_section = ComponentSection(
+            title="Timeline",
+            description="Chronological investigation workflow.",
+        )
+
+        self._timeline = TimelineWidget()
+
+        self._timeline.add_event(
+            TimelineEvent(
+                timestamp="09:15",
+                title="Report Imported",
+                description="Malware report loaded into SOC-IQ.",
+            )
+        )
+
+        self._timeline.add_event(
+            TimelineEvent(
+                timestamp="09:16",
+                title="IOC Extraction Completed",
+                description="10 indicators extracted successfully.",
+            )
+        )
+
+        self._timeline.add_event(
+            TimelineEvent(
+                timestamp="09:17",
+                title="Threat Intelligence Lookup",
+                description="VirusTotal enrichment started.",
+            )
+        )
+
+        self._timeline.add_event(
+            TimelineEvent(
+                timestamp="09:18",
+                title="Risk Score Calculated",
+                description="Overall severity classified as HIGH.",
+            )
+        )
+
+        self._timeline.add_event(
+            TimelineEvent(
+                timestamp="09:19",
+                title="Investigation Saved",
+                description="Results stored in the investigation database.",
+            )
+        )
+
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
@@ -399,6 +454,24 @@ class ComponentShowcasePage(PageContainer):
 
         self.content_layout().addWidget(
             self._layout_section,
+        )
+
+        timeline_layout = QVBoxLayout()
+
+        timeline_layout.setSpacing(
+            Spacing.MD,
+        )
+
+        timeline_layout.addWidget(
+            self._timeline,
+        )
+
+        self._timeline_section.add_layout(
+            timeline_layout,
+        )
+
+        self.content_layout().addWidget(
+            self._timeline_section,
         )
 
         self.content_layout().addStretch()
