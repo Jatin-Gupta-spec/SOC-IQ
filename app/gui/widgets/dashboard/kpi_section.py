@@ -4,7 +4,7 @@ SOC-IQ Dashboard
 KPI Section
 
 Displays the primary dashboard metrics using
-reusable MetricCard components.
+enterprise MetricCard components.
 """
 
 from __future__ import annotations
@@ -20,14 +20,7 @@ from app.gui.design.tokens import Spacing
 
 class KPISection(QWidget):
     """
-    Dashboard KPI section.
-
-    Displays the four primary dashboard metrics:
-
-    • Reports
-    • IOCs
-    • High Risk
-    • Database
+    Executive dashboard KPI grid.
     """
 
     def __init__(
@@ -37,42 +30,44 @@ class KPISection(QWidget):
         super().__init__(parent)
 
         self._reports_card = MetricCard(
-            title="Reports",
+            title="Investigations",
             value="0",
-            subtitle="Analyzed Reports",
-            footer="Ready",
+            subtitle="Completed Reports",
+            footer="Updated just now",
         )
 
         self._ioc_card = MetricCard(
-            title="IOCs",
+            title="Indicators",
             value="0",
-            subtitle="Indicators Extracted",
-            footer="Ready",
+            subtitle="Extracted IOCs",
+            footer="Across all reports",
         )
 
         self._risk_card = MetricCard(
-            title="High Risk",
+            title="High Severity",
             value="0",
             subtitle="Critical Investigations",
-            footer="No Active Alerts",
+            footer="Requires attention",
         )
 
         self._database_card = MetricCard(
-            title="Database",
-            value="Disconnected",
-            subtitle="SQLite Repository",
-            footer="Waiting",
+            title="Repository",
+            value="ONLINE",
+            subtitle="SQLite Database",
+            footer="Healthy",
         )
 
         self._layout = QGridLayout(self)
 
         self._build_ui()
+        self._configure_cards()
 
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
 
     def _build_ui(self) -> None:
+
         self._layout.setContentsMargins(
             0,
             0,
@@ -102,25 +97,36 @@ class KPISection(QWidget):
 
         self._layout.addWidget(
             self._risk_card,
-            1,
             0,
+            2,
         )
 
         self._layout.addWidget(
             self._database_card,
-            1,
-            1,
-        )
-
-        self._layout.setColumnStretch(
             0,
-            1,
+            3,
         )
 
-        self._layout.setColumnStretch(
-            1,
-            1,
-        )
+        for column in range(4):
+            self._layout.setColumnStretch(column, 1)
+
+    # --------------------------------------------------
+    # Card Styling
+    # --------------------------------------------------
+
+    def _configure_cards(self) -> None:
+
+        self._reports_card.set_badge("+12%")
+        self._reports_card.set_icon("📄")
+
+        self._ioc_card.set_badge("+38")
+        self._ioc_card.set_icon("🎯")
+
+        self._risk_card.set_badge("HIGH")
+        self._risk_card.set_icon("🚨")
+
+        self._database_card.set_badge("LIVE")
+        self._database_card.set_icon("🟢")
 
     # --------------------------------------------------
     # Public API
@@ -134,38 +140,23 @@ class KPISection(QWidget):
         high_risk: str,
         database: str,
     ) -> None:
-        """
-        Update all dashboard KPI values.
-        """
 
-        self._reports_card.set_value(
-            reports,
-        )
+        self._reports_card.set_value(reports)
 
-        self._ioc_card.set_value(
-            iocs,
-        )
+        self._ioc_card.set_value(iocs)
 
-        self._risk_card.set_value(
-            high_risk,
-        )
+        self._risk_card.set_value(high_risk)
 
-        self._database_card.set_value(
-            database,
-        )
+        self._database_card.set_value(database)
 
     def reports_card(self) -> MetricCard:
-        """Return the reports metric card."""
         return self._reports_card
 
     def ioc_card(self) -> MetricCard:
-        """Return the IOC metric card."""
         return self._ioc_card
 
     def risk_card(self) -> MetricCard:
-        """Return the risk metric card."""
         return self._risk_card
 
     def database_card(self) -> MetricCard:
-        """Return the database metric card."""
         return self._database_card

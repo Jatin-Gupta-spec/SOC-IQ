@@ -66,6 +66,22 @@ from app.gui.pages.component_showcase_page import (
     ComponentShowcasePage,
 )
 
+from app.gui.pages.ioc_viewer_page import (
+    IOCViewerPage,
+)
+
+from app.gui.pages.threat_intel_page import (
+    ThreatIntelPage,
+)
+
+from app.gui.pages.risk_dashboard_page import (
+    RiskDashboardPage,
+)
+
+from app.gui.pages.settings_page import (
+    SettingsPage,
+)
+
 from app.gui.widgets.sidebar import (
     SidebarWidget,
 )
@@ -245,15 +261,15 @@ class MainWindow(QMainWindow):
 
         self.analyze_page = AnalyzePage()
 
-        self.ioc_page = QWidget()
+        self.ioc_page = IOCViewerPage()
 
-        self.threat_page = QWidget()
+        self.threat_page = ThreatIntelPage()
 
-        self.risk_page = QWidget()
+        self.risk_page = RiskDashboardPage()
 
         self.history_page = HistoryPage()
 
-        self.settings_page = QWidget()
+        self.settings_page = SettingsPage()
 
         self.workspace_page = (
             InvestigationWorkspacePage()
@@ -305,6 +321,10 @@ class MainWindow(QMainWindow):
         """
 
         self.sidebar.page_selected.connect(
+            self.page_stack.setCurrentIndex,
+        )
+
+        self.dashboard_page.navigate_to_page.connect(
             self.page_stack.setCurrentIndex,
         )
 

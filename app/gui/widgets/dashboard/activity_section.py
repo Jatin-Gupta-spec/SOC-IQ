@@ -102,32 +102,16 @@ class ActivitySection(QWidget):
         return panel
 
     def _create_timeline_panel(self) -> QWidget:
+        """
+        Return the timeline directly.
 
-        panel = Panel()
-
-        layout = QVBoxLayout(panel)
-
-        layout.setContentsMargins(
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
-        )
-
-        layout.setSpacing(Spacing.MD)
-
-        layout.addWidget(
-            SectionHeader(
-                "Activity Timeline",
-                "Recent system events",
-            )
-        )
+        TimelineWidget already provides its own
+        title and card styling.
+        """
 
         self._populate_timeline()
 
-        layout.addWidget(self._timeline)
-
-        return panel
+        return self._timeline
 
     # --------------------------------------------------
     # Placeholder Data

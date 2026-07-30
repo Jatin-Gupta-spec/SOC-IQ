@@ -1,100 +1,100 @@
 """
 Dashboard page for the SOC-IQ desktop application.
+
+Functions as an Executive Command Center Landing Page, presenting situational
+awareness, key security metrics, threat status, and direct action triggers.
 """
 
 from __future__ import annotations
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
+    QHBoxLayout,
     QLabel,
     QVBoxLayout,
     QWidget,
-    QHBoxLayout,
 )
 
+from app.gui.components.cards.modern_card import ModernCard
+from app.gui.components.layout.page_header import PageHeader
+from app.gui.controllers.dashboard_controller import DashboardController
+from app.gui.design.tokens import Spacing
+from app.gui.events.application_state import ApplicationState
+from app.gui.events.event_bus import event_bus
+from app.gui.widgets.dashboard.dashboard_hero_widget import DashboardHeroWidget
+from app.gui.widgets.dashboard.featured_investigation_card import (
+    FeaturedInvestigationCard,
+)
 from app.gui.components.timeline.timeline_widget import (
     TimelineWidget,
+    TimelineEvent,
 )
-
-from app.gui.controllers.dashboard_controller import DashboardController
-from app.gui.events.event_bus import event_bus
-from app.gui.events.application_state import (
-    ApplicationState,
-)
-from app.gui.widgets.dashboard.kpi_section import (
-    KPISection,
-)
-from app.gui.widgets.recent_investigations_widget import (
-    RecentInvestigationsWidget,
-)
-from app.gui.components.buttons.animated_button import (
-    AnimatedButton,
-)
-
-from app.gui.components.layout.page_header import (
-    PageHeader,
-)
-from datetime import datetime
-from app.gui.widgets.panel import Panel
+from app.gui.widgets.dashboard.kpi_section import KPISection
+from app.gui.widgets.dashboard.quick_access_widget import QuickAccessWidget
 
 
 class DashboardPage(QWidget):
     """
-    Dashboard page displayed when the application starts.
+    Command Center Dashboard Landing Page.
     """
 
-    def __init__(self) -> None:
-        super().__init__()
+    navigate_to_page = Signal(int)
+
+    def __init__(
+        self,
+        parent: QWidget | None = None,
+    ) -> None:
+        super().__init__(parent)
 
         self._controller = DashboardController()
 
+        # --------------------------------------------------
+        # Header
+        # --------------------------------------------------
+
         self._header_widget = PageHeader(
-            title="Dashboard",
+            title="SOC-IQ Cyber Operations Center",
             subtitle=(
-                "Overview of investigations, IOC analysis, "
-                "risk assessment, and system status."
+                "Situational awareness, key threat metrics, "
+                "and executive investigation overview."
             ),
         )
 
-        self._header_widget.add_action(
-            AnimatedButton("Refresh")
-        )
+        # --------------------------------------------------
+        # Dashboard Widgets
+        # --------------------------------------------------
 
-        self._header_widget.add_action(
-            AnimatedButton("Export")
-        )
+        self._hero_widget = DashboardHeroWidget()
 
         self._kpi_section = KPISection()
 
-        self._recent_table = (
-            RecentInvestigationsWidget()
+        self._featured_card = (
+            FeaturedInvestigationCard()
         )
 
-        self._timeline_widget = TimelineWidget()
+        self._timeline = TimelineWidget()
+
+        self._quick_access = (
+            QuickAccessWidget()
+        )
+
+        self._system_status_card = (
+            ModernCard()
+        )
 
         self._build_ui()
 
-        # NEW: Refresh whenever the selected investigation changes.
-        event_bus.investigation_selected.connect(
-            self.refresh,
-        )
+        self._connect_signals()
 
-        self._recent_table.investigation_selected.connect(
-            self._open_investigation,
-        )
+        self.refresh()
 
-        self._recent_table.export_requested.connect(
-            self._export_investigation,
-        )
-
-        self._recent_table.delete_requested.connect(
-            self._delete_investigation,
-        )
-
-        self._load_dashboard()
+    # --------------------------------------------------
+    # UI
+    # --------------------------------------------------
 
     def _build_ui(self) -> None:
         """
-        Build the dashboard user interface.
+        Construct dashboard layout.
         """
 
         root_layout = QVBoxLayout(self)
@@ -108,188 +108,244 @@ class DashboardPage(QWidget):
 
         root_layout.setSpacing(24)
 
-        layout = root_layout
+        # Header
 
-        layout.addWidget(
-            self._header_widget,
+        root_layout.addWidget(
+            self._header_widget
         )
 
-        layout.addWidget(
-            self._kpi_section,
+        # Hero Banner
+
+        root_layout.addWidget(
+            self._hero_widget
         )
 
-        self._recent_activity = QLabel()
+        # KPI Cards
 
-        self._recent_activity.setObjectName(
-            "dashboardEmptyState"
+        root_layout.addWidget(
+            self._kpi_section
         )
 
-        self._recent_activity.setWordWrap(
-            True,
+        # Main Content
+
+        columns_layout = QHBoxLayout()
+
+        columns_layout.setSpacing(24)
+
+        # Left Column
+
+        left_column = QVBoxLayout()
+
+        left_column.setSpacing(24)
+
+        left_column.addWidget(
+            self._featured_card
         )
 
-        overview_panel = Panel()
+        left_column.addStretch()
 
-        overview_layout = QVBoxLayout(
-            overview_panel,
-        )
+        # Right Column
 
-        overview_layout.addWidget(
-            QLabel(
-                "Investigation Overview",
-            )
-        )
+        right_column = QVBoxLayout()
 
-        overview_layout.addWidget(
-            self._recent_activity,
-        )
+        right_column.setSpacing(24)
 
-        top_row = QHBoxLayout()
-        top_row.setSpacing(24)
-
-        top_row.addWidget(
-            overview_panel,
+        right_column.addWidget(
+            self._timeline,
             1,
         )
 
-        timeline_panel = Panel()
+        self._build_system_status_card()
 
-        timeline_layout = QVBoxLayout(
-            timeline_panel,
+        right_column.addWidget(
+            self._system_status_card
         )
 
-        timeline_layout.addWidget(
-            QLabel("Investigation Timeline"),
+        right_column.addStretch()
+
+        columns_layout.addLayout(
+            left_column,
+            3,
         )
 
-        timeline_layout.addWidget(
-            self._timeline_widget,
+        columns_layout.addLayout(
+            right_column,
+            2,
         )
 
-        top_row.addWidget(
-            timeline_panel,
-            1,
+        root_layout.addLayout(
+            columns_layout
         )
 
-        layout.addLayout(
-            top_row,
-        )
+        root_layout.addStretch()
 
-        recent_panel = Panel()
+    # --------------------------------------------------
+    # System Card
+    # --------------------------------------------------
 
-        recent_layout = QVBoxLayout(
-            recent_panel,
-        )
-
-        recent_layout.addWidget(
-            QLabel(
-                "Recent Investigations",
-            )
-        )
-
-        recent_layout.addWidget(
-            self._recent_table,
-        )
-
-        layout.addWidget(
-            recent_panel,
-        )
-
-        status_panel = Panel()
-
-        status_layout = QVBoxLayout(
-            status_panel,
-        )
-
-        status_layout.addWidget(
-            QLabel(
-                "System Status",
-            )
-        )
-
-        self._status_placeholder = QLabel(
-            "All SOC-IQ services are operational."
-        )
-
-        self._status_placeholder.setObjectName(
-            "dashboardEmptyState",
-        )
-
-        status_layout.addWidget(
-            self._status_placeholder,
-        )
-
-        layout.addWidget(
-            status_panel,
-        )
-
-        layout.addStretch()
-
-
-    def refresh(self) -> None:
-        """
-        Refresh the dashboard with the latest
-        application data.
-        """
-
-        self._load_dashboard()
-
-    def _open_investigation(
+    def _build_system_status_card(
         self,
-        investigation,
     ) -> None:
         """
-        Open an investigation selected from
-        the recent investigations table.
+        Build infrastructure health card.
         """
+
+        palette = (
+            self._system_status_card.theme.palette
+        )
+
+        fonts = (
+            self._system_status_card.theme.fonts
+        )
+
+        card_layout = QVBoxLayout()
+
+        card_layout.setContentsMargins(
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+        )
+
+        card_layout.setSpacing(
+            Spacing.MD,
+        )
+
+        title = QLabel(
+            "System & Infrastructure Health"
+        )
+
+        title.setFont(
+            fonts.title()
+        )
+
+        title.setStyleSheet(
+            f"""
+            color: {palette.text_primary};
+            font-weight: 600;
+            """
+        )
+
+        self._db_status = QLabel()
+
+        self._db_status.setFont(fonts.body())
+
+        self._db_status.setStyleSheet(
+            f"color: {palette.success};"
+        )
+
+        self._vt_status = QLabel()
+
+        self._vt_status.setFont(fonts.body())
+
+        self._vt_status.setStyleSheet(
+            f"color: {palette.info};"
+        )
+
+        self._engine_status = QLabel()
+
+        self._engine_status.setFont(fonts.body())
+
+        self._engine_status.setStyleSheet(
+            f"""
+            color:
+            {palette.text_secondary};
+            """
+        )
+
+        card_layout.addWidget(title)
+        card_layout.addWidget(self._db_status)
+        card_layout.addWidget(self._vt_status)
+        card_layout.addWidget(self._engine_status)
+
+        self._system_status_card.add_layout(
+            card_layout
+        )
+
+    # --------------------------------------------------
+    # Signals
+    # --------------------------------------------------
+
+    def _connect_signals(
+        self,
+    ) -> None:
+        """
+        Connect dashboard signals.
+        """
+
+        event_bus.investigation_selected.connect(
+            self.refresh
+        )
+
+        event_bus.investigation_created.connect(
+            self.refresh
+        )
+
+        self._featured_card.open_workspace_requested.connect(
+            self._open_featured_workspace
+        )
+
+        self._quick_access.navigate_to_analyze.connect(
+            lambda: self.navigate_to_page.emit(1)
+        )
+
+        self._quick_access.navigate_to_history.connect(
+            lambda: self.navigate_to_page.emit(5)
+        )
+
+        self._quick_access.navigate_to_threat_intel.connect(
+            lambda: self.navigate_to_page.emit(3)
+        )
+
+    # --------------------------------------------------
+    # Navigation
+    # --------------------------------------------------
+
+    def _open_featured_workspace(
+        self,
+    ) -> None:
+        """
+        Open latest investigation.
+        """
+
+        latest = (
+            self._controller
+            .get_latest_investigation()
+        )
+
+        if latest is None:
+            return
 
         ApplicationState.select_investigation(
-            investigation,
+            latest
         )
 
-    def _export_investigation(
+        self.navigate_to_page.emit(7)
+
+    # --------------------------------------------------
+    # Refresh
+    # --------------------------------------------------
+
+    def refresh(
         self,
-        investigation,
     ) -> None:
         """
-        Handle export request.
+        Refresh dashboard.
         """
 
-        print(
-            "Export:",
-            investigation.report_name,
+        self._hero_widget.update_timestamp()
+
+        threat_level, badge = (
+            self._controller.get_threat_status()
         )
 
-
-    def _delete_investigation(
-        self,
-        investigation,
-    ) -> None:
-        """
-        Handle delete request.
-        """
-
-        print(
-            "Delete:",
-            investigation.report_name,
+        self._hero_widget.set_threat_level(
+            threat_level,
+            badge,
         )
 
-    def _load_dashboard(self) -> None:
-        """
-        Load dashboard information from the controller.
-        """
-
-        summary = self._controller.get_summary()
-
-        self._header_widget.set_last_refresh(
-            datetime.now().strftime(
-                "%d %b %Y %H:%M:%S",
-            ),
-        )
-
-        self._header_widget.set_status(
-            "Database",
-            summary["database"],
+        summary = (
+            self._controller.get_summary()
         )
 
         self._kpi_section.set_metrics(
@@ -299,44 +355,29 @@ class DashboardPage(QWidget):
             database=str(summary["database"]),
         )
 
-        recent = (
-            self._controller.get_recent_investigations()
-        )
-
-        self._recent_table.load_investigations(
-            recent,
-        )
-
-        self._timeline_widget.clear()
-
-        for event in self._controller.get_dashboard_timeline():
-            self._timeline_widget.add_event(event)
-
         latest = (
             self._controller.get_latest_investigation()
         )
 
-        if latest is None:
-
-            self._recent_activity.setText(
-                "Recent Activity\n\n"
-                "No investigations available.\n"
-                "Analyze a report to begin."
-            )
-
-            return
-
-        analyzed_at = (
-            latest.analyzed_at.strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+        self._featured_card.load_investigation(
+            latest
         )
 
-        self._recent_activity.setText(
-            "Recent Activity\n\n"
-            "Latest Investigation\n\n"
-            f"Report Name : {latest.report_name}\n"
-            f"Analyzed    : {analyzed_at}\n"
-            f"Risk Score  : {latest.risk_score}\n"
-            f"Severity    : {latest.severity}"
+        status = self._controller.get_system_status()
+
+        self._db_status.setText(
+            f"• SQLite Database : {status['database']}"
         )
+
+        self._vt_status.setText(
+            f"• VirusTotal API : {status['virustotal']}"
+        )
+
+        self._engine_status.setText(
+            f"• Analysis Engine : {status['analysis_engine']}"
+        )
+
+        self._timeline.clear()
+
+        for event in self._controller.get_dashboard_timeline():
+            self._timeline.add_event(event)

@@ -26,6 +26,7 @@ class MetricCard(ModernCard):
 
     Displays:
 
+    • Icon (optional)
     • Title
     • Value
     • Subtitle
@@ -43,6 +44,7 @@ class MetricCard(ModernCard):
     ) -> None:
         super().__init__(parent)
 
+        self._icon_label = QLabel()
         self._title_label = QLabel(title)
         self._value_label = QLabel(value)
         self._subtitle_label = QLabel(subtitle)
@@ -62,7 +64,9 @@ class MetricCard(ModernCard):
         layout = self.content_layout()
 
         header = QHBoxLayout()
+        header.setSpacing(Spacing.XS)
 
+        header.addWidget(self._icon_label)
         header.addWidget(self._title_label)
         header.addStretch()
         header.addWidget(self._badge_label)
@@ -99,6 +103,10 @@ class MetricCard(ModernCard):
         palette = self.theme.palette
         fonts = self.theme.fonts
 
+        self._icon_label.setFont(
+            fonts.heading()
+        )
+
         self._title_label.setFont(
             fonts.label()
         )
@@ -117,6 +125,10 @@ class MetricCard(ModernCard):
 
         self._badge_label.setFont(
             fonts.caption()
+        )
+
+        self._icon_label.setStyleSheet(
+            f"color:{palette.text_primary};"
         )
 
         self._title_label.setStyleSheet(
@@ -143,11 +155,19 @@ class MetricCard(ModernCard):
             """
         )
 
+        self._icon_label.hide()
         self._badge_label.hide()
 
     # --------------------------------------------------
     # Public API
     # --------------------------------------------------
+
+    def set_icon(self, icon: str) -> None:
+        """
+        Sets the KPI icon displayed beside the title.
+        """
+        self._icon_label.setText(icon)
+        self._icon_label.setVisible(bool(icon))
 
     def set_title(self, title: str) -> None:
         self._title_label.setText(title)
