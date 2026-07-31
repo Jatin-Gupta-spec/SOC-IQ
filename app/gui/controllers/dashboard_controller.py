@@ -8,7 +8,17 @@ from __future__ import annotations
 
 from app.database.models import Investigation
 from app.database.service import InvestigationService
-from app.services.system_health_service import SystemHealthService
+
+from app.services.dashboard_statistics_service import (
+    DashboardStatisticsService,
+)
+from app.services.dashboard_threat_service import (
+    DashboardThreatService,
+)
+from app.services.system_health_service import (
+    SystemHealthService,
+)
+
 from app.gui.components.feedback.status_badge import BadgeType
 from app.gui.components.timeline.timeline_widget import TimelineEvent
 
@@ -32,6 +42,14 @@ class DashboardController:
             else InvestigationService()
         )
 
+        self._statistics = DashboardStatisticsService(
+            self._investigation_service
+        )
+
+        self._threat_service = DashboardThreatService(
+            self._investigation_service
+        )
+
         self._system_health = SystemHealthService()
 
     def get_summary(self) -> dict[str, str]:
@@ -39,60 +57,16 @@ class DashboardController:
         Return dashboard summary information.
         """
 
-        investigations = self._investigation_service.list_all()
+        return self._statistics.get_summary()
 
-        report_count = len(investigations)
-
-        total_iocs = sum(
-            sum(len(values) for values in investigation.iocs.values())
-            for investigation in investigations
-        )
-
-        high_risk = sum(
-            1
-            for investigation in investigations
-            if (investigation.severity or "").upper() in {
-                "HIGH",
-                "CRITICAL",
-            }
-        )
-
-        return {
-            "reports": str(report_count),
-            "iocs": str(total_iocs),
-            "high_risk": str(high_risk),
-            "database": "Connected",
-        }
-
-    def get_threat_status(self) -> tuple[str, BadgeType]:
+    def get_threat_status(
+        self,
+    ) -> tuple[str, BadgeType]:
         """
-        Evaluate overall system threat level.
+        Return current dashboard threat level.
         """
 
-        investigations = self._investigation_service.list_all()
-
-        if not investigations:
-            return ("NORMAL", BadgeType.SUCCESS)
-
-        critical_count = sum(
-            1
-            for inv in investigations
-            if (inv.severity or "").upper() == "CRITICAL"
-        )
-
-        high_count = sum(
-            1
-            for inv in investigations
-            if (inv.severity or "").upper() == "HIGH"
-        )
-
-        if critical_count > 0:
-            return ("CRITICAL ALERT", BadgeType.CRITICAL)
-
-        if high_count > 0:
-            return ("ELEVATED", BadgeType.WARNING)
-
-        return ("NORMAL", BadgeType.SUCCESS)
+        return self._threat_service.get_threat_status()
 
     def get_latest_investigation(
         self,
@@ -160,7 +134,9 @@ class DashboardController:
 
         return timeline
 
-    def get_system_status(self) -> dict[str, str]:
+    def get_system_status(
+        self,
+    ) -> dict[str, str]:
         """
         Return current application component status.
         """
