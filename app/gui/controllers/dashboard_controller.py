@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from app.database.models import Investigation
 from app.database.service import InvestigationService
+from app.services.system_health_service import SystemHealthService
 from app.gui.components.feedback.status_badge import BadgeType
 from app.gui.components.timeline.timeline_widget import TimelineEvent
 
@@ -31,6 +32,8 @@ class DashboardController:
             else InvestigationService()
         )
 
+        self._system_health = SystemHealthService()
+
     def get_summary(self) -> dict[str, str]:
         """
         Return dashboard summary information.
@@ -48,7 +51,10 @@ class DashboardController:
         high_risk = sum(
             1
             for investigation in investigations
-            if (investigation.severity or "").upper() in {"HIGH", "CRITICAL"}
+            if (investigation.severity or "").upper() in {
+                "HIGH",
+                "CRITICAL",
+            }
         )
 
         return {
@@ -60,8 +66,9 @@ class DashboardController:
 
     def get_threat_status(self) -> tuple[str, BadgeType]:
         """
-        Evaluate overall system threat level based on active investigations.
+        Evaluate overall system threat level.
         """
+
         investigations = self._investigation_service.list_all()
 
         if not investigations:
@@ -81,45 +88,70 @@ class DashboardController:
 
         if critical_count > 0:
             return ("CRITICAL ALERT", BadgeType.CRITICAL)
-        elif high_count > 0:
-            return ("ELEVATED", BadgeType.WARNING)
-        else:
-            return ("NORMAL", BadgeType.SUCCESS)
 
-    def get_latest_investigation(self) -> Investigation | None:
+        if high_count > 0:
+            return ("ELEVATED", BadgeType.WARNING)
+
+        return ("NORMAL", BadgeType.SUCCESS)
+
+    def get_latest_investigation(
+        self,
+    ) -> Investigation | None:
         """
         Return the most recently analyzed investigation.
         """
 
-        investigations = self._investigation_service.find_recent(limit=1)
+        investigations = (
+            self._investigation_service.find_recent(
+                limit=1
+            )
+        )
 
         if not investigations:
             return None
 
         return investigations[0]
 
-    def get_recent_investigations(self, limit: int = 5) -> list[Investigation]:
+    def get_recent_investigations(
+        self,
+        limit: int = 5,
+    ) -> list[Investigation]:
         """
         Return the most recent investigations.
         """
 
-        return self._investigation_service.find_recent(limit=limit)
+        return self._investigation_service.find_recent(
+            limit=limit
+        )
 
-    def get_dashboard_timeline(self, limit: int = 6) -> list[TimelineEvent]:
+    def get_dashboard_timeline(
+        self,
+        limit: int = 6,
+    ) -> list[TimelineEvent]:
         """
-        Return timeline events representing the most recent investigations.
+        Return timeline events representing
+        the most recent investigations.
         """
 
-        investigations = self._investigation_service.find_recent(limit=limit)
+        investigations = (
+            self._investigation_service.find_recent(
+                limit=limit
+            )
+        )
 
         timeline: list[TimelineEvent] = []
 
         for investigation in investigations:
             timeline.append(
                 TimelineEvent(
-                    timestamp=investigation.analyzed_at.strftime("%H:%M"),
+                    timestamp=investigation.analyzed_at.strftime(
+                        "%H:%M"
+                    ),
                     title=investigation.report_name,
-                    description=f"Risk Score: {investigation.risk_score}",
+                    description=(
+                        f"Risk Score: "
+                        f"{investigation.risk_score}"
+                    ),
                     severity=investigation.severity,
                     source="Investigation Engine",
                     icon="🛡",
@@ -130,20 +162,7 @@ class DashboardController:
 
     def get_system_status(self) -> dict[str, str]:
         """
-        Return current system health information.
+        Return current application component status.
         """
 
-        latest = self.get_latest_investigation()
-
-        if latest is None:
-            last_analysis = "Never"
-        else:
-            last_analysis = latest.analyzed_at.strftime("%d %b %Y %H:%M")
-
-        return {
-            "database": "Connected",
-            "repository": "Operational",
-            "analysis_engine": "Ready",
-            "virustotal": "API Key Missing",
-            "last_analysis": last_analysis,
-        }
+        return self._system_health.get_status()

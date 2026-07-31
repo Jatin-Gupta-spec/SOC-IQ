@@ -1,10 +1,34 @@
+"""
+SOC-IQ Configuration
+
+Centralized application configuration.
+
+Loads environment variables from .env and exposes
+application-wide configuration values.
+"""
+
+from __future__ import annotations
+
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+# ==========================================================
+# Base Directories
+# ==========================================================
+
+BASE_DIR: Path = Path(__file__).resolve().parent.parent
+
+# ==========================================================
+# Load Environment Variables
+# ==========================================================
+
+load_dotenv(BASE_DIR / ".env")
 
 # ==========================================================
 # Project Directories
 # ==========================================================
-
-BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
 SAMPLES_DIR: Path = BASE_DIR / "samples"
 OUTPUT_DIR: Path = BASE_DIR / "output"
@@ -54,4 +78,33 @@ APP_AUTHOR: str = "Himanshu Gupta"
 
 APP_DESCRIPTION: str = (
     "Security Operations Center Intelligence & IOC Analysis Tool"
+)
+
+# ==========================================================
+# Environment Configuration
+# ==========================================================
+
+APP_ENV: str = os.getenv("APP_ENV", "development")
+
+LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+
+# ==========================================================
+# VirusTotal Configuration
+# ==========================================================
+
+VIRUSTOTAL_API_KEY: str = os.getenv(
+    "VIRUSTOTAL_API_KEY",
+    "",
+)
+
+VIRUSTOTAL_TIMEOUT: int = int(
+    os.getenv(
+        "VIRUSTOTAL_TIMEOUT",
+        "30",
+    )
+)
+
+VIRUSTOTAL_BASE_URL: str = os.getenv(
+    "VIRUSTOTAL_BASE_URL",
+    "https://www.virustotal.com/api/v3",
 )

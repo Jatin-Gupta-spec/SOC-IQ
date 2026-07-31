@@ -198,6 +198,8 @@ class DashboardPage(QWidget):
             self._system_status_card.theme.fonts
         )
 
+        status = self._controller.get_system_status()
+
         card_layout = QVBoxLayout()
 
         card_layout.setContentsMargins(
