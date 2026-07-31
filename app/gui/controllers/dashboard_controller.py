@@ -18,7 +18,9 @@ from app.services.dashboard_threat_service import (
 from app.services.system_health_service import (
     SystemHealthService,
 )
-
+from app.services.dashboard_timeline_service import (
+    DashboardTimelineService,
+)
 from app.gui.components.feedback.status_badge import BadgeType
 from app.gui.components.timeline.timeline_widget import TimelineEvent
 
@@ -47,6 +49,10 @@ class DashboardController:
         )
 
         self._threat_service = DashboardThreatService(
+            self._investigation_service
+        )
+
+        self._timeline_service = DashboardTimelineService(
             self._investigation_service
         )
 
@@ -103,36 +109,12 @@ class DashboardController:
         limit: int = 6,
     ) -> list[TimelineEvent]:
         """
-        Return timeline events representing
-        the most recent investigations.
+        Return dashboard timeline events.
         """
 
-        investigations = (
-            self._investigation_service.find_recent(
-                limit=limit
-            )
+        return self._timeline_service.get_timeline(
+            limit
         )
-
-        timeline: list[TimelineEvent] = []
-
-        for investigation in investigations:
-            timeline.append(
-                TimelineEvent(
-                    timestamp=investigation.analyzed_at.strftime(
-                        "%H:%M"
-                    ),
-                    title=investigation.report_name,
-                    description=(
-                        f"Risk Score: "
-                        f"{investigation.risk_score}"
-                    ),
-                    severity=investigation.severity,
-                    source="Investigation Engine",
-                    icon="🛡",
-                )
-            )
-
-        return timeline
 
     def get_system_status(
         self,
