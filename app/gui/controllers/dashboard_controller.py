@@ -21,6 +21,9 @@ from app.services.system_health_service import (
 from app.services.dashboard_timeline_service import (
     DashboardTimelineService,
 )
+from app.services.dashboard_investigation_service import (
+    DashboardInvestigationService,
+)
 from app.gui.components.feedback.status_badge import BadgeType
 from app.gui.components.timeline.timeline_widget import TimelineEvent
 
@@ -56,6 +59,12 @@ class DashboardController:
             self._investigation_service
         )
 
+        self._investigation_service_dashboard = (
+            DashboardInvestigationService(
+                self._investigation_service
+            )
+        )
+
         self._system_health = SystemHealthService()
 
     def get_summary(self) -> dict[str, str]:
@@ -78,30 +87,25 @@ class DashboardController:
         self,
     ) -> Investigation | None:
         """
-        Return the most recently analyzed investigation.
+        Return latest investigation.
         """
 
-        investigations = (
-            self._investigation_service.find_recent(
-                limit=1
-            )
+        return (
+            self._investigation_service_dashboard.get_latest()
         )
-
-        if not investigations:
-            return None
-
-        return investigations[0]
 
     def get_recent_investigations(
         self,
         limit: int = 5,
     ) -> list[Investigation]:
         """
-        Return the most recent investigations.
+        Return recent investigations.
         """
 
-        return self._investigation_service.find_recent(
-            limit=limit
+        return (
+            self._investigation_service_dashboard.get_recent(
+                limit
+            )
         )
 
     def get_dashboard_timeline(
