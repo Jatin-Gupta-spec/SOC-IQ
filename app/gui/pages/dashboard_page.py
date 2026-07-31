@@ -28,6 +28,12 @@ from app.gui.widgets.dashboard.featured_investigation_card import (
 from app.gui.widgets.dashboard.investigation_queue_widget import (
     InvestigationQueueWidget,
 )
+from app.gui.widgets.dashboard.threat_intelligence_feed_widget import (
+    ThreatIntelligenceFeedWidget,
+)
+from app.gui.widgets.dashboard.ioc_distribution_widget import (
+    IOCDistributionWidget,
+)
 from app.gui.widgets.dashboard.kpi_section import KPISection
 from app.gui.widgets.dashboard.quick_access_widget import QuickAccessWidget
 
@@ -69,6 +75,14 @@ class DashboardPage(QWidget):
 
         self._investigation_queue = (
             InvestigationQueueWidget()
+        )
+
+        self._ioc_distribution = (
+            IOCDistributionWidget()
+        )
+
+        self._threat_feed = (
+            ThreatIntelligenceFeedWidget()
         )
 
         self._featured_card = (
@@ -145,17 +159,13 @@ class DashboardPage(QWidget):
         )
 
         grid.addWidget(
-            self._create_placeholder_card(
-                "Threat Intelligence Feed"
-            ),
+            self._threat_feed,
             0,
             1,
         )
 
         grid.addWidget(
-            self._create_placeholder_card(
-                "IOC Distribution"
-            ),
+            self._ioc_distribution,
             1,
             0,
         )
@@ -410,6 +420,24 @@ class DashboardPage(QWidget):
 
         self._investigation_queue.load_investigations(
             recent
+        )
+
+        distribution = (
+            self._controller.get_ioc_distribution()
+        )
+
+        self._ioc_distribution.load_distribution(
+            distribution
+        )
+
+        feed = (
+            self._controller.get_threat_feed(
+                limit=10
+            )
+        )
+
+        self._threat_feed.load_feed(
+            feed
         )
 
         status = self._controller.get_system_status()

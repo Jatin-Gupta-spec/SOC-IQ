@@ -24,6 +24,12 @@ from app.services.dashboard_timeline_service import (
 from app.services.dashboard_investigation_service import (
     DashboardInvestigationService,
 )
+from app.services.dashboard_threat_feed_service import (
+    DashboardThreatFeedService,
+)
+from app.services.dashboard_ioc_distribution_service import (
+    DashboardIOCDistributionService,
+)
 from app.gui.components.feedback.status_badge import BadgeType
 from app.gui.components.timeline.timeline_widget import TimelineEvent
 
@@ -57,6 +63,18 @@ class DashboardController:
 
         self._timeline_service = DashboardTimelineService(
             self._investigation_service
+        )
+
+        self._ioc_distribution = (
+            DashboardIOCDistributionService(
+                self._investigation_service
+            )
+        )
+
+        self._threat_feed_service = (
+            DashboardThreatFeedService(
+                self._investigation_service
+            )
         )
 
         self._investigation_service_dashboard = (
@@ -120,6 +138,15 @@ class DashboardController:
             limit
         )
 
+    def get_ioc_distribution(
+        self,
+    ) -> dict[str, int]:
+        """
+        Return IOC distribution statistics.
+        """
+
+        return self._ioc_distribution.get_distribution()
+
     def get_system_status(
         self,
     ) -> dict[str, str]:
@@ -128,3 +155,15 @@ class DashboardController:
         """
 
         return self._system_health.get_status()
+
+    def get_threat_feed(
+        self,
+        limit: int = 10,
+    ) -> list[dict[str, str]]:
+        """
+        Return dashboard threat feed.
+        """
+
+        return self._threat_feed_service.get_feed(
+            limit
+        )

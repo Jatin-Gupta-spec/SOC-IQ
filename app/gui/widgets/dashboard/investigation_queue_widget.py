@@ -10,14 +10,19 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLabel,
-    QTableWidget,
-    QTableWidgetItem,
-    QVBoxLayout,
     QHeaderView,
+    QTableView,
+    QVBoxLayout,
 )
 
 from app.database.models import Investigation
 from app.gui.components.cards.modern_card import ModernCard
+from app.gui.models.investigation_proxy_model import (
+    InvestigationProxyModel,
+)
+from app.gui.models.investigation_table_model import (
+    InvestigationTableModel,
+)
 
 
 class InvestigationQueueWidget(ModernCard):
@@ -27,6 +32,14 @@ class InvestigationQueueWidget(ModernCard):
 
     def __init__(self) -> None:
         super().__init__()
+
+        self._model = InvestigationTableModel()
+
+        self._proxy = InvestigationProxyModel()
+
+        self._proxy.setSourceModel(
+            self._model
+        )
 
         self._build_ui()
 
@@ -59,32 +72,46 @@ class InvestigationQueueWidget(ModernCard):
             """
         )
 
-        self._table = QTableWidget()
+        self._table = QTableView()
 
-        self._table.setColumnCount(4)
+        self._table.setModel(
+            self._proxy
+        )
 
-        self._table.setHorizontalHeaderLabels(
-            [
-                "Report",
-                "Severity",
-                "Risk",
-                "Time",
-            ]
+        self._table.setSortingEnabled(
+            True
+        )
+
+        self._table.sortByColumn(
+            5,
+            Qt.SortOrder.DescendingOrder,
         )
 
         self._table.verticalHeader().hide()
 
+        self._table.setAlternatingRowColors(
+            True
+        )
+
+        self._table.setShowGrid(
+            False
+        )
+
         self._table.setSelectionBehavior(
-            QTableWidget.SelectionBehavior.SelectRows
+            QTableView.SelectionBehavior.SelectRows
+        )
+
+        self._table.setSelectionMode(
+            QTableView.SelectionMode.SingleSelection
         )
 
         self._table.setEditTriggers(
-            QTableWidget.EditTrigger.NoEditTriggers
+            QTableView.EditTrigger.NoEditTriggers
         )
 
-        self._table.setAlternatingRowColors(True)
-
-        self._table.setShowGrid(False)
+        self._table.setSortingEnabled(
+            True
+        )
 
         self._table.horizontalHeader().setStretchLastSection(
             True
@@ -94,10 +121,19 @@ class InvestigationQueueWidget(ModernCard):
             QHeaderView.ResizeMode.Stretch
         )
 
-        layout.addWidget(title)
-        layout.addWidget(self._table)
+        self._table.horizontalHeader().setHighlightSections(
+            False
+        )
 
-        self.add_layout(layout)
+        layout.addWidget(title)
+
+        layout.addWidget(
+            self._table
+        )
+
+        self.add_layout(
+            layout
+        )
 
     # --------------------------------------------------
     # Public API
@@ -108,7 +144,9 @@ class InvestigationQueueWidget(ModernCard):
         Clear queue.
         """
 
-        self._table.setRowCount(0)
+        self._model.set_investigations(
+            []
+        )
 
     def load_investigations(
         self,
@@ -118,50 +156,20 @@ class InvestigationQueueWidget(ModernCard):
         Populate investigation queue.
         """
 
-        self.clear()
-
-        self._table.setRowCount(
-            len(investigations)
+        self._model.set_investigations(
+            investigations
         )
 
-        for row, investigation in enumerate(
-            investigations
-        ):
-
-            self._table.setItem(
-                row,
-                0,
-                QTableWidgetItem(
-                    investigation.report_name
-                ),
-            )
-
-            self._table.setItem(
-                row,
-                1,
-                QTableWidgetItem(
-                    investigation.severity
-                ),
-            )
-
-            self._table.setItem(
-                row,
-                2,
-                QTableWidgetItem(
-                    str(
-                        investigation.risk_score
-                    )
-                ),
-            )
-
-            self._table.setItem(
-                row,
-                3,
-                QTableWidgetItem(
-                    investigation.analyzed_at.strftime(
-                        "%d %b %H:%M"
-                    )
-                ),
-            )
-
         self._table.resizeRowsToContents()
+
+    def filter(
+        self,
+        text: str,
+    ) -> None:
+        """
+        Filter investigations.
+        """
+
+        self._proxy.setFilterFixedString(
+            text
+        )
