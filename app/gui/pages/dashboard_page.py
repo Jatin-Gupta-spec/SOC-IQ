@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QHBoxLayout,
+     QGridLayout,
     QLabel,
     QVBoxLayout,
     QWidget,
@@ -25,9 +25,8 @@ from app.gui.widgets.dashboard.dashboard_hero_widget import DashboardHeroWidget
 from app.gui.widgets.dashboard.featured_investigation_card import (
     FeaturedInvestigationCard,
 )
-from app.gui.components.timeline.timeline_widget import (
-    TimelineWidget,
-    TimelineEvent,
+from app.gui.widgets.dashboard.investigation_queue_widget import (
+    InvestigationQueueWidget,
 )
 from app.gui.widgets.dashboard.kpi_section import KPISection
 from app.gui.widgets.dashboard.quick_access_widget import QuickAccessWidget
@@ -68,11 +67,13 @@ class DashboardPage(QWidget):
 
         self._kpi_section = KPISection()
 
+        self._investigation_queue = (
+            InvestigationQueueWidget()
+        )
+
         self._featured_card = (
             FeaturedInvestigationCard()
         )
-
-        self._timeline = TimelineWidget()
 
         self._quick_access = (
             QuickAccessWidget()
@@ -126,56 +127,63 @@ class DashboardPage(QWidget):
             self._kpi_section
         )
 
-        # Main Content
-
-        columns_layout = QHBoxLayout()
-
-        columns_layout.setSpacing(24)
-
-        # Left Column
-
-        left_column = QVBoxLayout()
-
-        left_column.setSpacing(24)
-
-        left_column.addWidget(
-            self._featured_card
-        )
-
-        left_column.addStretch()
-
-        # Right Column
-
-        right_column = QVBoxLayout()
-
-        right_column.setSpacing(24)
-
-        right_column.addWidget(
-            self._timeline,
-            1,
-        )
+        # --------------------------------------------------
+        # SOC Workbench
+        # --------------------------------------------------
 
         self._build_system_status_card()
 
-        right_column.addWidget(
-            self._system_status_card
+        grid = QGridLayout()
+
+        grid.setHorizontalSpacing(Spacing.LG)
+        grid.setVerticalSpacing(Spacing.LG)
+
+        grid.addWidget(
+            self._investigation_queue,
+            0,
+            0,
         )
 
-        right_column.addStretch()
-
-        columns_layout.addLayout(
-            left_column,
-            3,
+        grid.addWidget(
+            self._create_placeholder_card(
+                "Threat Intelligence Feed"
+            ),
+            0,
+            1,
         )
 
-        columns_layout.addLayout(
-            right_column,
+        grid.addWidget(
+            self._create_placeholder_card(
+                "IOC Distribution"
+            ),
+            1,
+            0,
+        )
+
+        grid.addWidget(
+            self._create_placeholder_card(
+                "Live Security Events"
+            ),
+            1,
+            1,
+        )
+
+        grid.addWidget(
+            self._featured_card,
             2,
+            0,
         )
 
-        root_layout.addLayout(
-            columns_layout
+        grid.addWidget(
+            self._system_status_card,
+            2,
+            1,
         )
+
+        grid.setColumnStretch(0, 1)
+        grid.setColumnStretch(1, 1)
+
+        root_layout.addLayout(grid)
 
         root_layout.addStretch()
 
@@ -197,8 +205,6 @@ class DashboardPage(QWidget):
         fonts = (
             self._system_status_card.theme.fonts
         )
-
-        status = self._controller.get_system_status()
 
         card_layout = QVBoxLayout()
 
@@ -263,6 +269,37 @@ class DashboardPage(QWidget):
         self._system_status_card.add_layout(
             card_layout
         )
+
+    def _create_placeholder_card(
+        self,
+        title: str,
+    ) -> ModernCard:
+        """
+        Create a placeholder card for future
+        dashboard widgets.
+        """
+
+        card = ModernCard()
+
+        palette = card.theme.palette
+        fonts = card.theme.fonts
+
+        label = QLabel(title)
+
+        label.setFont(
+            fonts.title()
+        )
+
+        label.setStyleSheet(
+            f"""
+            color: {palette.text_primary};
+            font-weight: 600;
+            """
+        )
+
+        card.add_widget(label)
+
+        return card
 
     # --------------------------------------------------
     # Signals
@@ -365,6 +402,16 @@ class DashboardPage(QWidget):
             latest
         )
 
+        recent = (
+            self._controller.get_recent_investigations(
+                limit=10
+            )
+        )
+
+        self._investigation_queue.load_investigations(
+            recent
+        )
+
         status = self._controller.get_system_status()
 
         self._db_status.setText(
@@ -378,8 +425,3 @@ class DashboardPage(QWidget):
         self._engine_status.setText(
             f"• Analysis Engine : {status['analysis_engine']}"
         )
-
-        self._timeline.clear()
-
-        for event in self._controller.get_dashboard_timeline():
-            self._timeline.add_event(event)
