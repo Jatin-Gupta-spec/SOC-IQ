@@ -13,7 +13,6 @@ from typing import Any, Self
 import requests
 
 from app.config import (
-    VIRUSTOTAL_API_KEY,
     VIRUSTOTAL_BASE_URL,
     VIRUSTOTAL_TIMEOUT,
 )
@@ -52,8 +51,6 @@ class VirusTotalClient:
         """
         Initialize the VirusTotal client.
         """
-
-        from app.settings.service import SettingsService
 
         settings = SettingsService().load_settings()
 

@@ -12,6 +12,7 @@ import os
 import sqlite3
 
 from app.database.connection import DatabaseConnection
+from app.settings.service import SettingsService
 
 
 class SystemHealthService:
@@ -22,6 +23,7 @@ class SystemHealthService:
     def __init__(self) -> None:
 
         self._database = DatabaseConnection()
+        self._settings_service = SettingsService()
 
     # --------------------------------------------------
     # Database
@@ -55,12 +57,9 @@ class SystemHealthService:
         Verify VirusTotal configuration.
         """
 
-        api_key = os.getenv(
-            "VIRUSTOTAL_API_KEY",
-            "",
-        ).strip()
+        settings = self._settings_service.load_settings()
 
-        if api_key:
+        if settings.virustotal_api_key.strip():
 
             return "Configured"
 
