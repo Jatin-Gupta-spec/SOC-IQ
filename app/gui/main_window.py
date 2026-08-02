@@ -357,7 +357,7 @@ class MainWindow(QMainWindow):
         )
 
         self.page_stack.setCurrentIndex(
-            self.WORKSPACE_PAGE_INDEX,
+            self.page_stack.indexOf(self.workspace_page)
         )
 
         self.statusBar().showMessage(
