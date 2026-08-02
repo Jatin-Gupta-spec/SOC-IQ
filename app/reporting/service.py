@@ -13,7 +13,6 @@ from pathlib import Path
 from app.database.models import Investigation
 from app.reporting.export_manager import ExportManager
 from app.reporting.models import InvestigationReport
-from app.reporting.export_manager import ExportManager
 
 
 class ReportingService:
