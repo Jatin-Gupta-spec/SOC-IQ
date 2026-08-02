@@ -12,7 +12,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QMessageBox,
     QVBoxLayout,
@@ -22,9 +21,9 @@ from PySide6.QtWidgets import (
 from app.gui.components.buttons.animated_button import AnimatedButton
 from app.gui.components.cards.modern_card import ModernCard
 from app.gui.components.layout.component_section import ComponentSection
-from app.gui.design.theme.theme_manager import theme_manager
 from app.gui.design.tokens import Spacing
 from app.gui.widgets.page_container import PageContainer
+from app.settings.service import SettingsService
 
 
 class SettingsPage(QWidget):
@@ -34,6 +33,8 @@ class SettingsPage(QWidget):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
+
+        self._settings_service = SettingsService()
 
         self._container = PageContainer(
             title="System Settings & Preferences",
@@ -53,6 +54,7 @@ class SettingsPage(QWidget):
         self._apply_theme_btn = AnimatedButton("Apply Theme")
 
         self._build_ui()
+        self._load_settings()
         self._connect_signals()
 
     def _build_ui(self) -> None:
@@ -61,73 +63,97 @@ class SettingsPage(QWidget):
         """
         layout = self._container.content_layout()
 
-        # 1. VirusTotal API Key Card
+        # Threat Intelligence
         vt_section = ComponentSection(
             title="Threat Intelligence Credentials",
             description="Configure your VirusTotal API key for live threat enrichment.",
         )
 
         vt_card = ModernCard()
-        vt_box = QVBoxLayout()
-        vt_box.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
-        vt_box.setSpacing(Spacing.MD)
+        vt_layout = QVBoxLayout()
+        vt_layout.setContentsMargins(
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+        )
+        vt_layout.setSpacing(Spacing.MD)
 
         self._vt_api_key.setEchoMode(QLineEdit.EchoMode.Password)
-        self._vt_api_key.setPlaceholderText("Enter VirusTotal API key...")
+        self._vt_api_key.setPlaceholderText(
+            "Enter VirusTotal API key..."
+        )
 
         vt_row = QHBoxLayout()
         vt_row.setSpacing(Spacing.MD)
         vt_row.addWidget(self._vt_api_key, 3)
         vt_row.addWidget(self._save_vt_btn, 1)
 
-        vt_box.addLayout(vt_row)
-        vt_card.add_layout(vt_box)
+        vt_layout.addLayout(vt_row)
+        vt_card.add_layout(vt_layout)
         vt_section.add_widget(vt_card)
         layout.addWidget(vt_section)
 
-        # 2. Export & Storage Preferences
+        # Export Preferences
         export_section = ComponentSection(
             title="Report Export Preferences",
-            description="Set default output directory for generated HTML and PDF reports.",
+            description="Set the default export directory for generated reports.",
         )
 
         export_card = ModernCard()
-        exp_box = QVBoxLayout()
-        exp_box.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
-        exp_box.setSpacing(Spacing.MD)
+        export_layout = QVBoxLayout()
+        export_layout.setContentsMargins(
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+        )
+        export_layout.setSpacing(Spacing.MD)
 
-        self._export_dir_input.setPlaceholderText("Default export folder path...")
+        self._export_dir_input.setPlaceholderText(
+            "Default export folder..."
+        )
 
-        exp_row = QHBoxLayout()
-        exp_row.setSpacing(Spacing.MD)
-        exp_row.addWidget(self._export_dir_input, 3)
-        exp_row.addWidget(self._browse_dir_btn, 1)
+        export_row = QHBoxLayout()
+        export_row.setSpacing(Spacing.MD)
+        export_row.addWidget(self._export_dir_input, 3)
+        export_row.addWidget(self._browse_dir_btn, 1)
 
-        exp_box.addLayout(exp_row)
-        export_card.add_layout(exp_box)
+        export_layout.addLayout(export_row)
+        export_card.add_layout(export_layout)
         export_section.add_widget(export_card)
         layout.addWidget(export_section)
 
-        # 3. Theme & Appearance
+        # Theme
         theme_section = ComponentSection(
             title="UI Theme & Appearance",
-            description="Customize application visual styles and dark mode preferences.",
+            description="Configure application appearance.",
         )
 
         theme_card = ModernCard()
-        thm_box = QVBoxLayout()
-        thm_box.setContentsMargins(Spacing.LG, Spacing.LG, Spacing.LG, Spacing.LG)
-        thm_box.setSpacing(Spacing.MD)
+        theme_layout = QVBoxLayout()
+        theme_layout.setContentsMargins(
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+        )
+        theme_layout.setSpacing(Spacing.MD)
 
-        self._theme_combo.addItems(["Dark Mode (SOC-IQ Standard)", "High Contrast Dark"])
+        self._theme_combo.addItems(
+            [
+                "Dark Mode (SOC-IQ Standard)",
+                "High Contrast Dark",
+            ]
+        )
 
-        thm_row = QHBoxLayout()
-        thm_row.setSpacing(Spacing.MD)
-        thm_row.addWidget(self._theme_combo, 3)
-        thm_row.addWidget(self._apply_theme_btn, 1)
+        theme_row = QHBoxLayout()
+        theme_row.setSpacing(Spacing.MD)
+        theme_row.addWidget(self._theme_combo, 3)
+        theme_row.addWidget(self._apply_theme_btn, 1)
 
-        thm_box.addLayout(thm_row)
-        theme_card.add_layout(thm_box)
+        theme_layout.addLayout(theme_row)
+        theme_card.add_layout(theme_layout)
         theme_section.add_widget(theme_card)
         layout.addWidget(theme_section)
 
@@ -136,6 +162,20 @@ class SettingsPage(QWidget):
         root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.addWidget(self._container)
+
+    def _load_settings(self) -> None:
+        """
+        Load saved application settings into the UI.
+        """
+        settings = self._settings_service.load_settings()
+
+        self._vt_api_key.setText(settings.virustotal_api_key)
+        self._export_dir_input.setText(settings.export_directory)
+
+        index = self._theme_combo.findText(settings.theme)
+
+        if index >= 0:
+            self._theme_combo.setCurrentIndex(index)
 
     def _connect_signals(self) -> None:
         """
@@ -147,25 +187,52 @@ class SettingsPage(QWidget):
 
     def _save_api_key(self) -> None:
         """
-        Save VT API Key.
+        Save VirusTotal API key.
         """
         key = self._vt_api_key.text().strip()
+
         if not key:
-            QMessageBox.warning(self, "Invalid Key", "Please enter a valid API key.")
+            QMessageBox.warning(
+                self,
+                "Invalid Key",
+                "Please enter a valid API key.",
+            )
             return
 
-        QMessageBox.information(self, "API Key Saved", "VirusTotal API key saved successfully.")
+        self._settings_service.update_api_key(key)
+
+        QMessageBox.information(
+            self,
+            "Success",
+            "VirusTotal API key saved successfully.",
+        )
 
     def _browse_export_dir(self) -> None:
         """
-        Select export folder.
+        Select and save export directory.
         """
-        directory = QFileDialog.getExistingDirectory(self, "Select Default Export Directory")
-        if directory:
-            self._export_dir_input.setText(directory)
+        directory = QFileDialog.getExistingDirectory(
+            self,
+            "Select Default Export Directory",
+        )
+
+        if not directory:
+            return
+
+        self._export_dir_input.setText(directory)
+
+        self._settings_service.update_export_directory(directory)
 
     def _apply_theme(self) -> None:
         """
-        Apply selected theme.
+        Save selected theme.
         """
-        QMessageBox.information(self, "Theme Applied", "UI theme updated successfully.")
+        theme = self._theme_combo.currentText()
+
+        self._settings_service.update_theme(theme)
+
+        QMessageBox.information(
+            self,
+            "Success",
+            "Theme preference saved.",
+        )

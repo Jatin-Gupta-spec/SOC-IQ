@@ -29,5 +29,9 @@ class ApplicationSettings:
     """
 
     virustotal_api_key: str = ""
-    export_directory: str = str(Path("output").resolve())
+
+    export_directory: str = str(
+        Path("output").resolve()
+    )
+
     theme: str = "Dark Mode (SOC-IQ Standard)"

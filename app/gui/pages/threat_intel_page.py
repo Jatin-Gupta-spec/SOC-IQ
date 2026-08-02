@@ -35,7 +35,10 @@ class ThreatIntelPage(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self._vt_client = VirusTotalClient()
+        try:
+            self._vt_client = VirusTotalClient()
+        except Exception:
+            self._vt_client = None
 
         self._container = PageContainer(
             title="Threat Intelligence Center",

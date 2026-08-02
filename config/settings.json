@@ -1,5 +1,5 @@
 {
-    "virustotal_api_key": "TEST_KEY",
+    "virustotal_api_key": "api123",
     "export_directory": "D:\\cyber projects\\SOC-IQ\\output",
     "theme": "Dark Mode (SOC-IQ Standard)"
 }
