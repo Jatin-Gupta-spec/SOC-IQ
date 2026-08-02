@@ -19,7 +19,7 @@ class SettingsRepository:
     """
 
     def __init__(self, settings_path: Path | None = None) -> None:
-        self._settings_path = settings_path or Path("settings.json")
+        self._settings_path = settings_path or Path("config") / "settings.json"
 
     def load(self) -> ApplicationSettings:
         """
@@ -58,6 +58,11 @@ class SettingsRepository:
         """
         Save application settings.
         """
+        self._settings_path.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
         with self._settings_path.open(
             "w",
             encoding="utf-8",
@@ -67,3 +72,4 @@ class SettingsRepository:
                 file,
                 indent=4,
             )
+            file.flush()
