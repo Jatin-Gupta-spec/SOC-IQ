@@ -4,6 +4,17 @@ Application-wide event bus for the SOC-IQ desktop application.
 This module provides a centralized event dispatcher that enables
 communication between independent GUI components without creating
 direct dependencies between them.
+
+Scope: this bus carries settings changes, per-page refresh
+requests, and generic status/error messages. Investigation
+lifecycle events (selected/created/updated/removed) live on
+the separate `app.gui.events.event_bus.event_bus` singleton
+instead -- see that module's docstring. In particular,
+`investigation_deleted` here and `investigation_removed` on
+`event_bus` are NOT the same signal and are not bridged to one
+another; deleting an investigation should emit
+`event_bus.investigation_removed` so pages that already
+subscribe to it (e.g. `IOCViewerPage`) refresh correctly.
 """
 
 from __future__ import annotations

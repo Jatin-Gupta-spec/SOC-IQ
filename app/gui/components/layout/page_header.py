@@ -48,39 +48,23 @@ class PageHeader(BaseWidget):
         self._status_label = QLabel()
         self._refresh_label = QLabel()
 
+        self._meta_widget = QWidget()
+        self._meta_layout = QHBoxLayout(self._meta_widget)
+
         self._actions_layout = QHBoxLayout()
 
         self._build_ui()
+        self.refresh_theme()
 
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
 
     def _build_ui(self) -> None:
-        palette = self.theme.palette
-        fonts = self.theme.fonts
 
-        self._title_label.setFont(fonts.display())
-        self._title_label.setStyleSheet(
-            f"color: {palette.text_primary};"
-        )
-
-        self._subtitle_label.setFont(fonts.body())
-        self._subtitle_label.setStyleSheet(
-            f"color: {palette.text_secondary};"
-        )
-
-        self._status_label.setFont(fonts.caption())
-        self._status_label.setStyleSheet(
-            f"color: {palette.text_secondary};"
-        )
-        self._status_label.hide()
-
-        self._refresh_label.setFont(fonts.caption())
-        self._refresh_label.setStyleSheet(
-            f"color: {palette.text_secondary};"
-        )
-        self._refresh_label.hide()
+        # True display-scale title — this is the top of the
+        # typography ladder for the whole app (bigger than any
+        # hero or card title downstream).
 
         title_layout = QVBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
@@ -91,8 +75,16 @@ class PageHeader(BaseWidget):
         if self._subtitle_label.text():
             title_layout.addWidget(self._subtitle_label)
 
-        title_layout.addWidget(self._status_label)
-        title_layout.addWidget(self._refresh_label)
+        self._meta_layout.setContentsMargins(0, 0, 0, 0)
+        self._meta_layout.setSpacing(Spacing.MD)
+
+        self._meta_layout.addWidget(self._status_label)
+        self._meta_layout.addWidget(self._refresh_label)
+        self._meta_layout.addStretch()
+
+        self._meta_widget.hide()
+
+        title_layout.addWidget(self._meta_widget)
 
         actions_container = QWidget()
 
@@ -118,7 +110,7 @@ class PageHeader(BaseWidget):
             0,
             0,
             0,
-            0,
+            Spacing.MD,
         )
 
         root.setSpacing(Spacing.LG)
@@ -128,6 +120,38 @@ class PageHeader(BaseWidget):
         root.addStretch()
 
         root.addWidget(actions_container)
+
+    def refresh_theme(self) -> None:
+        """
+        Refresh the page header styling.
+        """
+
+        palette = self.palette
+        fonts = self.fonts
+
+        self._title_label.setFont(fonts.display())
+        self._title_label.setStyleSheet(
+            f"""
+            color: {palette.text_primary};
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            """
+        )
+
+        self._subtitle_label.setFont(fonts.body())
+        self._subtitle_label.setStyleSheet(
+            f"color: {palette.text_secondary};"
+        )
+
+        self._status_label.setFont(fonts.caption())
+        self._status_label.setStyleSheet(
+            f"color: {palette.text_secondary};"
+        )
+
+        self._refresh_label.setFont(fonts.caption())
+        self._refresh_label.setStyleSheet(
+            f"color: {palette.text_muted};"
+        )
 
     # --------------------------------------------------
     # Public API
@@ -139,6 +163,7 @@ class PageHeader(BaseWidget):
     ) -> None:
         """Update the page title."""
         self._title_label.setText(title)
+        self.refresh_theme()
 
     def set_subtitle(
         self,
@@ -149,6 +174,7 @@ class PageHeader(BaseWidget):
         self._subtitle_label.setVisible(
             bool(subtitle)
         )
+        self.refresh_theme()
 
     def set_status(
         self,
@@ -166,11 +192,15 @@ class PageHeader(BaseWidget):
             f"{label}: {value}"
         )
         self._status_label.show()
+        self._meta_widget.show()
 
     def clear_status(self) -> None:
         """Hide the status label."""
         self._status_label.clear()
         self._status_label.hide()
+
+        if not self._refresh_label.isVisible():
+            self._meta_widget.hide()
 
     def set_last_refresh(
         self,
@@ -184,11 +214,15 @@ class PageHeader(BaseWidget):
             f"Last Refresh: {timestamp}"
         )
         self._refresh_label.show()
+        self._meta_widget.show()
 
     def clear_last_refresh(self) -> None:
         """Hide the refresh label."""
         self._refresh_label.clear()
         self._refresh_label.hide()
+
+        if not self._status_label.isVisible():
+            self._meta_widget.hide()
 
     def add_action(
         self,

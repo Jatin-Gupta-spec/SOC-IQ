@@ -36,6 +36,8 @@ from app.gui.widgets.dashboard.ioc_distribution_widget import (
 )
 from app.gui.widgets.dashboard.kpi_section import KPISection
 from app.gui.widgets.dashboard.quick_access_widget import QuickAccessWidget
+from app.gui.widgets.dashboard.system_status_section import SystemStatusSection
+from app.gui.widgets.sidebar import NavigationPage
 
 
 class DashboardPage(QWidget):
@@ -93,8 +95,8 @@ class DashboardPage(QWidget):
             QuickAccessWidget()
         )
 
-        self._system_status_card = (
-            ModernCard()
+        self._system_status_section = (
+            SystemStatusSection()
         )
 
         self._build_ui()
@@ -145,8 +147,6 @@ class DashboardPage(QWidget):
         # SOC Workbench
         # --------------------------------------------------
 
-        self._build_system_status_card()
-
         grid = QGridLayout()
 
         grid.setHorizontalSpacing(Spacing.LG)
@@ -185,7 +185,7 @@ class DashboardPage(QWidget):
         )
 
         grid.addWidget(
-            self._system_status_card,
+            self._system_status_section,
             2,
             1,
         )
@@ -198,87 +198,8 @@ class DashboardPage(QWidget):
         root_layout.addStretch()
 
     # --------------------------------------------------
-    # System Card
+    # Placeholder cards
     # --------------------------------------------------
-
-    def _build_system_status_card(
-        self,
-    ) -> None:
-        """
-        Build infrastructure health card.
-        """
-
-        palette = (
-            self._system_status_card.theme.palette
-        )
-
-        fonts = (
-            self._system_status_card.theme.fonts
-        )
-
-        card_layout = QVBoxLayout()
-
-        card_layout.setContentsMargins(
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
-        )
-
-        card_layout.setSpacing(
-            Spacing.MD,
-        )
-
-        title = QLabel(
-            "System & Infrastructure Health"
-        )
-
-        title.setFont(
-            fonts.title()
-        )
-
-        title.setStyleSheet(
-            f"""
-            color: {palette.text_primary};
-            font-weight: 600;
-            """
-        )
-
-        self._db_status = QLabel()
-
-        self._db_status.setFont(fonts.body())
-
-        self._db_status.setStyleSheet(
-            f"color: {palette.success};"
-        )
-
-        self._vt_status = QLabel()
-
-        self._vt_status.setFont(fonts.body())
-
-        self._vt_status.setStyleSheet(
-            f"color: {palette.info};"
-        )
-
-        self._engine_status = QLabel()
-
-        self._engine_status.setFont(fonts.body())
-
-        self._engine_status.setStyleSheet(
-            f"""
-            color:
-            {palette.text_secondary};
-            """
-        )
-
-        card_layout.addWidget(title)
-        card_layout.addWidget(self._db_status)
-        card_layout.addWidget(self._vt_status)
-        card_layout.addWidget(self._engine_status)
-
-        self._system_status_card.add_layout(
-            card_layout
-        )
 
     def _create_placeholder_card(
         self,
@@ -335,15 +256,17 @@ class DashboardPage(QWidget):
         )
 
         self._quick_access.navigate_to_analyze.connect(
-            lambda: self.navigate_to_page.emit(1)
+            lambda: self.navigate_to_page.emit(NavigationPage.ANALYZE)
         )
 
         self._quick_access.navigate_to_history.connect(
-            lambda: self.navigate_to_page.emit(5)
+            lambda: self.navigate_to_page.emit(NavigationPage.HISTORY)
         )
 
         self._quick_access.navigate_to_threat_intel.connect(
-            lambda: self.navigate_to_page.emit(3)
+            lambda: self.navigate_to_page.emit(
+                NavigationPage.THREAT_INTELLIGENCE
+            )
         )
 
     # --------------------------------------------------
@@ -369,7 +292,7 @@ class DashboardPage(QWidget):
             latest
         )
 
-        self.navigate_to_page.emit(7)
+        self.navigate_to_page.emit(NavigationPage.WORKSPACE)
 
     # --------------------------------------------------
     # Refresh
@@ -442,14 +365,4 @@ class DashboardPage(QWidget):
 
         status = self._controller.get_system_status()
 
-        self._db_status.setText(
-            f"• SQLite Database : {status['database']}"
-        )
-
-        self._vt_status.setText(
-            f"• VirusTotal API : {status['virustotal']}"
-        )
-
-        self._engine_status.setText(
-            f"• Analysis Engine : {status['analysis_engine']}"
-        )
+        self._system_status_section.load_status(status)

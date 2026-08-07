@@ -7,6 +7,7 @@ from __future__ import annotations
 from PySide6.QtCore import (
     Qt,
     QTimer,
+    Signal,
 )
 
 from PySide6.QtGui import (
@@ -28,6 +29,12 @@ class ProgressDialog(QDialog):
     """
     Professional progress dialog used by SOC-IQ.
     """
+
+    # Exposes cancellation as a proper signal instead of
+    # requiring callers to reach into the private
+    # `_cancel_button` attribute and connect to its
+    # `clicked` signal directly, which broke encapsulation.
+    canceled = Signal()
 
     def __init__(
         self,
@@ -140,6 +147,10 @@ class ProgressDialog(QDialog):
             36,
         )
 
+        self._cancel_button.clicked.connect(
+            self.canceled.emit,
+        )
+
         # ------------------------------------------
         # Layout
         # ------------------------------------------
@@ -194,6 +205,27 @@ class ProgressDialog(QDialog):
         self.setLayout(
             layout,
         )
+
+    # ==================================================
+    # Lifecycle
+    # ==================================================
+
+    def closeEvent(self, event) -> None:
+        """
+        Stop the elapsed-time timer when the dialog closes.
+
+        Previously the QTimer kept firing every second even
+        after the dialog was closed (via Cancel, the window
+        X button, or a caller calling `.close()`/`.reject()`
+        directly). On PySide6, a running QTimer that still
+        targets a since-deleted/hidden dialog is a real
+        crash risk ("Internal C++ object already deleted")
+        and, at minimum, a background timer leak for the
+        lifetime of the parent widget.
+        """
+
+        self._timer.stop()
+        super().closeEvent(event)
 
     # ==================================================
     # Timer
@@ -324,6 +356,13 @@ class ProgressDialog(QDialog):
         self._elapsed_label.setText(
             "Elapsed: 00:00",
         )
+
+        # If the dialog was previously closed (which now
+        # stops the timer), reusing it for a new analysis
+        # must restart the clock — otherwise elapsed time
+        # would silently freeze forever on a reused dialog.
+        if not self._timer.isActive():
+            self._timer.start(1000)
 
     @property
     def elapsed_seconds(

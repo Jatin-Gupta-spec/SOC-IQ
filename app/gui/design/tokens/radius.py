@@ -34,10 +34,14 @@ class Radius:
     # Large decorative surfaces (use sparingly)
     XXL = 16
 
+    # Circular elements
+    CIRCLE = 999
+
     # Semantic aliases
     BUTTON = MD
     INPUT = MD
     BADGE = SM
+    CHIP = XL
     CARD = LG
     PANEL = LG
     DIALOG = XL

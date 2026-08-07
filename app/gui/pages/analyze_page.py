@@ -205,10 +205,26 @@ class AnalyzePage(QWidget):
         toast = ToastNotification(message, toast_type)
         self._toast_box.addWidget(toast)
 
+    def _set_analysis_controls_enabled(
+        self,
+        enabled: bool,
+    ) -> None:
+        """
+        Enable or disable analysis controls.
+        """
+
+        self._browse_button.setEnabled(enabled)
+        self._analyze_button.setEnabled(enabled)
+
     def _start_analysis(self) -> None:
         """
         Start report analysis in a background thread.
         """
+        if self._thread is not None and self._thread.isRunning():
+            return
+
+        self._set_analysis_controls_enabled(False)
+
         report_path = self._report_path.text()
 
         self._thread = QThread(self)
@@ -227,15 +243,23 @@ class AnalyzePage(QWidget):
 
         self._thread.finished.connect(self._worker.deleteLater)
         self._thread.finished.connect(self._thread.deleteLater)
+        self._thread.finished.connect(self._cleanup_worker)
 
         self._thread.start()
+
+    def _cleanup_worker(self) -> None:
+        """
+        Clear thread and worker references after analysis finishes.
+        """
+
+        self._thread = None
+        self._worker = None
 
     def _on_analysis_started(self) -> None:
         """
         Handle analysis start.
         """
-        self._browse_button.setEnabled(False)
-        self._analyze_button.setEnabled(False)
+        self._set_analysis_controls_enabled(False)
 
         self._progress_dialog.reset()
         self._progress_dialog.show()
@@ -256,13 +280,18 @@ class AnalyzePage(QWidget):
         """
         Handle successful analysis.
         """
-        self._browse_button.setEnabled(True)
-        self._analyze_button.setEnabled(True)
+        self._set_analysis_controls_enabled(True)
 
         self._progress_dialog.hide()
 
-        investigation = result["investigation"]
-        existing = result["existing"]
+        investigation = result.get("investigation")
+        existing = result.get("existing", False)
+
+        if investigation is None:
+            self._on_analysis_failed(
+                "Analysis completed, but no investigation data was returned."
+            )
+            return
 
         if existing:
             self._show_toast(
@@ -289,8 +318,7 @@ class AnalyzePage(QWidget):
         """
         Handle analysis failure.
         """
-        self._browse_button.setEnabled(True)
-        self._analyze_button.setEnabled(True)
+        self._set_analysis_controls_enabled(True)
 
         self._progress_dialog.hide()
 

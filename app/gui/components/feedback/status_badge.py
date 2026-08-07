@@ -10,6 +10,7 @@ from __future__ import annotations
 from enum import Enum, auto
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QWidget
 
 from app.gui.components.base_widget import BaseWidget
@@ -38,6 +39,12 @@ class StatusBadge(BaseWidget):
 
     Displays a short piece of text using semantic
     colours from the active theme.
+
+    Rendered as a tinted-fill pill (low-opacity background,
+    full-opacity text/border in the semantic color) rather
+    than a solid-fill chip — this reads as enterprise UI
+    rather than a consumer-app tag, and stays legible when
+    many badges appear together in a table.
     """
 
     def __init__(
@@ -54,7 +61,7 @@ class StatusBadge(BaseWidget):
         self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._build_ui()
-        self._apply_theme()
+        self.refresh_theme()
 
     # --------------------------------------------------
     # UI
@@ -74,28 +81,32 @@ class StatusBadge(BaseWidget):
 
         layout.addWidget(self._label)
 
+        self.setMinimumHeight(24)
+
         self.setSizePolicy(
             self.sizePolicy().horizontalPolicy(),
             self.sizePolicy().verticalPolicy(),
         )
 
     def _apply_theme(self) -> None:
-        palette = self.theme.palette
-        fonts = self.theme.fonts
+        fonts = self.fonts
 
         self._label.setFont(fonts.label())
 
-        background, foreground = self._badge_colors()
+        accent = self._badge_accent_color()
+        tint = self._tinted(accent, alpha=32)
 
         self.setStyleSheet(
             f"""
             StatusBadge {{
-                background-color: {background};
+                background-color: {tint};
+                border: 1px solid {self._tinted(accent, alpha=90)};
                 border-radius: {Radius.BADGE}px;
             }}
 
             QLabel {{
-                color: {foreground};
+                color: {accent};
+                font-weight: 600;
                 background: transparent;
             }}
             """
@@ -105,49 +116,49 @@ class StatusBadge(BaseWidget):
     # Internal helpers
     # --------------------------------------------------
 
-    def _badge_colors(self) -> tuple[str, str]:
-        palette = self.theme.palette
+    def _badge_accent_color(self) -> str:
+        """
+        Return the single semantic accent color for the
+        current badge type (used for both text and, tinted,
+        the background/border).
+        """
+
+        palette = self.palette
 
         mapping = {
-            BadgeType.DEFAULT: (
-                palette.surface_secondary,
-                palette.text_primary,
-            ),
-            BadgeType.SUCCESS: (
-                palette.success,
-                palette.text_primary,
-            ),
-            BadgeType.WARNING: (
-                palette.warning,
-                palette.text_primary,
-            ),
-            BadgeType.ERROR: (
-                palette.error,
-                palette.text_primary,
-            ),
-            BadgeType.INFO: (
-                palette.info,
-                palette.text_primary,
-            ),
-            BadgeType.LOW: (
-                palette.severity_low,
-                palette.text_primary,
-            ),
-            BadgeType.MEDIUM: (
-                palette.severity_medium,
-                palette.text_primary,
-            ),
-            BadgeType.HIGH: (
-                palette.severity_high,
-                palette.text_primary,
-            ),
-            BadgeType.CRITICAL: (
-                palette.severity_critical,
-                palette.text_primary,
-            ),
+            BadgeType.DEFAULT: palette.text_secondary,
+            BadgeType.SUCCESS: palette.success,
+            BadgeType.WARNING: palette.warning,
+            BadgeType.ERROR: palette.error,
+            BadgeType.INFO: palette.info,
+            BadgeType.LOW: palette.severity_low,
+            BadgeType.MEDIUM: palette.severity_medium,
+            BadgeType.HIGH: palette.severity_high,
+            BadgeType.CRITICAL: palette.severity_critical,
         }
 
         return mapping[self._badge_type]
+
+    @staticmethod
+    def _tinted(hex_color: str, alpha: int) -> str:
+        """
+        Return an rgba() string for the given hex color at
+        the given alpha (0-255), for use in QSS.
+        """
+
+        color = QColor(hex_color)
+
+        return (
+            f"rgba({color.red()}, {color.green()}, "
+            f"{color.blue()}, {alpha})"
+        )
+
+    def refresh_theme(self) -> None:
+        """
+        Refresh the badge styling.
+        """
+
+        self._apply_theme()
 
     # --------------------------------------------------
     # Public API
@@ -164,7 +175,7 @@ class StatusBadge(BaseWidget):
     def set_badge_type(self, badge_type: BadgeType) -> None:
         """Update the badge type."""
         self._badge_type = badge_type
-        self._apply_theme()
+        self.refresh_theme()
 
     def badge_type(self) -> BadgeType:
         """Return the current badge type."""

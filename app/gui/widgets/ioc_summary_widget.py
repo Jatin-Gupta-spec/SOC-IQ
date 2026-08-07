@@ -30,6 +30,19 @@ class IOCSummaryWidget(QWidget):
         list,
     )
 
+    IOC_TITLES = {
+        "ipv4": "IPv4 Addresses",
+        "domains": "Domains",
+        "urls": "URLs",
+        "emails": "Emails",
+        "md5": "MD5 Hashes",
+        "sha1": "SHA1 Hashes",
+        "sha256": "SHA256 Hashes",
+        "cves": "CVEs",
+        "windows_file_paths": "Windows File Paths",
+        "windows_registry_keys": "Registry Keys",
+    }
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -114,29 +127,12 @@ class IOCSummaryWidget(QWidget):
 
         self._ioc_data = investigation.iocs
 
-        print("\n===== IOC DATA =====")
-        print(investigation.iocs)
-        print("====================\n")
-
-        ioc_titles = {
-            "ipv4": "IPv4 Addresses",
-            "domains": "Domains",
-            "urls": "URLs",
-            "emails": "Emails",
-            "md5": "MD5 Hashes",
-            "sha1": "SHA1 Hashes",
-            "sha256": "SHA256 Hashes",
-            "cves": "CVEs",
-            "windows_file_paths": "Windows File Paths",
-            "windows_registry_keys": "Registry Keys",
-        }
-
         self._table.setRowCount(
-            len(ioc_titles),
+            len(self.IOC_TITLES),
         )
 
         for row, (key, title) in enumerate(
-            ioc_titles.items()
+            self.IOC_TITLES.items()
         ):
             values = self._ioc_data.get(
                 key,
@@ -178,21 +174,8 @@ class IOCSummaryWidget(QWidget):
 
         del column
 
-        ioc_titles = {
-            "ipv4": "IPv4 Addresses",
-            "domains": "Domains",
-            "urls": "URLs",
-            "emails": "Emails",
-            "md5": "MD5 Hashes",
-            "sha1": "SHA1 Hashes",
-            "sha256": "SHA256 Hashes",
-            "cves": "CVEs",
-            "windows_file_paths": "Windows File Paths",
-            "windows_registry_keys": "Registry Keys",
-        }
-
         keys = list(
-            ioc_titles.keys()
+            self.IOC_TITLES.keys()
         )
 
         if row >= len(keys):

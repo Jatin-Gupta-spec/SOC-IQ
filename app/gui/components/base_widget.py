@@ -25,3 +25,23 @@ class BaseWidget(QWidget):
     def theme(self):
         """Return the active theme manager."""
         return self._theme
+
+    @property
+    def palette(self):
+        """Return the active application palette."""
+        return self._theme.palette
+
+    @property
+    def fonts(self):
+        """Return the application font factory."""
+        return self._theme.fonts
+
+    def refresh_theme(self) -> None:
+        """
+        Refresh the widget after a theme change.
+
+        Subclasses may override this to reapply colors,
+        fonts or styles when the active theme changes.
+        """
+
+        return

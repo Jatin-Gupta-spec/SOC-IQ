@@ -31,6 +31,11 @@ class FileDropzoneWidget(ModernCard):
     file_dropped = Signal(str)
     clicked = Signal()
 
+    # Kept as a single source of truth so the accepted
+    # extensions can never drift from what the label
+    # above promises the user.
+    SUPPORTED_EXTENSIONS = (".txt", ".log", ".json")
+
     def __init__(
         self,
         parent: QWidget | None = None,
@@ -108,6 +113,22 @@ class FileDropzoneWidget(ModernCard):
         self._primary_label.setText(f"Selected: {file_name}")
         self._selected_file_label.setText(path_str)
 
+    def _is_supported_url(self, urls) -> bool:
+        """
+        Determine whether the drag payload contains at
+        least one local file matching a supported
+        extension.
+        """
+        if not urls:
+            return False
+
+        local_path = urls[0].toLocalFile()
+
+        if not local_path:
+            return False
+
+        return Path(local_path).suffix.lower() in self.SUPPORTED_EXTENSIONS
+
     # --------------------------------------------------
     # Drag & Drop Events
     # --------------------------------------------------
@@ -124,10 +145,19 @@ class FileDropzoneWidget(ModernCard):
         """
         Validate file drag entering boundary.
         """
-        if event.mimeData().hasUrls():
+        # Previously this accepted any drag containing a
+        # URL, showing the "accepted" drag style for any
+        # file type. That's misleading: the widget label
+        # explicitly promises .txt/.log/.json support, so
+        # dragging e.g. a .zip in showed a false "this will
+        # work" affordance right up until the drop was
+        # silently accepted anyway.
+        if self._is_supported_url(event.mimeData().urls()):
             event.acceptProposedAction()
             self._is_dragging = True
             self._apply_drag_style()
+        else:
+            event.ignore()
 
     def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
         """
@@ -145,11 +175,14 @@ class FileDropzoneWidget(ModernCard):
         self._apply_default_style()
 
         urls = event.mimeData().urls()
-        if urls:
-            file_path = urls[0].toLocalFile()
-            if file_path:
-                self.set_file_path(file_path)
-                self.file_dropped.emit(file_path)
+
+        if not self._is_supported_url(urls):
+            event.ignore()
+            return
+
+        file_path = urls[0].toLocalFile()
+        self.set_file_path(file_path)
+        self.file_dropped.emit(file_path)
         event.acceptProposedAction()
 
     def _apply_drag_style(self) -> None:

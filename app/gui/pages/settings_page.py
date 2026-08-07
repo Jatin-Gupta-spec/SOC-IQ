@@ -7,7 +7,6 @@ and UI theme preferences.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -22,6 +21,7 @@ from app.gui.components.buttons.animated_button import AnimatedButton
 from app.gui.components.cards.modern_card import ModernCard
 from app.gui.components.layout.component_section import ComponentSection
 from app.gui.design.tokens import Spacing
+from app.gui.events.application_events import events
 from app.gui.widgets.page_container import PageContainer
 from app.settings.service import SettingsService
 
@@ -199,13 +199,35 @@ class SettingsPage(QWidget):
             )
             return
 
-        self._settings_service.update_api_key(key)
+        try:
+            self._settings_service.update_api_key(key)
+        except Exception as error:
+            # Previously an exception here (disk write
+            # failure, permissions, etc.) would propagate
+            # straight out of a Qt slot uncaught. Depending
+            # on platform/binding, that ranges from a silent
+            # no-op to a hard crash — never a clear message
+            # to the analyst that their key wasn't saved.
+            QMessageBox.critical(
+                self,
+                "Save Failed",
+                f"Could not save the VirusTotal API key:\n{error}",
+            )
+            return
 
         QMessageBox.information(
             self,
             "Success",
             "VirusTotal API key saved successfully.",
         )
+
+        # Nothing previously told the rest of the running
+        # app that credentials changed. Concretely: the
+        # Threat Intelligence page builds its VirusTotalClient
+        # once at construction time — without this signal, a
+        # freshly saved key is silently ignored by any page
+        # already open until the app is restarted.
+        events.settings_changed.emit({"virustotal_api_key": key})
 
     def _browse_export_dir(self) -> None:
         """
@@ -221,7 +243,17 @@ class SettingsPage(QWidget):
 
         self._export_dir_input.setText(directory)
 
-        self._settings_service.update_export_directory(directory)
+        try:
+            self._settings_service.update_export_directory(directory)
+        except Exception as error:
+            QMessageBox.critical(
+                self,
+                "Save Failed",
+                f"Could not save the export directory:\n{error}",
+            )
+            return
+
+        events.settings_changed.emit({"export_directory": directory})
 
     def _apply_theme(self) -> None:
         """
@@ -229,10 +261,26 @@ class SettingsPage(QWidget):
         """
         theme = self._theme_combo.currentText()
 
-        self._settings_service.update_theme(theme)
+        try:
+            self._settings_service.update_theme(theme)
+        except Exception as error:
+            QMessageBox.critical(
+                self,
+                "Save Failed",
+                f"Could not save the theme preference:\n{error}",
+            )
+            return
 
         QMessageBox.information(
             self,
             "Success",
             "Theme preference saved.",
         )
+
+        # Persisting the choice is not the same as applying
+        # it. Broadcasting this lets whatever owns live
+        # theming (ThemeManager / MainWindow — not part of
+        # this review) react and restyle immediately instead
+        # of requiring an app restart for "Apply Theme" to
+        # actually apply anything.
+        events.settings_changed.emit({"theme": theme})

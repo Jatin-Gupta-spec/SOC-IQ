@@ -35,10 +35,10 @@ class FontSize:
     HEADING = 22
     TITLE = 18
     SUBTITLE = 16
-    BODY = 11
-    BODY_SMALL = 10
-    LABEL = 10
-    CAPTION = 9
+    BODY = 12
+    BODY_SMALL = 11
+    LABEL = 11
+    CAPTION = 10
     CODE = 10
 
 

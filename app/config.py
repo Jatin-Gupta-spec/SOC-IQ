@@ -10,6 +10,7 @@ application-wide configuration values.
 from __future__ import annotations
 
 import os
+import warnings
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -97,12 +98,27 @@ VIRUSTOTAL_API_KEY: str = os.getenv(
     "",
 )
 
-VIRUSTOTAL_TIMEOUT: int = int(
-    os.getenv(
-        "VIRUSTOTAL_TIMEOUT",
-        "30",
-    )
-)
+_DEFAULT_VIRUSTOTAL_TIMEOUT = 30
+
+_raw_vt_timeout = os.getenv("VIRUSTOTAL_TIMEOUT")
+
+if _raw_vt_timeout is None:
+    VIRUSTOTAL_TIMEOUT: int = _DEFAULT_VIRUSTOTAL_TIMEOUT
+else:
+    try:
+        VIRUSTOTAL_TIMEOUT = int(_raw_vt_timeout)
+    except ValueError:
+        # This module is imported before app.logger can be (logger.py
+        # imports from here), so a bad .env value can't crash the
+        # whole application at import time over a malformed timeout --
+        # fall back to the default and surface it with a warning
+        # instead.
+        warnings.warn(
+            f"Invalid VIRUSTOTAL_TIMEOUT={_raw_vt_timeout!r}; "
+            f"falling back to {_DEFAULT_VIRUSTOTAL_TIMEOUT}.",
+            stacklevel=2,
+        )
+        VIRUSTOTAL_TIMEOUT = _DEFAULT_VIRUSTOTAL_TIMEOUT
 
 VIRUSTOTAL_BASE_URL: str = os.getenv(
     "VIRUSTOTAL_BASE_URL",

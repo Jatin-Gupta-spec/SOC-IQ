@@ -36,11 +36,17 @@ class AICopilotWidget(GlassCard):
     ) -> None:
         super().__init__(parent)
 
-        self._badge = StatusBadge("AI ASSISTANT ACTIVE", BadgeType.INFO)
+        # No analysis has actually run yet at construction time -- this
+        # widget has no AI backend wired in here, so anything more
+        # specific than "no analysis run" would be fabricated threat
+        # intelligence. Real findings only ever reach the label via
+        # set_insight(), called by whatever component performs (or
+        # requests) real correlation/AI analysis.
+        self._badge = StatusBadge("AI ASSISTANT IDLE", BadgeType.INFO)
         self._title = QLabel("SOC-IQ Threat Intelligence Co-Pilot")
         self._insight = QLabel(
-            "AI Insights: 1 High-Severity Trojan dropper identified in recent log file. "
-            "VirusTotal correlation score: 42/70 malicious vendors."
+            "No AI analysis has been run yet. Use \"Correlate Indicators\" "
+            "or \"Generate Briefing\" to request one."
         )
 
         self._btn_correlate = AnimatedButton("Correlate Indicators")

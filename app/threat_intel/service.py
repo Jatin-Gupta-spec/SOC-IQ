@@ -75,25 +75,30 @@ class ThreatIntelService:
             ),
         )
 
-        enriched_hashes = (
-            self._enrich_sha256_hashes(
-                hashes,
-            )
+        (
+            enriched_hashes,
+            coverage,
+        ) = self._enrich_sha256_hashes(
+            hashes,
         )
 
         logger.info(
-            "Successfully enriched %d SHA256 hash(es).",
-            len(enriched_hashes),
+            "Enriched %d/%d SHA256 hash(es) (status=%s).",
+            coverage["succeeded"],
+            coverage["requested"],
+            coverage["status"],
         )
 
         return {
             "hashes": enriched_hashes,
+            "status": coverage["status"],
+            "coverage": coverage,
         }
 
     def _enrich_sha256_hashes(
         self,
         hashes: list[str],
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """
         Enrich SHA256 hashes using VirusTotal.
 
@@ -102,12 +107,35 @@ class ThreatIntelService:
                 List of SHA256 hashes.
 
         Returns:
-            List of VirusTotal enrichment results.
+            A tuple of `(enriched_results, coverage)`.
+            `coverage["status"]` is one of:
+              - "no_indicators": nothing was submitted for enrichment.
+              - "ok": every requested hash was successfully looked up
+                (found or not found in VirusTotal -- both are a
+                completed check).
+              - "partial": at least one requested hash was NOT
+                successfully checked (a per-hash failure, or a rate
+                limit that stopped remaining lookups). `enriched`
+                may still be non-empty and any "Clean" verdicts in
+                it remain trustworthy -- but the *absence* of
+                malicious findings across the whole set can no
+                longer be read as "nothing malicious was found",
+                only as "not everything was checked."
+            This lets callers (and the persisted `Investigation`)
+            distinguish a genuinely clean result from an incomplete
+            one instead of both collapsing to the same empty/short
+            `hashes` list.
         """
 
         enriched: list[
             dict[str, Any]
         ] = []
+
+        requested = len(hashes)
+        succeeded = 0
+        failed = 0
+        skipped_invalid = 0
+        rate_limited = False
 
         for sha256 in hashes:
 
@@ -170,12 +198,16 @@ class ThreatIntelService:
                     result,
                 )
 
+                succeeded += 1
+
             except InvalidHashError:
 
                 logger.warning(
                     "Skipping invalid SHA256: %s",
                     sha256,
                 )
+
+                skipped_invalid += 1
 
             except (
                 ThreatIntelTimeoutError,
@@ -190,6 +222,8 @@ class ThreatIntelService:
                     error,
                 )
 
+                failed += 1
+
             except RateLimitExceededError:
 
                 logger.warning(
@@ -197,9 +231,41 @@ class ThreatIntelService:
                     "Stopping further lookups."
                 )
 
+                # Every hash that never got a chance to run counts
+                # against coverage, not just this one -- otherwise
+                # a rate limit hit early in a long IOC list would
+                # under-report how much of the investigation was
+                # left unchecked.
+                remaining_unattempted = (
+                    requested
+                    - succeeded
+                    - failed
+                    - skipped_invalid
+                )
+
+                failed += remaining_unattempted
+
+                rate_limited = True
+
                 break
 
-        return enriched
+        if requested == 0:
+            status = "no_indicators"
+        elif rate_limited or failed > 0:
+            status = "partial"
+        else:
+            status = "ok"
+
+        coverage = {
+            "status": status,
+            "requested": requested,
+            "succeeded": succeeded,
+            "failed": failed,
+            "skipped_invalid": skipped_invalid,
+            "rate_limited": rate_limited,
+        }
+
+        return enriched, coverage
 
     def close(
         self,

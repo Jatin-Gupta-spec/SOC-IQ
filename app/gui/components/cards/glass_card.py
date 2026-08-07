@@ -27,16 +27,18 @@ class GlassCard(ModernCard):
     ) -> None:
         super().__init__(parent)
 
-        self._apply_glass_theme()
-
     # --------------------------------------------------
     # Theme
     # --------------------------------------------------
 
-    def _apply_glass_theme(self) -> None:
+    def refresh_theme(self) -> None:
         """Apply glass card styling."""
 
-        palette = self.theme.palette
+        super().refresh_theme()
+
+        assert self._frame is not None
+
+        palette = self.palette
 
         self._frame.setStyleSheet(
             f"""

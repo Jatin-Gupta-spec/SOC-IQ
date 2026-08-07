@@ -33,6 +33,18 @@ class FeaturedInvestigationCard(ModernCard):
     Enterprise featured investigation card.
     """
 
+    # TODO: identical to ThreatIntelligenceFeedWidget._SEVERITY_BADGE_MAP.
+    # Hoist to a single shared constant (e.g. in status_badge.py) next
+    # time that module is touched, so the severity->badge mapping has
+    # one source of truth instead of two copies that can drift.
+    _SEVERITY_BADGE_MAP = {
+        "LOW": BadgeType.LOW,
+        "MEDIUM": BadgeType.MEDIUM,
+        "HIGH": BadgeType.HIGH,
+        "CRITICAL": BadgeType.CRITICAL,
+        "INFO": BadgeType.INFO,
+    }
+
     open_workspace_requested = Signal()
 
     def __init__(
@@ -65,6 +77,8 @@ class FeaturedInvestigationCard(ModernCard):
             "No Investigation Available"
         )
 
+        # TODO: wire to Investigation.malware_family once that field
+        # is exposed on the model — currently always "Unknown".
         self._family_label = QLabel(
             "Malware Family : Unknown"
         )
@@ -258,6 +272,48 @@ class FeaturedInvestigationCard(ModernCard):
             button_layout
         )
 
+    def _apply_risk_bar_color(self, color: str) -> None:
+        """
+        Style the risk bar using the given color.
+        """
+
+        palette = self.theme.palette
+
+        self._risk_bar.setStyleSheet(
+            f"""
+            QProgressBar {{
+                background: {palette.surface_secondary};
+                border: none;
+                border-radius: 5px;
+            }}
+
+            QProgressBar::chunk {{
+                background: {color};
+                border-radius: 5px;
+            }}
+            """
+        )
+
+
+    def _risk_bar_color_for_severity(self, severity: str) -> str:
+        """
+        Return the appropriate color for the investigation severity.
+        """
+
+        palette = self.theme.palette
+
+        mapping = {
+            "LOW": palette.severity_low,
+            "MEDIUM": palette.severity_medium,
+            "HIGH": palette.severity_high,
+            "CRITICAL": palette.severity_critical,
+        }
+
+        return mapping.get(
+            severity,
+            palette.brand_primary,
+        )
+
     # --------------------------------------------------
     # Public API
     # --------------------------------------------------
@@ -331,8 +387,18 @@ class FeaturedInvestigationCard(ModernCard):
             f"Risk Score : {investigation.risk_score} / 100"
         )
 
+        severity = (
+            investigation.severity or "INFO"
+        ).upper()
+
         self._risk_bar.setValue(
             investigation.risk_score
+        )
+
+        self._apply_risk_bar_color(
+            self._risk_bar_color_for_severity(
+                severity
+            )
         )
 
         self._date_label.setText(
@@ -342,24 +408,12 @@ class FeaturedInvestigationCard(ModernCard):
             )
         )
 
-        severity = (
-            investigation.severity or "INFO"
-        ).upper()
-
-        mapping = {
-            "LOW": BadgeType.LOW,
-            "MEDIUM": BadgeType.MEDIUM,
-            "HIGH": BadgeType.HIGH,
-            "CRITICAL": BadgeType.CRITICAL,
-            "INFO": BadgeType.INFO,
-        }
-
         self._severity_badge.set_text(
             severity
         )
 
         self._severity_badge.set_badge_type(
-            mapping.get(
+            self._SEVERITY_BADGE_MAP.get(
                 severity,
                 BadgeType.DEFAULT,
             )

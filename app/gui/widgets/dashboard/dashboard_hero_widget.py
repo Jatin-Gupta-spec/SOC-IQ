@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -23,7 +23,7 @@ from app.gui.components.feedback.status_badge import (
     BadgeType,
     StatusBadge,
 )
-from app.gui.design.tokens import Spacing
+from app.gui.design.tokens import Radius, Spacing
 
 
 class DashboardHeroWidget(GlassCard):
@@ -45,6 +45,11 @@ class DashboardHeroWidget(GlassCard):
             "Real-time operational intelligence, threat monitoring, and automated forensic analysis."
         )
 
+        # Small live-status pulse dot shown next to the
+        # operational badge — gives the hero a "this is a
+        # live system" feel instead of a static label.
+        self._pulse_dot = QLabel()
+
         self._status_badge = StatusBadge(
             "SYSTEM OPERATIONAL",
             BadgeType.SUCCESS,
@@ -58,7 +63,16 @@ class DashboardHeroWidget(GlassCard):
         self._timestamp_label = QLabel()
 
         self._build_hero_ui()
+        self.refresh_theme()
         self.update_timestamp()
+
+        # Keep the "System Time" readout genuinely live instead
+        # of only updating on investigation events — matches the
+        # "real-time" language in the subtitle and the pulse dot.
+        self._clock_timer = QTimer(self)
+        self._clock_timer.setInterval(1000)
+        self._clock_timer.timeout.connect(self.update_timestamp)
+        self._clock_timer.start()
 
     def _build_hero_ui(self) -> None:
         """
@@ -80,18 +94,6 @@ class DashboardHeroWidget(GlassCard):
         left_box = QVBoxLayout()
         left_box.setSpacing(Spacing.XS)
 
-        palette = self.theme.palette
-        fonts = self.theme.fonts
-
-        self._greeting_label.setFont(fonts.title())
-        self._greeting_label.setStyleSheet(
-            f"color: {palette.text_primary}; font-weight: 700; font-size: 20px;"
-        )
-
-        self._sub_label.setFont(fonts.body())
-        self._sub_label.setStyleSheet(
-            f"color: {palette.text_secondary};"
-        )
         self._sub_label.setWordWrap(True)
 
         left_box.addWidget(self._greeting_label)
@@ -106,15 +108,18 @@ class DashboardHeroWidget(GlassCard):
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
 
+        self._pulse_dot.setFixedSize(8, 8)
+
         badges_row = QHBoxLayout()
         badges_row.setSpacing(Spacing.SM)
+        badges_row.addWidget(
+            self._pulse_dot,
+            0,
+            Qt.AlignmentFlag.AlignVCenter,
+        )
         badges_row.addWidget(self._status_badge)
         badges_row.addWidget(self._threat_badge)
 
-        self._timestamp_label.setFont(fonts.caption())
-        self._timestamp_label.setStyleSheet(
-            f"color: {palette.text_muted};"
-        )
         self._timestamp_label.setAlignment(
             Qt.AlignmentFlag.AlignRight
         )
@@ -125,6 +130,55 @@ class DashboardHeroWidget(GlassCard):
         container_layout.addLayout(right_box, 2)
 
         self.add_layout(container_layout)
+
+        # Flatten the inherited glass treatment in favor of a
+        # solid elevated surface with a brand-colored top
+        # accent — matches the flat-surface / no-glassmorphism
+        # direction used for ModernCard elsewhere in the app.
+
+    def refresh_theme(self) -> None:
+        """
+        Refresh hero styling.
+        """
+
+        palette = self.palette
+        fonts = self.fonts
+
+        self._greeting_label.setFont(fonts.display())
+        self._greeting_label.setStyleSheet(
+            f"""
+            color: {palette.text_primary};
+            font-weight: 700;
+            """
+        )
+
+        self._sub_label.setFont(fonts.body())
+        self._sub_label.setStyleSheet(
+            f"color: {palette.text_secondary};"
+        )
+
+        self._timestamp_label.setFont(fonts.caption())
+        self._timestamp_label.setStyleSheet(
+            f"color: {palette.text_muted};"
+        )
+
+        self._pulse_dot.setStyleSheet(
+            f"""
+            background-color: {palette.success};
+            border-radius: 4px;
+            """
+        )
+
+        self.setStyleSheet(
+            f"""
+            DashboardHeroWidget {{
+                background-color: {palette.surface_elevated};
+                border: 1px solid {palette.border_default};
+                border-top: 2px solid {palette.brand_primary};
+                border-radius: {Radius.CARD}px;
+            }}
+            """
+        )
 
     def update_timestamp(self) -> None:
         """
@@ -139,3 +193,24 @@ class DashboardHeroWidget(GlassCard):
         """
         self._threat_badge.set_text(f"THREAT LEVEL: {level.upper()}")
         self._threat_badge.set_badge_type(badge_type)
+
+        # Keep the pulse dot color aligned with severity so the
+        # whole hero reads as one coherent status signal rather
+        # than a static badge plus an unrelated green dot.
+        palette = self.palette
+
+        color_map = {
+            BadgeType.SUCCESS: palette.success,
+            BadgeType.WARNING: palette.warning,
+            BadgeType.ERROR: palette.error,
+            BadgeType.INFO: palette.info,
+        }
+
+        dot_color = color_map.get(badge_type, palette.success)
+
+        self._pulse_dot.setStyleSheet(
+            f"""
+            background-color: {dot_color};
+            border-radius: 4px;
+            """
+        )

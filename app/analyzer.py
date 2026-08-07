@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from app.database.models import Investigation
-from app.database.service import InvestigationService
+from app.database.repository import InvestigationRepository
 from app.extractor import (
     COMPILED_PATTERNS,
     extract_iocs,
@@ -37,8 +37,8 @@ def analyze_report(
     7. Return investigation
     """
 
-    investigation_service = (
-        InvestigationService()
+    investigation_repository = (
+        InvestigationRepository()
     )
 
     if progress_callback is not None:
@@ -87,7 +87,7 @@ def analyze_report(
         "Checking for duplicate investigation."
     )
 
-    if investigation_service.investigation_exists(
+    if investigation_repository.exists_by_report_name(
         report_path.name,
     ):
 
@@ -96,13 +96,17 @@ def analyze_report(
             report_path.name,
         )
 
-        existing = (
-            investigation_service.get_latest_by_report_name(
+        # `find_by_report_name` returns every matching
+        # investigation ordered newest-first (see
+        # `InvestigationRepository`), so the latest one is the
+        # first element.
+        existing_matches = (
+            investigation_repository.find_by_report_name(
                 report_path.name,
             )
         )
 
-        if existing is None:
+        if not existing_matches:
 
             raise RuntimeError(
                 "Duplicate investigation detected "
@@ -110,12 +114,20 @@ def analyze_report(
             )
 
         return {
-            "investigation": existing,
+            "investigation": existing_matches[0],
             "existing": True,
         }
 
+    # `status` records *why* `hashes` looks the way it does, so
+    # downstream consumers (risk scoring, the Investigation
+    # record, any future UI) can tell "checked and found nothing"
+    # apart from "never actually checked" -- previously both
+    # collapsed to the same empty `{"hashes": []}` shape, which is
+    # actively misleading in a tool whose job is to report risk.
     threat_intelligence: dict[str, Any] = {
         "hashes": [],
+        "status": "unavailable",
+        "reason": "not_attempted",
     }
 
     try:
@@ -140,7 +152,9 @@ def analyze_report(
             )
 
             logger.info(
-                "Threat intelligence enrichment completed."
+                "Threat intelligence enrichment completed "
+                "(status=%s).",
+                threat_intelligence.get("status"),
             )
 
     except MissingAPIKeyError:
@@ -150,12 +164,24 @@ def analyze_report(
             "Skipping enrichment."
         )
 
+        threat_intelligence = {
+            "hashes": [],
+            "status": "unavailable",
+            "reason": "missing_api_key",
+        }
+
     except Exception as error:
 
         logger.exception(
             "Threat intelligence failed: %s",
             error,
         )
+
+        threat_intelligence = {
+            "hashes": [],
+            "status": "unavailable",
+            "reason": "error",
+        }
 
     if progress_callback is not None:
 
@@ -205,7 +231,7 @@ def analyze_report(
     )
 
     investigation_id = (
-        investigation_service.save(
+        investigation_repository.save(
             investigation,
         )
     )
@@ -216,7 +242,7 @@ def analyze_report(
     )
 
     loaded = (
-        investigation_service.get_by_id(
+        investigation_repository.get_by_id(
             investigation_id,
         )
     )

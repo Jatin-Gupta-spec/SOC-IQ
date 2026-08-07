@@ -17,6 +17,7 @@ from PySide6.QtCore import (
 
 from PySide6.QtGui import (
     QAction,
+    QCloseEvent,
     QDesktopServices,
     QKeySequence,
     QShortcut,
@@ -79,6 +80,7 @@ from app.gui.pages.settings_page import (
 )
 
 from app.gui.widgets.sidebar import (
+    NavigationPage,
     SidebarWidget,
 )
 
@@ -91,8 +93,6 @@ class MainWindow(QMainWindow):
     """
     Primary application window.
     """
-
-    WORKSPACE_PAGE_INDEX = 7
 
     def __init__(self) -> None:
         super().__init__()
@@ -189,6 +189,12 @@ class MainWindow(QMainWindow):
         analyze_action = QAction(
             "Analyze",
             self,
+        )
+
+        analyze_action.triggered.connect(
+            lambda: self.page_stack.setCurrentIndex(
+                NavigationPage.ANALYZE
+            )
         )
 
         toolbar.addAction(
@@ -320,6 +326,10 @@ class MainWindow(QMainWindow):
             self.page_stack.setCurrentIndex,
         )
 
+        self.page_stack.currentChanged.connect(
+            self.sidebar.set_active_page,
+        )
+
         self.dashboard_page.navigate_to_page.connect(
             self.page_stack.setCurrentIndex,
         )
@@ -352,12 +362,14 @@ class MainWindow(QMainWindow):
         if investigation is None:
             return
 
-        self.workspace_page.load_investigation(
-            investigation,
-        )
+        # Not loaded here: InvestigationWorkspacePage subscribes to
+        # this same event_bus signal and reloads itself from
+        # ApplicationState, which is already updated by the time
+        # this signal fires. Calling load_investigation() here too
+        # would rebuild every workspace widget a second time.
 
         self.page_stack.setCurrentIndex(
-            self.page_stack.indexOf(self.workspace_page)
+            NavigationPage.WORKSPACE
         )
 
         self.statusBar().showMessage(
@@ -387,6 +399,31 @@ class MainWindow(QMainWindow):
                 f"{investigation.report_name}"
             )
         )
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """
+        Release resources owned by embedded pages before the
+        window closes.
+
+        `ThreatIntelPage` and `IOCViewerPage` each define a
+        `cleanup()` that releases resources tied to the running
+        application (a VirusTotal HTTP session, `event_bus`
+        subscriptions) and each also defines its own
+        `closeEvent()` as a fallback for standalone use -- but as
+        children of `self.page_stack`, they never receive a
+        `QCloseEvent` from Qt when this top-level window closes,
+        since Qt does not propagate close events down a widget
+        tree. Without this, both resources leaked until process
+        exit on every normal shutdown. Only the pages that
+        currently define `cleanup()` are called here; add to this
+        list if another page starts owning something that needs
+        explicit teardown.
+        """
+
+        self.threat_page.cleanup()
+        self.ioc_page.cleanup()
+
+        super().closeEvent(event)
 
     def _create_status_bar(self) -> None:
         """
@@ -449,15 +486,6 @@ class MainWindow(QMainWindow):
             The selected output path, or None if the
             export is cancelled.
         """
-
-        default_path = (
-            self._last_export_directory
-            / f"{report_name}.html"
-            if self._last_export_directory is not None
-            else Path(
-                f"{report_name}.html"
-            )
-        )
 
         if export_format == "html":
 

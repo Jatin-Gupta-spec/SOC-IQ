@@ -24,13 +24,14 @@ class StylesheetBuilder:
         QPushButton {{
             background-color: {self._palette.brand_primary};
             color: {self._palette.text_primary};
-            border: none;
+            border: 1px solid transparent;
             border-radius: {Radius.BUTTON}px;
             padding: {Spacing.MD}px {Spacing.LG}px;
         }}
 
         QPushButton:hover {{
             background-color: {self._palette.brand_hover};
+            border: 1px solid {self._palette.border_default};
         }}
 
         QPushButton:pressed {{
@@ -40,14 +41,26 @@ class StylesheetBuilder:
         QPushButton:disabled {{
             background-color: {self._palette.surface_secondary};
             color: {self._palette.text_disabled};
+            border: 1px solid transparent;
         }}
         """.strip()
 
     def card(self) -> str:
-        """Modern card stylesheet."""
+        """
+        Legacy card stylesheet fragment.
+
+        Scoped to QFrame#legacyCard rather than a bare QWidget
+        selector. The previous unscoped `QWidget { ... }` rule
+        applied a card border/background to every widget in the
+        application when included in the global stylesheet —
+        fighting ModernCard's own QFrame#modernCard styling.
+        ModernCard now owns its own styling directly, so this
+        fragment is kept only for any legacy direct consumer
+        that opts in via the "legacyCard" object name.
+        """
 
         return f"""
-        QWidget {{
+        QFrame#legacyCard {{
             background-color: {self._palette.surface_primary};
             border: 1px solid {self._palette.border_default};
             border-radius: {Radius.CARD}px;
@@ -64,6 +77,10 @@ class StylesheetBuilder:
             border: 1px solid {self._palette.border_default};
             border-radius: {Radius.INPUT}px;
             padding: {Spacing.SM}px;
+        }}
+
+        QLineEdit:hover {{
+            border: 1px solid {self._palette.border_strong};
         }}
 
         QLineEdit:focus {{

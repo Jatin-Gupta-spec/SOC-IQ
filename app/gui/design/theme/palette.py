@@ -85,5 +85,11 @@ class Palette:
     severity_high: str = Colors.Severity.HIGH
     severity_critical: str = Colors.Severity.CRITICAL
 
+    # --------------------------------------------------
+    # Overlay
+    # --------------------------------------------------
+
+    overlay: str = Colors.Overlay.MODAL
+
 
 DEFAULT_PALETTE = Palette()

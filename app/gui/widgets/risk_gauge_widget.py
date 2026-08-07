@@ -15,6 +15,8 @@ from PySide6.QtGui import (
 
 from PySide6.QtWidgets import QWidget
 
+from app.gui.design.theme.theme_manager import theme_manager
+
 
 class RiskGaugeWidget(QWidget):
     """
@@ -66,6 +68,8 @@ class RiskGaugeWidget(QWidget):
             -15,
         )
 
+        palette = theme_manager.palette
+
         pen = QPen()
 
         pen.setWidth(
@@ -73,7 +77,7 @@ class RiskGaugeWidget(QWidget):
         )
 
         pen.setColor(
-            QColor("#303030"),
+            QColor(palette.border_subtle),
         )
 
         painter.setPen(
@@ -88,19 +92,19 @@ class RiskGaugeWidget(QWidget):
 
         if self._score >= 90:
 
-            color = "#DC2626"
+            color = palette.severity_critical
 
         elif self._score >= 70:
 
-            color = "#EA580C"
+            color = palette.severity_high
 
         elif self._score >= 40:
 
-            color = "#CA8A04"
+            color = palette.severity_medium
 
         else:
 
-            color = "#16A34A"
+            color = palette.severity_low
 
         pen.setColor(
             QColor(color),

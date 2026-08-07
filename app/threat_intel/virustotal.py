@@ -83,7 +83,7 @@ class VirusTotalClient:
 
         if self._owns_session:
 
-            self._session = (
+            self._session: requests.Session | None = (
                 requests.Session()
             )
 
@@ -129,6 +129,29 @@ class VirusTotalClient:
                 "is not a valid SHA256 hash."
             )
 
+    def _ensure_open(self) -> requests.Session:
+        """
+        Guard against use of the client after it has
+        been closed.
+
+        A closed VirusTotalClient previously left
+        `_session` set to `None`, so any subsequent
+        request raised an opaque `AttributeError`
+        deep inside `requests`. This surfaces a clear,
+        actionable error instead.
+        """
+
+        if self._session is None:
+
+            raise ThreatIntelConnectionError(
+                "VirusTotalClient has already been "
+                "closed and cannot be reused. Create "
+                "a new client instance for further "
+                "lookups."
+            )
+
+        return self._session
+
     def _request(
         self,
         endpoint: str,
@@ -136,6 +159,8 @@ class VirusTotalClient:
         """
         Execute a GET request.
         """
+
+        session = self._ensure_open()
 
         url = (
             f"{self._base_url}/"
@@ -149,7 +174,7 @@ class VirusTotalClient:
 
         try:
 
-            return self._session.get(
+            return session.get(
                 url,
                 timeout=self._timeout,
             )
@@ -295,8 +320,7 @@ class VirusTotalClient:
             "reputation": None,
             "last_analysis_date": None,
             "permalink": (
-                f"https://www.virustotal.com/"
-                f"gui/file/{sha256}"
+                f"https://www.virustotal.com/gui/file/{sha256}"
             ),
         }
 
@@ -430,8 +454,7 @@ class VirusTotalClient:
                 last_analysis_date
             ),
             "permalink": (
-                f"https://www.virustotal.com/"
-                f"gui/file/{sha256}"
+                f"https://www.virustotal.com/gui/file/{sha256}"
             ),
         }
 
@@ -452,7 +475,7 @@ class VirusTotalClient:
 
             self._session.close()
 
-            self._session = None
+        self._session = None
 
     def __enter__(
         self,
@@ -474,3 +497,33 @@ class VirusTotalClient:
         """
 
         self.close()
+
+    def __del__(self) -> None:
+        """
+        Safety net for callers that construct a
+        VirusTotalClient without using it as a
+        context manager and never call `close()`
+        explicitly. Never raises during
+        interpreter teardown.
+        """
+
+        try:
+
+            if (
+                getattr(self, "_owns_session", False)
+                and getattr(self, "_session", None) is not None
+            ):
+
+                logger.warning(
+                    "VirusTotalClient was garbage-collected "
+                    "without close() being called explicitly. "
+                    "Use 'with VirusTotalClient(...) as client:' "
+                    "to guarantee the HTTP session is released."
+                )
+
+                self.close()
+
+        except Exception:
+
+            # __del__ must never raise.
+            pass

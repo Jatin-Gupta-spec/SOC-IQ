@@ -30,10 +30,24 @@ def initialize_application() -> None:
 
     for directory in directories:
 
-        directory.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        try:
+            directory.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+        except OSError as error:
+            # Startup should still fail loudly (a missing writable
+            # directory means logging, the database, and exports are
+            # all unusable) -- but the caller needs to know *which*
+            # directory and why, rather than an unlabeled OSError
+            # surfacing from inside pathlib.
+            logger.error(
+                "Failed to create required directory %s: %s",
+                directory,
+                error,
+            )
+            raise
 
         logger.debug(
             "Verified directory: %s",

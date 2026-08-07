@@ -29,9 +29,11 @@ class FontFactory:
 
         font = QFont(style.family)
         font.setPointSize(style.size)
-
-        # Convert integer weight into the PySide6 enum.
         font.setWeight(QFont.Weight(style.weight))
+
+        # Future typography options
+        # font.setKerning(True)
+        # font.setHintingPreference(...)
 
         return font
 

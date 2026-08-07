@@ -67,13 +67,15 @@ class ComponentShowcasePage(PageContainer):
 
         self._create_demo_components()
         self._build_ui()
-        self._apply_theme()
 
     # --------------------------------------------------
     # Component Creation
     # --------------------------------------------------
 
     def _create_demo_components(self) -> None:
+
+        palette = self.theme.palette
+        fonts = self.theme.fonts
 
         self._cards_section = ComponentSection(
             title="Cards",
@@ -189,24 +191,30 @@ class ComponentShowcasePage(PageContainer):
         self._layout_card = ModernCard()
         self._layout_card.setMinimumWidth(700)
 
-        layout_title = QLabel("Layout Architecture")
-
-        layout_description = QLabel(
-            "SOC-IQ pages are built using PageContainer "
-            "as the root layout and ComponentSection "
-            "to organise related UI into reusable groups."
+        layout_title = self._make_title_label(
+            "Layout Architecture",
+            palette,
+            fonts,
         )
 
-        layout_description.setWordWrap(True)
+        layout_description = self._make_body_label(
+            "SOC-IQ pages are built using PageContainer "
+            "as the root layout and ComponentSection "
+            "to organise related UI into reusable groups.",
+            palette,
+            fonts,
+            word_wrap=True,
+        )
 
-        layout_points = QLabel(
+        layout_points = self._make_body_label(
             "• PageContainer provides consistent page spacing.\n"
             "• ComponentSection groups related widgets.\n"
             "• Design tokens ensure consistent layout.\n"
-            "• Every page follows the same composition pattern."
+            "• Every page follows the same composition pattern.",
+            palette,
+            fonts,
+            word_wrap=True,
         )
-
-        layout_points.setWordWrap(True)
 
         self._layout_card.add_widget(layout_title)
         self._layout_card.add_widget(layout_description)
@@ -220,10 +228,17 @@ class ComponentShowcasePage(PageContainer):
         self._modern_card = ModernCard()
         self._modern_card.setMinimumWidth(320)
 
-        modern_title = QLabel("Modern Card")
-        modern_description = QLabel(
+        modern_title = self._make_title_label(
+            "Modern Card",
+            palette,
+            fonts,
+        )
+
+        modern_description = self._make_body_label(
             "Base reusable surface used across "
-            "the SOC-IQ dashboard."
+            "the SOC-IQ dashboard.",
+            palette,
+            fonts,
         )
 
         self._modern_card.add_widget(modern_title)
@@ -239,10 +254,17 @@ class ComponentShowcasePage(PageContainer):
         self._glass_card = GlassCard()
         self._glass_card.setMinimumWidth(320)
 
-        glass_title = QLabel("Glass Card")
-        glass_description = QLabel(
+        glass_title = self._make_title_label(
+            "Glass Card",
+            palette,
+            fonts,
+        )
+
+        glass_description = self._make_body_label(
             "Elevated translucent surface "
-            "for premium widgets."
+            "for premium widgets.",
+            palette,
+            fonts,
         )
 
         self._glass_card.add_widget(glass_title)
@@ -314,6 +336,48 @@ class ComponentShowcasePage(PageContainer):
                 description="Results stored in the investigation database.",
             )
         )
+
+    # --------------------------------------------------
+    # Label Factories (theming applied once, at creation)
+    # --------------------------------------------------
+
+    @staticmethod
+    def _make_title_label(
+        text: str,
+        palette,
+        fonts,
+    ) -> QLabel:
+        """
+        Build a themed title label.
+        """
+
+        label = QLabel(text)
+        label.setFont(fonts.title())
+        label.setStyleSheet(
+            f"color:{palette.text_primary};"
+        )
+
+        return label
+
+    @staticmethod
+    def _make_body_label(
+        text: str,
+        palette,
+        fonts,
+        word_wrap: bool = False,
+    ) -> QLabel:
+        """
+        Build a themed body/secondary label.
+        """
+
+        label = QLabel(text)
+        label.setFont(fonts.body())
+        label.setStyleSheet(
+            f"color:{palette.text_secondary};"
+        )
+        label.setWordWrap(word_wrap)
+
+        return label
 
     # --------------------------------------------------
     # UI
@@ -475,42 +539,3 @@ class ComponentShowcasePage(PageContainer):
         )
 
         self.content_layout().addStretch()
-
-    # --------------------------------------------------
-    # Theme
-    # --------------------------------------------------
-
-    def _apply_theme(self) -> None:
-
-        palette = self.theme.palette
-        fonts = self.theme.fonts
-
-        for label in self.findChildren(QLabel):
-
-            if label.text() in (
-                "Modern Card",
-                "Glass Card",
-                "Layout Architecture",
-            ):
-                label.setFont(
-                    fonts.title()
-                )
-
-                label.setStyleSheet(
-                    f"color:{palette.text_primary};"
-                )
-
-            elif (
-                "surface" in label.text().lower()
-                or "premium" in label.text().lower()
-                or "pagecontainer" in label.text().lower()
-                or "componentsection" in label.text().lower()
-                or "layout" in label.text().lower()
-            ):
-                label.setFont(
-                    fonts.body()
-                )
-
-                label.setStyleSheet(
-                    f"color:{palette.text_secondary};"
-                )

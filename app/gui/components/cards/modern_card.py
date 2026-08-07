@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
 )
 
 from app.gui.components.base_widget import BaseWidget
-from app.gui.design.theme.theme_manager import theme_manager
 from app.gui.design.tokens import (
     Radius,
     Spacing,
@@ -50,15 +49,15 @@ class ModernCard(BaseWidget):
 
         self._create_layout()
 
+        self._build_contents()
+
         # ------------------------------------------
         # Allow subclasses to populate the card.
         # ------------------------------------------
 
-        self._build_contents()
-
         self._connect_signals()
 
-        ModernCard._apply_theme(self)
+        ModernCard.refresh_theme(self)
 
     # --------------------------------------------------
     # Internal Card Construction
@@ -87,14 +86,14 @@ class ModernCard(BaseWidget):
         self._content_layout = QVBoxLayout()
 
         self._content_layout.setContentsMargins(
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
+            Spacing.CARD_PADDING,
+            Spacing.CARD_PADDING,
+            Spacing.CARD_PADDING,
+            Spacing.CARD_PADDING,
         )
 
         self._content_layout.setSpacing(
-            Spacing.MD,
+            Spacing.CONTENT_GAP,
         )
 
         self._frame.setLayout(
@@ -124,8 +123,16 @@ class ModernCard(BaseWidget):
         """
         Override this in subclasses.
 
-        Called after the card has created
-        its internal layout.
+        Called from ModernCard's own __init__, before the
+        subclass's __init__ body has finished running. If your
+        subclass needs instance state (models, services, etc.)
+        available inside this method, set those attributes on
+        `self` BEFORE calling `super().__init__()` in your
+        subclass constructor — see InvestigationQueueWidget for
+        an example of this pattern. This is a deliberate
+        template-method design, not an oversight; don't reorder
+        the base class's init sequence to "fix" it without
+        checking every subclass that depends on the current order.
         """
 
         return
@@ -150,21 +157,49 @@ class ModernCard(BaseWidget):
     def _apply_theme(self) -> None:
         """
         Apply active theme.
+
+        Flat surface, thin border, subtle top accent, and a
+        border-color hover state so interactive cards read
+        differently from static ones without needing a new
+        widget subclass.
         """
 
         assert self._frame is not None
 
-        palette = theme_manager.palette
+        palette = self.palette
 
         self._frame.setStyleSheet(
             f"""
             QFrame#modernCard {{
                 background-color: {palette.surface_primary};
                 border: 1px solid {palette.border_default};
+                border-top: 2px solid {palette.border_default};
                 border-radius: {Radius.CARD}px;
+            }}
+
+            QFrame#modernCard:hover {{
+                border: 1px solid {palette.border_strong};
+                border-top: 2px solid {palette.brand_primary};
             }}
             """
         )
+
+    def _apply_elevation(self) -> None:
+        """
+        Reserved for future elevation implementation.
+
+        Intentionally left empty to avoid rendering issues with
+        Qt item views (QTableView/QTableWidget).
+        """
+        return
+
+    def refresh_theme(self) -> None:
+        """
+        Refresh the card theme and elevation.
+        """
+
+        self._apply_theme()
+        self._apply_elevation()
 
     # --------------------------------------------------
     # Public API
@@ -210,20 +245,41 @@ class ModernCard(BaseWidget):
 
         self.content_layout().addStretch()
 
-    def clear(
+    def _clear_layout(
         self,
+        layout: QLayout,
     ) -> None:
+        """
+        Recursively remove all items from a layout.
 
-        layout = self.content_layout()
+        This clears child widgets, nested layouts, and spacer
+        items to ensure the layout is completely reset.
+        """
 
         while layout.count():
 
             item = layout.takeAt(0)
 
             widget = item.widget()
+            child_layout = item.layout()
 
             if widget is not None:
                 widget.deleteLater()
+
+            elif child_layout is not None:
+                self._clear_layout(child_layout)
+
+
+    def clear(
+        self,
+    ) -> None:
+        """
+        Remove all content from the card.
+        """
+
+        self._clear_layout(
+            self.content_layout()
+        )
 
     def set_alignment(
         self,

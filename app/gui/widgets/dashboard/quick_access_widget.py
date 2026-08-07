@@ -51,6 +51,8 @@ class QuickAccessWidget(ModernCard):
             "Jump directly to operational modules."
         )
 
+        self._desc_label.setWordWrap(True)
+
         self._btn_analyze = AnimatedButton(
             "+ Analyze Report"
         )
@@ -65,11 +67,26 @@ class QuickAccessWidget(ModernCard):
 
         super().__init__(parent)
 
+        self._connect_signals()
+
+    def _connect_signals(self) -> None:
+        self._btn_analyze.button().clicked.connect(
+            self.navigate_to_analyze.emit
+        )
+
+        self._btn_history.button().clicked.connect(
+            self.navigate_to_history.emit
+        )
+
+        self._btn_intel.button().clicked.connect(
+            self.navigate_to_threat_intel.emit
+        )
+
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
 
-    def _build_ui(self) -> None:
+    def _build_contents(self) -> None:
         """
         Build widget layout.
         """
@@ -119,22 +136,12 @@ class QuickAccessWidget(ModernCard):
             self._desc_label,
         )
 
+        main_layout.addSpacing(Spacing.SM)
+
         buttons_layout = QVBoxLayout()
 
         buttons_layout.setSpacing(
             Spacing.SM,
-        )
-
-        self._btn_analyze.button().clicked.connect(
-            self.navigate_to_analyze.emit
-        )
-
-        self._btn_history.button().clicked.connect(
-            self.navigate_to_history.emit
-        )
-
-        self._btn_intel.button().clicked.connect(
-            self.navigate_to_threat_intel.emit
         )
 
         buttons_layout.addWidget(

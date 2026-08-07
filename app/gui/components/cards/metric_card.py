@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.gui.components.cards.modern_card import ModernCard
-from app.gui.design.tokens import Spacing
+from app.gui.design.tokens import Radius, Spacing
 
 
 class MetricCard(ModernCard):
@@ -42,9 +42,10 @@ class MetricCard(ModernCard):
         footer: str = "",
         parent: QWidget | None = None,
     ) -> None:
-        super().__init__(parent)
 
         self._icon_label = QLabel()
+        self._icon_label.setFixedWidth(20)
+        self._icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._title_label = QLabel(title)
         self._value_label = QLabel(value)
         self._subtitle_label = QLabel(subtitle)
@@ -52,14 +53,16 @@ class MetricCard(ModernCard):
         self._footer_label = QLabel(footer)
         self._badge_label = QLabel()
 
-        self._build_content()
-        self._apply_theme()
+        self._icon_label.hide()
+        self._badge_label.hide()
+
+        super().__init__(parent)
 
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
 
-    def _build_content(self) -> None:
+    def _build_contents(self) -> None:
 
         layout = self.content_layout()
 
@@ -79,29 +82,49 @@ class MetricCard(ModernCard):
             Qt.AlignmentFlag.AlignCenter
         )
 
+        self._footer_label.setAlignment(
+            Qt.AlignmentFlag.AlignCenter
+        )
+
         layout.addWidget(self._value_label)
 
-        if self._subtitle_label.text():
-            layout.addSpacing(Spacing.XS)
+        # Subtitle and footer are always added to the layout (not
+        # only when they start non-empty) so that set_subtitle()/
+        # set_footer() work correctly even when called after
+        # construction. Visibility — not layout membership — is
+        # what controls whether they take up space; Qt layouts
+        # skip hidden widgets automatically.
 
-            self._subtitle_label.setAlignment(
-                Qt.AlignmentFlag.AlignCenter
-            )
+        layout.addSpacing(Spacing.XS)
 
-            layout.addWidget(
-                self._subtitle_label
-            )
+        self._subtitle_label.setAlignment(
+            Qt.AlignmentFlag.AlignCenter
+        )
+
+        self._subtitle_label.setVisible(
+            bool(self._subtitle_label.text())
+        )
+
+        layout.addWidget(
+            self._subtitle_label
+        )
 
         layout.addStretch()
 
-        if self._footer_label.text():
-            layout.addSpacing(Spacing.SM)
-            layout.addWidget(self._footer_label)
+        layout.addSpacing(Spacing.SM)
 
-    def _apply_theme(self) -> None:
+        self._footer_label.setVisible(
+            bool(self._footer_label.text())
+        )
 
-        palette = self.theme.palette
-        fonts = self.theme.fonts
+        layout.addWidget(
+            self._footer_label
+        )
+
+    def refresh_theme(self) -> None:
+
+        palette = self.palette
+        fonts = self.fonts
 
         self._icon_label.setFont(
             fonts.heading()
@@ -150,13 +173,11 @@ class MetricCard(ModernCard):
         self._badge_label.setStyleSheet(
             f"""
             color:{palette.text_primary};
-            padding:2px 8px;
-            border-radius:10px;
+            background:{palette.accent};
+            padding: {Spacing.XXS}px {Spacing.SM}px;
+            border-radius: {Radius.BADGE}px;
             """
         )
-
-        self._icon_label.hide()
-        self._badge_label.hide()
 
     # --------------------------------------------------
     # Public API

@@ -104,3 +104,16 @@ class Colors:
 
         MODAL = "#00000099"
         SELECTION = "#4F8CFF33"
+
+    class Divider:
+        """Divider and separator colors."""
+
+        PRIMARY = "#262D3A"
+        SECONDARY = "#1E2431"
+
+    class Shadow:
+        """Shadow colors."""
+
+        SOFT = "#00000055"
+        MEDIUM = "#00000077"
+        STRONG = "#00000099"

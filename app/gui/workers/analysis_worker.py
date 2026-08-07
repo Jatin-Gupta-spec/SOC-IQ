@@ -7,6 +7,7 @@ without blocking the GUI.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from PySide6.QtCore import QObject, Signal, Slot
@@ -14,6 +15,8 @@ from PySide6.QtCore import QObject, Signal, Slot
 from app.gui.controllers.analyze_controller import (
     AnalyzeController,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AnalysisWorker(QObject):
@@ -64,6 +67,18 @@ class AnalysisWorker(QObject):
             )
 
         except Exception as error:
+
+            # Without this, failures were only ever
+            # surfaced to the user as a bare `str(error)`
+            # message via the `failed` signal, with no
+            # record of the traceback anywhere. That makes
+            # production incidents (e.g. a malformed report,
+            # a threat-intel client bug) effectively
+            # undebuggable after the fact.
+            logger.exception(
+                "Report analysis failed for '%s'.",
+                self._report_path,
+            )
 
             self.failed.emit(
                 str(error),

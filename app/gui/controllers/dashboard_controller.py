@@ -6,6 +6,8 @@ This controller prepares executive overview data for presentation.
 
 from __future__ import annotations
 
+import logging
+
 from app.database.models import Investigation
 from app.database.service import InvestigationService
 
@@ -32,6 +34,8 @@ from app.services.dashboard_ioc_distribution_service import (
 )
 from app.gui.components.feedback.status_badge import BadgeType
 from app.gui.components.timeline.timeline_widget import TimelineEvent
+
+logger = logging.getLogger(__name__)
 
 
 class DashboardController:
@@ -90,7 +94,11 @@ class DashboardController:
         Return dashboard summary information.
         """
 
-        return self._statistics.get_summary()
+        try:
+            return self._statistics.get_summary()
+        except Exception:
+            logger.exception("Failed to load dashboard summary")
+            return {}
 
     def get_threat_status(
         self,
@@ -99,7 +107,11 @@ class DashboardController:
         Return current dashboard threat level.
         """
 
-        return self._threat_service.get_threat_status()
+        try:
+            return self._threat_service.get_threat_status()
+        except Exception:
+            logger.exception("Failed to load threat status")
+            return ("UNKNOWN", BadgeType.DEFAULT)
 
     def get_latest_investigation(
         self,
@@ -108,9 +120,13 @@ class DashboardController:
         Return latest investigation.
         """
 
-        return (
-            self._investigation_service_dashboard.get_latest()
-        )
+        try:
+            return (
+                self._investigation_service_dashboard.get_latest()
+            )
+        except Exception:
+            logger.exception("Failed to load latest investigation")
+            return None
 
     def get_recent_investigations(
         self,
@@ -120,11 +136,15 @@ class DashboardController:
         Return recent investigations.
         """
 
-        return (
-            self._investigation_service_dashboard.get_recent(
-                limit
+        try:
+            return (
+                self._investigation_service_dashboard.get_recent(
+                    limit
+                )
             )
-        )
+        except Exception:
+            logger.exception("Failed to load recent investigations")
+            return []
 
     def get_dashboard_timeline(
         self,
@@ -134,9 +154,13 @@ class DashboardController:
         Return dashboard timeline events.
         """
 
-        return self._timeline_service.get_timeline(
-            limit
-        )
+        try:
+            return self._timeline_service.get_timeline(
+                limit
+            )
+        except Exception:
+            logger.exception("Failed to load dashboard timeline")
+            return []
 
     def get_ioc_distribution(
         self,
@@ -145,7 +169,11 @@ class DashboardController:
         Return IOC distribution statistics.
         """
 
-        return self._ioc_distribution.get_distribution()
+        try:
+            return self._ioc_distribution.get_distribution()
+        except Exception:
+            logger.exception("Failed to load IOC distribution")
+            return {}
 
     def get_system_status(
         self,
@@ -154,7 +182,11 @@ class DashboardController:
         Return current application component status.
         """
 
-        return self._system_health.get_status()
+        try:
+            return self._system_health.get_status()
+        except Exception:
+            logger.exception("Failed to load system status")
+            return {}
 
     def get_threat_feed(
         self,
@@ -164,6 +196,10 @@ class DashboardController:
         Return dashboard threat feed.
         """
 
-        return self._threat_feed_service.get_feed(
-            limit
-        )
+        try:
+            return self._threat_feed_service.get_feed(
+                limit
+            )
+        except Exception:
+            logger.exception("Failed to load threat feed")
+            return []

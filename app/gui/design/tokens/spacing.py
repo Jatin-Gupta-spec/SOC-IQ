@@ -35,6 +35,11 @@ class Spacing:
     CARD_PADDING = 16
     PANEL_PADDING = 20
 
+    # Dashboard layouts
+    GRID_GAP = 20
+    CARD_GAP = 16
+    WIDGET_GAP = 12
+
     # Dense data views
     TABLE_CELL_PADDING = 8
     ROW_HEIGHT = 32
@@ -42,6 +47,7 @@ class Spacing:
     # Forms
     LABEL_GAP = 6
     FIELD_GAP = 12
+    CONTENT_GAP = 16
 
     # Sidebar
     SIDEBAR_PADDING = 16
@@ -56,3 +62,6 @@ class Spacing:
 
     # Status bar
     STATUSBAR_HEIGHT = 28
+
+    # Dialogs
+    DIALOG_PADDING = 24
