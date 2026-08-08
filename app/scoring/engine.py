@@ -1,4 +1,3 @@
-
 """
 Risk scoring engine for SOC-IQ investigations.
 """
@@ -101,6 +100,7 @@ class RiskScoringEngine:
  
         confidence = self._calculate_confidence(
             iocs,
+            threat_intelligence,
         )
  
         reasons: list[str] = []
@@ -114,6 +114,36 @@ class RiskScoringEngine:
             reasons.append(
                 f"Threat Intelligence score: "
                 f"{threat_score}"
+            )
+
+        # `threat_score` above is purely a count of *confirmed*
+        # malicious/suspicious hits -- when threat intelligence
+        # could not be fully checked (unavailable, partial, rate
+        # limited, invalid key, or any status this engine doesn't
+        # recognize) that count is legitimately 0 not because
+        # nothing was found, but because nothing conclusive could be
+        # checked. Nothing above this line reflects that distinction
+        # -- a score with zero threat-intel contribution looks
+        # identical whether TI ran clean or never ran at all. This
+        # makes the gap explicit in `reasons` (which is persisted on
+        # the `Investigation`) without inventing a risk contribution
+        # for detections that were never actually confirmed.
+        ti_status = (
+            threat_intelligence.get("status")
+            if threat_intelligence
+            else None
+        )
+
+        if ti_status not in (
+            "ok",
+            "no_indicators",
+        ):
+            reasons.append(
+                "Threat Intelligence check incomplete "
+                f"(status: {ti_status!r}) -- this score does "
+                "NOT confirm a clean result, only that nothing "
+                "conclusive was found among what could be "
+                "checked."
             )
  
         if cve_score:
@@ -248,10 +278,20 @@ class RiskScoringEngine:
     def _calculate_confidence(
         self,
         iocs: dict[str, list[str]],
+        threat_intelligence: dict[str, Any] | None = None,
     ) -> float:
         """
         Calculate confidence based on
         the amount of collected evidence.
+
+        Confidence is reduced when threat intelligence was not
+        fully completed (unavailable, partial, or any status this
+        engine doesn't recognize as a finished check). IOC volume
+        alone is not "evidence" of risk absence if the one signal
+        capable of confirming maliciousness -- threat-intel lookup
+        -- never finished running; halving confidence keeps a
+        degraded check from reading as equally trustworthy as a
+        completed one, without altering the underlying score.
         """
  
         total_iocs = sum(
@@ -263,6 +303,19 @@ class RiskScoringEngine:
             total_iocs / 40.0,
             1.0,
         )
+
+        ti_status = (
+            threat_intelligence.get("status")
+            if threat_intelligence
+            else None
+        )
+
+        if ti_status not in (
+            "ok",
+            "no_indicators",
+        ):
+
+            confidence *= 0.5
  
         logger.debug(
             "Confidence calculated: %.2f",
