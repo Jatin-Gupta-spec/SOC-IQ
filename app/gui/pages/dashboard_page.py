@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-     QGridLayout,
-    QLabel,
+    QFrame,
+    QGridLayout,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
-from app.gui.components.cards.modern_card import ModernCard
 from app.gui.components.feedback.toast_notification import (
     ToastNotification,
     ToastType,
@@ -39,6 +39,9 @@ from app.gui.widgets.dashboard.ioc_distribution_widget import (
     IOCDistributionWidget,
 )
 from app.gui.widgets.dashboard.kpi_section import KPISection
+from app.gui.widgets.dashboard.live_security_events_widget import (
+    LiveSecurityEventsWidget,
+)
 from app.gui.widgets.dashboard.quick_access_widget import QuickAccessWidget
 from app.gui.widgets.dashboard.system_status_section import SystemStatusSection
 from app.gui.widgets.sidebar import NavigationPage
@@ -105,6 +108,10 @@ class DashboardPage(QWidget):
             SystemStatusSection()
         )
 
+        self._live_security_events = (
+            LiveSecurityEventsWidget()
+        )
+
         self._build_ui()
 
         self._connect_signals()
@@ -118,35 +125,60 @@ class DashboardPage(QWidget):
     def _build_ui(self) -> None:
         """
         Construct dashboard layout.
+
+        The page is placed directly inside the app's top-level
+        `QStackedWidget` (see `main_window.py`), which never
+        scrolls its pages itself -- it only ever gives a page
+        exactly the viewport's size. `InvestigationWorkspacePage`
+        (the other long page hung off the same stack) accounts for
+        this by wrapping its content in a `QScrollArea`; this page
+        previously didn't, so once the header, hero, KPI row, and
+        three-row workbench grid combined exceeded the viewport
+        height, the grid's bottom row had nowhere to go and was cut
+        off/squeezed instead of becoming reachable by scrolling.
+        Wrapping the same content in a `QScrollArea` here brings the
+        page in line with that established pattern.
         """
 
-        root_layout = QVBoxLayout(self)
+        content = QWidget()
 
-        root_layout.setContentsMargins(
+        content_layout = QVBoxLayout(content)
+
+        content_layout.setContentsMargins(
             24,
             24,
             24,
             24,
         )
 
-        root_layout.setSpacing(24)
+        content_layout.setSpacing(24)
 
         # Header
 
-        root_layout.addWidget(
+        content_layout.addWidget(
             self._header_widget
         )
 
         # Hero Banner
 
-        root_layout.addWidget(
+        content_layout.addWidget(
             self._hero_widget
         )
 
         # KPI Cards
 
-        root_layout.addWidget(
+        content_layout.addWidget(
             self._kpi_section
+        )
+
+        # Quick Access
+        #
+        # Previously created in __init__ but never added to any
+        # layout, so it never appeared and its navigate_to_*
+        # signals (wired in _connect_signals) had no way to fire.
+
+        content_layout.addWidget(
+            self._quick_access
         )
 
         # --------------------------------------------------
@@ -177,9 +209,7 @@ class DashboardPage(QWidget):
         )
 
         grid.addWidget(
-            self._create_placeholder_card(
-                "Live Security Events"
-            ),
+            self._live_security_events,
             1,
             1,
         )
@@ -199,46 +229,20 @@ class DashboardPage(QWidget):
         grid.setColumnStretch(0, 1)
         grid.setColumnStretch(1, 1)
 
-        root_layout.addLayout(grid)
+        content_layout.addLayout(grid)
 
-        root_layout.addLayout(self._toast_box)
+        content_layout.addLayout(self._toast_box)
 
-        root_layout.addStretch()
+        content_layout.addStretch()
 
-    # --------------------------------------------------
-    # Placeholder cards
-    # --------------------------------------------------
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setWidget(content)
 
-    def _create_placeholder_card(
-        self,
-        title: str,
-    ) -> ModernCard:
-        """
-        Create a placeholder card for future
-        dashboard widgets.
-        """
-
-        card = ModernCard()
-
-        palette = card.theme.palette
-        fonts = card.theme.fonts
-
-        label = QLabel(title)
-
-        label.setFont(
-            fonts.title()
-        )
-
-        label.setStyleSheet(
-            f"""
-            color: {palette.text_primary};
-            font-weight: 600;
-            """
-        )
-
-        card.add_widget(label)
-
-        return card
+        root_layout = QVBoxLayout(self)
+        root_layout.setContentsMargins(0, 0, 0, 0)
+        root_layout.addWidget(scroll_area)
 
     # --------------------------------------------------
     # Feedback
