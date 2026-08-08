@@ -11,6 +11,7 @@ import logging
 from typing import Any
 
 from app.threat_intel.exceptions import (
+    InvalidAPIKeyError,
     InvalidHashError,
     RateLimitExceededError,
     ThreatIntelConnectionError,
@@ -114,13 +115,15 @@ class ThreatIntelService:
                 (found or not found in VirusTotal -- both are a
                 completed check).
               - "partial": at least one requested hash was NOT
-                successfully checked (a per-hash failure, or a rate
-                limit that stopped remaining lookups). `enriched`
-                may still be non-empty and any "Clean" verdicts in
-                it remain trustworthy -- but the *absence* of
-                malicious findings across the whole set can no
-                longer be read as "nothing malicious was found",
-                only as "not everything was checked."
+                successfully checked (a per-hash failure, a rate
+                limit, or a rejected API key that stopped remaining
+                lookups -- see `coverage["rate_limited"]` /
+                `coverage["invalid_api_key"]`). `enriched` may still
+                be non-empty and any "Clean" verdicts in it remain
+                trustworthy -- but the *absence* of malicious
+                findings across the whole set can no longer be read
+                as "nothing malicious was found", only as "not
+                everything was checked."
             This lets callers (and the persisted `Investigation`)
             distinguish a genuinely clean result from an incomplete
             one instead of both collapsing to the same empty/short
@@ -136,6 +139,7 @@ class ThreatIntelService:
         failed = 0
         skipped_invalid = 0
         rate_limited = False
+        invalid_api_key = False
 
         for sha256 in hashes:
 
@@ -249,9 +253,41 @@ class ThreatIntelService:
 
                 break
 
+            except InvalidAPIKeyError:
+
+                # Unlike `InvalidHashError` (a per-hash problem),
+                # a rejected API key is a systemic failure: every
+                # remaining hash would fail the same way. Previously
+                # this exception type was not caught here at all, so
+                # it escaped `_enrich_sha256_hashes` mid-batch --
+                # any hashes not yet attempted were silently dropped
+                # from `coverage` instead of being counted, and the
+                # specific reason was lost by the time a generic
+                # `except Exception` higher up in the analyzer
+                # caught it. Treat it the same way as a rate limit:
+                # stop further lookups and account for every
+                # unattempted hash as failed.
+                logger.error(
+                    "VirusTotal API key rejected. "
+                    "Stopping further lookups."
+                )
+
+                remaining_unattempted = (
+                    requested
+                    - succeeded
+                    - failed
+                    - skipped_invalid
+                )
+
+                failed += remaining_unattempted
+
+                invalid_api_key = True
+
+                break
+
         if requested == 0:
             status = "no_indicators"
-        elif rate_limited or failed > 0:
+        elif rate_limited or invalid_api_key or failed > 0:
             status = "partial"
         else:
             status = "ok"
@@ -263,6 +299,7 @@ class ThreatIntelService:
             "failed": failed,
             "skipped_invalid": skipped_invalid,
             "rate_limited": rate_limited,
+            "invalid_api_key": invalid_api_key,
         }
 
         return enriched, coverage

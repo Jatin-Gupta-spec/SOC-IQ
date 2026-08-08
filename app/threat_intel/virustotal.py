@@ -409,54 +409,88 @@ class VirusTotalClient:
                 "VirusTotal returned an unexpected response format."
             ) from error
 
-        last_analysis_timestamp = attributes.get(
-            "last_analysis_date"
-        )
+        # The structural checks above only confirm that `data`,
+        # `attributes`, and `last_analysis_stats` exist and are
+        # dicts with the required keys present -- they say nothing
+        # about whether the *values* of those fields are sane. This
+        # payload comes from an external API, so the values below
+        # (a timestamp, a reputation score, four detection counts)
+        # must still be treated as untrusted. Previously these
+        # conversions ran outside any exception guard: a malformed
+        # `last_analysis_date` (e.g. a non-numeric value, or one
+        # outside the platform's representable date range) or a
+        # non-numeric `reputation`/stat value raised a raw
+        # `TypeError` / `ValueError` / `OSError` that escaped the
+        # project's `UnexpectedAPIResponseError` taxonomy entirely,
+        # the same failure-honesty gap the block above already
+        # closes for missing/mistyped keys.
+        try:
 
-        if (
-            last_analysis_timestamp
-            is not None
-        ):
-
-            last_analysis_date = (
-                datetime.fromtimestamp(
-                    last_analysis_timestamp,
-                    UTC,
-                ).isoformat()
+            last_analysis_timestamp = attributes.get(
+                "last_analysis_date"
             )
 
-        else:
+            if (
+                last_analysis_timestamp
+                is not None
+            ):
 
-            last_analysis_date = None
-        return {
-            "sha256": sha256,
-            "found": True,
-            "malicious": int(
-                stats["malicious"]
-            ),
-            "suspicious": int(
-                stats["suspicious"]
-            ),
-            "harmless": int(
-                stats["harmless"]
-            ),
-            "undetected": int(
-                stats["undetected"]
-            ),
-            "reputation": (
-                int(attributes["reputation"])
-                if attributes.get(
-                    "reputation"
-                ) is not None
-                else None
-            ),
-            "last_analysis_date": (
-                last_analysis_date
-            ),
-            "permalink": (
-                f"https://www.virustotal.com/gui/file/{sha256}"
-            ),
-        }
+                last_analysis_date = (
+                    datetime.fromtimestamp(
+                        last_analysis_timestamp,
+                        UTC,
+                    ).isoformat()
+                )
+
+            else:
+
+                last_analysis_date = None
+
+            result = {
+                "sha256": sha256,
+                "found": True,
+                "malicious": int(
+                    stats["malicious"]
+                ),
+                "suspicious": int(
+                    stats["suspicious"]
+                ),
+                "harmless": int(
+                    stats["harmless"]
+                ),
+                "undetected": int(
+                    stats["undetected"]
+                ),
+                "reputation": (
+                    int(attributes["reputation"])
+                    if attributes.get(
+                        "reputation"
+                    ) is not None
+                    else None
+                ),
+                "last_analysis_date": (
+                    last_analysis_date
+                ),
+                "permalink": (
+                    f"https://www.virustotal.com/gui/file/{sha256}"
+                ),
+            }
+
+        except (
+            TypeError,
+            ValueError,
+            OSError,
+        ) as error:
+
+            logger.exception(
+                "VirusTotal response contained a malformed field."
+            )
+
+            raise UnexpectedAPIResponseError(
+                "VirusTotal returned a malformed field value."
+            ) from error
+
+        return result
 
     def close(self) -> None:
         """

@@ -116,6 +116,21 @@ def read_report(
             f"Failed to read report: {report_path}"
         ) from error
 
+    except UnicodeDecodeError as error:
+
+        # `UnicodeDecodeError` is a `ValueError` subclass, not an
+        # `OSError` subclass, so it was previously NOT caught by the
+        # clause above. A report that isn't valid UTF-8 (binary
+        # content, a different source encoding, etc.) is a
+        # realistic, not hypothetical, input for a malware-report
+        # reader, and letting the raw decode error escape means the
+        # pipeline fails with an unhandled exception instead of the
+        # documented `ReportReadError`.
+        raise ReportReadError(
+            f"Failed to read report: {report_path} "
+            "(not valid UTF-8 text)"
+        ) from error
+
 
 # ==========================================================
 # IOC Extraction
