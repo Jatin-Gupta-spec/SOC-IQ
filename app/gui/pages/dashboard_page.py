@@ -16,6 +16,10 @@ from PySide6.QtWidgets import (
 )
 
 from app.gui.components.cards.modern_card import ModernCard
+from app.gui.components.feedback.toast_notification import (
+    ToastNotification,
+    ToastType,
+)
 from app.gui.components.layout.page_header import PageHeader
 from app.gui.controllers.dashboard_controller import DashboardController
 from app.gui.design.tokens import Spacing
@@ -54,6 +58,8 @@ class DashboardPage(QWidget):
         super().__init__(parent)
 
         self._controller = DashboardController()
+
+        self._toast_box = QVBoxLayout()
 
         # --------------------------------------------------
         # Header
@@ -195,6 +201,8 @@ class DashboardPage(QWidget):
 
         root_layout.addLayout(grid)
 
+        root_layout.addLayout(self._toast_box)
+
         root_layout.addStretch()
 
     # --------------------------------------------------
@@ -231,6 +239,22 @@ class DashboardPage(QWidget):
         card.add_widget(label)
 
         return card
+
+    # --------------------------------------------------
+    # Feedback
+    # --------------------------------------------------
+
+    def _show_toast(self, message: str, toast_type: ToastType) -> None:
+        """
+        Display an ephemeral toast notification.
+        """
+        while self._toast_box.count():
+            child = self._toast_box.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        toast = ToastNotification(message, toast_type)
+        self._toast_box.addWidget(toast)
 
     # --------------------------------------------------
     # Signals
@@ -280,10 +304,17 @@ class DashboardPage(QWidget):
         Open latest investigation.
         """
 
-        latest = (
-            self._controller
-            .get_latest_investigation()
-        )
+        try:
+            latest = (
+                self._controller
+                .get_latest_investigation()
+            )
+        except Exception as error:
+            self._show_toast(
+                f"Could not open the latest investigation: {error}",
+                ToastType.ERROR,
+            )
+            return
 
         if latest is None:
             return
@@ -305,19 +336,31 @@ class DashboardPage(QWidget):
         Refresh dashboard.
         """
 
-        self._hero_widget.update_timestamp()
-
-        threat_level, badge = (
-            self._controller.get_threat_status()
-        )
+        # Fetch everything first, before touching any widget. If any single
+        # controller call fails (e.g. database unavailable), we must not
+        # apply a partial update: that would leave some widgets showing
+        # fresh data and others showing stale data with no indication
+        # anything went wrong, and could misrepresent a data-access failure
+        # as "no data" once individual widgets are updated with empty
+        # results.
+        try:
+            threat_level, badge = self._controller.get_threat_status()
+            summary = self._controller.get_summary()
+            latest = self._controller.get_latest_investigation()
+            recent = self._controller.get_recent_investigations(limit=10)
+            distribution = self._controller.get_ioc_distribution()
+            feed = self._controller.get_threat_feed(limit=10)
+            status = self._controller.get_system_status()
+        except Exception as error:
+            self._show_toast(
+                f"Dashboard data could not be refreshed: {error}",
+                ToastType.ERROR,
+            )
+            return
 
         self._hero_widget.set_threat_level(
             threat_level,
             badge,
-        )
-
-        summary = (
-            self._controller.get_summary()
         )
 
         self._kpi_section.set_metrics(
@@ -327,42 +370,22 @@ class DashboardPage(QWidget):
             database=str(summary["database"]),
         )
 
-        latest = (
-            self._controller.get_latest_investigation()
-        )
-
         self._featured_card.load_investigation(
             latest
-        )
-
-        recent = (
-            self._controller.get_recent_investigations(
-                limit=10
-            )
         )
 
         self._investigation_queue.load_investigations(
             recent
         )
 
-        distribution = (
-            self._controller.get_ioc_distribution()
-        )
-
         self._ioc_distribution.load_distribution(
             distribution
-        )
-
-        feed = (
-            self._controller.get_threat_feed(
-                limit=10
-            )
         )
 
         self._threat_feed.load_feed(
             feed
         )
 
-        status = self._controller.get_system_status()
-
         self._system_status_section.load_status(status)
+
+        self._hero_widget.update_timestamp()

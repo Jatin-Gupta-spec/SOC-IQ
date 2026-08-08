@@ -241,9 +241,25 @@ class HistoryPage(QWidget):
         if not file_path:
             return
 
-        investigations = (
-            self._controller.get_recent_investigations()
-        )
+        # Export exactly what is currently shown in the table (respecting
+        # any active search filter), rather than re-querying the
+        # controller for a "recent investigations" set that may differ
+        # from -- or be more/less limited than -- what the user is
+        # looking at.
+        row_count = self._model.rowCount()
+        investigations = [
+            investigation
+            for row in range(row_count)
+            if (investigation := self._model.investigation_at(row)) is not None
+        ]
+
+        if not investigations:
+            QMessageBox.information(
+                self,
+                "Nothing to Export",
+                "There are no investigations to export.",
+            )
+            return
 
         try:
 
@@ -276,9 +292,25 @@ class HistoryPage(QWidget):
         Reload investigations from the controller.
         """
 
-        investigations = (
-            self._controller.get_recent_investigations()
-        )
+        try:
+            investigations = (
+                self._controller.get_recent_investigations()
+            )
+        except Exception as error:
+            # Leave the currently displayed data in place rather than
+            # clearing it to an empty list, since an empty list would be
+            # indistinguishable from "no investigations exist" -- a
+            # database/controller failure must never be shown as an
+            # empty state.
+            QMessageBox.critical(
+                self,
+                "Unable to Load Investigations",
+                (
+                    "Investigation history could not be loaded from the "
+                    f"database:\n\n{error}"
+                ),
+            )
+            return
 
         self._model.set_investigations(
             investigations,

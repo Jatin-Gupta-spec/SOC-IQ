@@ -83,13 +83,28 @@ class ApplicationShell:
 
         existing = QApplication.instance()
 
+        # The exception hook and the aboutToQuit -> shutdown-hooks
+        # wiring must be installed on every bootstrap path, not just
+        # the "we constructed the QApplication ourselves" path below.
+        # Previously both were only set up after this check, so
+        # reusing an existing QApplication (e.g. a test harness that
+        # already created one) silently skipped both: unhandled
+        # exceptions would fall through to the default console
+        # traceback instead of the SOC-IQ error dialog, and any hooks
+        # registered via `register_shutdown_hook()` would never run
+        # because nothing was connected to that QApplication's
+        # `aboutToQuit`. Doing this unconditionally, before branching
+        # on reuse, keeps both guarantees independent of which path
+        # constructed the QApplication.
+        self._install_global_exception_hook()
+
         if isinstance(existing, QApplication):
 
             self._app = existing
 
-            return self._app
+            self._app.aboutToQuit.connect(self._run_shutdown_hooks)
 
-        self._install_global_exception_hook()
+            return self._app
 
         app = QApplication(self._argv)
 

@@ -22,6 +22,16 @@ logger = logging.getLogger(__name__)
 class AnalysisWorker(QObject):
     """
     Executes report analysis in a background thread.
+
+    Each instance is bound to a single ``report_path`` and is meant
+    to be run exactly once. Nothing in the surrounding thread/signal
+    wiring (owned outside this file, e.g. by the page that creates
+    the ``QThread``) is visible here, so this class defends itself
+    against being entered twice for the same instance — e.g. because
+    of a duplicate ``started``/``run`` signal connection — since that
+    would otherwise emit ``started``/``finished``/``failed`` twice
+    and could trigger duplicate downstream side effects (persistence,
+    investigation creation) via the controller.
     """
 
     started = Signal()
@@ -45,11 +55,25 @@ class AnalysisWorker(QObject):
 
         self._controller = AnalyzeController()
 
+        self._has_run = False
+
     @Slot()
     def run(self) -> None:
         """
         Execute the report analysis.
         """
+
+        if self._has_run:
+            logger.warning(
+                "AnalysisWorker.run() called more than once for "
+                "'%s'; ignoring the repeat invocation to avoid "
+                "duplicate signal emissions and duplicate side "
+                "effects.",
+                self._report_path,
+            )
+            return
+
+        self._has_run = True
 
         self.started.emit()
 

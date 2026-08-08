@@ -7,9 +7,11 @@ background QThread execution, real-time progress modal, and toast feedback.
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from PySide6.QtCore import QThread, Signal, Qt
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -36,6 +38,8 @@ from app.gui.widgets.page_container import PageContainer
 from app.gui.widgets.progress_dialog import ProgressDialog
 from app.gui.widgets.section_header import SectionHeader
 from app.gui.workers.analysis_worker import AnalysisWorker
+
+logger = logging.getLogger(__name__)
 
 
 class AnalyzePage(QWidget):
@@ -170,7 +174,20 @@ class AnalyzePage(QWidget):
         self._report_path.setText(report_path)
         self._dropzone.set_file_path(report_path)
 
-        is_valid = self._controller.validate_report(report_path)
+        try:
+            is_valid = self._controller.validate_report(report_path)
+        except Exception as error:
+            # Path.exists()/.is_file() (used by validate_report) can raise
+            # on a malformed path or a permissions error -- that's a
+            # distinct failure mode from "invalid report" and must not
+            # crash the page or be silently treated as a normal
+            # invalid-file case.
+            self._analyze_button.setEnabled(False)
+            self._show_toast(
+                f"Could not validate report file: {error}", ToastType.ERROR
+            )
+            return
+
         self._analyze_button.setEnabled(is_valid)
 
         if is_valid:
@@ -227,7 +244,17 @@ class AnalyzePage(QWidget):
 
         report_path = self._report_path.text()
 
-        self._thread = QThread(self)
+        # Intentionally not parented to `self`: MainWindow does not (and,
+        # per Qt, cannot) propagate a QCloseEvent down to child pages, so
+        # this page's shutdown path is `cleanup()` (see below), called
+        # explicitly by MainWindow. If this page is ever torn down while
+        # `cleanup()`'s wait() has timed out and the thread is still
+        # running, parenting it to `self` would let Qt's child-object
+        # cleanup destroy a running QThread -- a fatal error ("QThread:
+        # Destroyed while thread is still running"). Left unparented, its
+        # lifetime is governed solely by the finished -> deleteLater
+        # chain below, independent of what happens to this page.
+        self._thread = QThread()
         self._worker = AnalysisWorker(report_path)
 
         self._worker.moveToThread(self._thread)
@@ -246,6 +273,54 @@ class AnalyzePage(QWidget):
         self._thread.finished.connect(self._cleanup_worker)
 
         self._thread.start()
+
+    def cleanup(self) -> None:
+        """
+        Stop the background analysis thread before this page is torn
+        down or the application quits.
+
+        `MainWindow` does not (and, per Qt, cannot) deliver a
+        `QCloseEvent` to child pages when the top-level window closes --
+        see the comment in `MainWindow.closeEvent`. This is the actual
+        shutdown path for this page's thread, matching the `cleanup()`
+        convention already used by `ThreatIntelPage`/`IOCViewerPage`;
+        the container/window that owns this page should call it when
+        the page is removed or the app is shutting down.
+
+        `quit()` only asks the QThread's own event loop to exit -- it
+        has no effect on `AnalysisWorker.run()` itself, which executes
+        synchronously on the worker thread (file I/O, IOC extraction,
+        VirusTotal enrichment, DB persistence) and does not poll any
+        interruption flag. So `wait(5000)` is a best-effort grace
+        period, not a guarantee -- a slow/rate-limited enrichment call
+        can outlast it. If it times out, the analysis keeps running in
+        the background; because the thread is not parented to this page
+        (see `_start_analysis`), that is safe -- it will simply clean
+        itself up via the existing `finished -> deleteLater` chain once
+        `AnalysisWorker.run()` returns. This is logged so a still-active
+        thread at shutdown is visible instead of silently disappearing.
+        Safe to call more than once.
+        """
+
+        if self._thread is not None and self._thread.isRunning():
+            self._thread.quit()
+
+            if not self._thread.wait(5000):
+                logger.warning(
+                    "AnalyzePage was torn down while an analysis thread "
+                    "was still running; it will keep running in the "
+                    "background and clean itself up once "
+                    "AnalysisWorker.run() returns."
+                )
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """
+        Ensure cleanup runs if this page is ever used as (or inside) a
+        top-level window that receives a close event.
+        """
+
+        self.cleanup()
+        super().closeEvent(event)
 
     def _cleanup_worker(self) -> None:
         """

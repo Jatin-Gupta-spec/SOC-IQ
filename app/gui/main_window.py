@@ -391,7 +391,15 @@ class MainWindow(QMainWindow):
             investigation,
         )
 
-        self.history_page.refresh()
+        # HistoryPage, DashboardPage, and LiveSecurityEventsWidget each
+        # already subscribe to event_bus.investigation_created -- it was
+        # defined but never emitted anywhere in the app, so only
+        # HistoryPage was being kept in sync (via a direct call here) and
+        # Dashboard/live-events silently never refreshed after a new
+        # analysis. Emitting the existing signal here notifies all three
+        # through the wiring that was already in place, instead of this
+        # window reaching into HistoryPage directly.
+        event_bus.investigation_created.emit()
 
         self.statusBar().showMessage(
             (
@@ -405,23 +413,25 @@ class MainWindow(QMainWindow):
         Release resources owned by embedded pages before the
         window closes.
 
-        `ThreatIntelPage` and `IOCViewerPage` each define a
-        `cleanup()` that releases resources tied to the running
-        application (a VirusTotal HTTP session, `event_bus`
-        subscriptions) and each also defines its own
-        `closeEvent()` as a fallback for standalone use -- but as
-        children of `self.page_stack`, they never receive a
-        `QCloseEvent` from Qt when this top-level window closes,
-        since Qt does not propagate close events down a widget
-        tree. Without this, both resources leaked until process
-        exit on every normal shutdown. Only the pages that
-        currently define `cleanup()` are called here; add to this
-        list if another page starts owning something that needs
-        explicit teardown.
+        `ThreatIntelPage`, `IOCViewerPage`, and `AnalyzePage` each
+        define a `cleanup()` that releases resources tied to the
+        running application (a VirusTotal HTTP session, `event_bus`
+        subscriptions, a background analysis QThread) and each also
+        defines its own `closeEvent()` as a fallback for standalone
+        use -- but as children of `self.page_stack`, they never
+        receive a `QCloseEvent` from Qt when this top-level window
+        closes, since Qt does not propagate close events down a
+        widget tree. Without this, resources leaked (or, for
+        AnalyzePage, a running analysis thread could still be alive
+        when its owning objects are torn down) until process exit on
+        every normal shutdown. Only the pages that currently define
+        `cleanup()` are called here; add to this list if another
+        page starts owning something that needs explicit teardown.
         """
 
         self.threat_page.cleanup()
         self.ioc_page.cleanup()
+        self.analyze_page.cleanup()
 
         super().closeEvent(event)
 

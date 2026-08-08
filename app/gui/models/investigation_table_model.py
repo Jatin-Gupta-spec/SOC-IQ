@@ -36,8 +36,15 @@ class InvestigationTableModel(QAbstractTableModel):
     ) -> None:
         super().__init__()
 
+        # Copied defensively: without this, `_all_investigations`
+        # held a direct reference to the caller's list. If the
+        # caller mutated that same list object in place later
+        # (e.g. append) instead of calling `set_investigations()`,
+        # this model's notion of the full dataset would silently
+        # drift out of sync with what was last reported to the
+        # view via begin/endResetModel.
         self._all_investigations = (
-            investigations or []
+            list(investigations) if investigations else []
         )
 
         self._investigations = list(
@@ -121,6 +128,16 @@ class InvestigationTableModel(QAbstractTableModel):
                 return investigation.status
 
             if column == 5:
+                # `analyzed_at` is not guaranteed to be populated
+                # (e.g. an investigation record created before
+                # analysis actually completed). Without this guard,
+                # a `None` value here raised an uncaught
+                # AttributeError from inside a Qt-invoked virtual
+                # method (`data()`), which PySide6 cannot recover
+                # from cleanly.
+                if investigation.analyzed_at is None:
+                    return "—"
+
                 return (
                     investigation.analyzed_at
                     .astimezone()
@@ -131,7 +148,11 @@ class InvestigationTableModel(QAbstractTableModel):
             role == Qt.ItemDataRole.ForegroundRole
             and column == 2
         ):
-            severity = investigation.severity.upper()
+            severity = (
+                investigation.severity.upper()
+                if investigation.severity
+                else ""
+            )
 
             if severity == "LOW":
                 return QColor("#4CAF50")
@@ -186,13 +207,22 @@ class InvestigationTableModel(QAbstractTableModel):
 
         else:
 
+            # `report_name`/`severity`/`status` are not guaranteed
+            # to be populated on every record (a malformed or
+            # partially-written investigation). `.lower()` on
+            # `None` would raise and abort filtering entirely,
+            # rather than simply excluding that row from the
+            # match.
             self._investigations = [
                 investigation
                 for investigation in self._all_investigations
                 if (
-                    text in investigation.report_name.lower()
-                    or text in investigation.severity.lower()
-                    or text in investigation.status.lower()
+                    text
+                    in (investigation.report_name or "").lower()
+                    or text
+                    in (investigation.severity or "").lower()
+                    or text
+                    in (investigation.status or "").lower()
                 )
             ]
 
@@ -223,9 +253,13 @@ class InvestigationTableModel(QAbstractTableModel):
             )
 
         elif column == 1:
+            # `report_name` is not guaranteed to be populated; an
+            # unguarded `.lower()` on `None` would raise and abort
+            # the sort entirely instead of just placing that row
+            # somewhere reasonable.
             self._investigations.sort(
                 key=lambda investigation: (
-                    investigation.report_name.lower()
+                    (investigation.report_name or "").lower()
                 ),
                 reverse=reverse,
             )
@@ -242,7 +276,11 @@ class InvestigationTableModel(QAbstractTableModel):
             self._investigations.sort(
                 key=lambda investigation: (
                     severity_order.get(
-                        investigation.severity.upper(),
+                        (
+                            investigation.severity.upper()
+                            if investigation.severity
+                            else ""
+                        ),
                         0,
                     )
                 ),
@@ -250,9 +288,15 @@ class InvestigationTableModel(QAbstractTableModel):
             )
 
         elif column == 3:
+            # `risk_score` is not guaranteed to be populated either;
+            # sorting `None` against an `int`/`float` raises a
+            # `TypeError` in Python 3. Missing scores sort as the
+            # lowest value rather than crashing the sort.
             self._investigations.sort(
                 key=lambda investigation: (
                     investigation.risk_score
+                    if investigation.risk_score is not None
+                    else float("-inf")
                 ),
                 reverse=reverse,
             )
@@ -260,15 +304,20 @@ class InvestigationTableModel(QAbstractTableModel):
         elif column == 4:
             self._investigations.sort(
                 key=lambda investigation: (
-                    investigation.status.lower()
+                    (investigation.status or "").lower()
                 ),
                 reverse=reverse,
             )
 
         elif column == 5:
+            # `analyzed_at` may be `None` (see `data()` above).
+            # Grouping on "is missing" first avoids ever comparing
+            # a `None` against a real `datetime`, which raises a
+            # `TypeError` in Python 3 and would abort the sort.
             self._investigations.sort(
                 key=lambda investigation: (
-                    investigation.analyzed_at
+                    investigation.analyzed_at is None,
+                    investigation.analyzed_at,
                 ),
                 reverse=reverse,
             )
@@ -290,4 +339,3 @@ class InvestigationTableModel(QAbstractTableModel):
             return None
 
         return self._investigations[row]
-    

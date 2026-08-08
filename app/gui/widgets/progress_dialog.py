@@ -262,10 +262,22 @@ class ProgressDialog(QDialog):
     ) -> None:
         """
         Update the progress bar.
+
+        ``value`` is clamped to the bar's ``[0, 100]`` range before
+        being applied. The backend progress callback is free-form
+        (any ``int``), and an out-of-range value — e.g. a buggy
+        percentage calculation emitting ``150`` or a negative
+        value — must not be allowed to render a progress bar that
+        misleadingly reads as already complete, or as invalid.
         """
 
+        clamped_value = max(
+            0,
+            min(100, value),
+        )
+
         self._progress_bar.setValue(
-            value,
+            clamped_value,
         )
 
     def set_status(
@@ -320,6 +332,13 @@ class ProgressDialog(QDialog):
     ) -> None:
         """
         Mark the investigation as complete.
+
+        Also disables the Cancel button: once the caller has told
+        this dialog the work is done, clicking Cancel can no longer
+        mean anything real (there is nothing left to cancel), and
+        emitting `canceled` at that point risks the caller
+        misinterpreting an already-finished analysis as having been
+        cancelled. `reset()` re-enables it for dialog reuse.
         """
 
         count = self._activity_log.count()
@@ -333,6 +352,10 @@ class ProgressDialog(QDialog):
             last.setText(
                 f"✔ {message}"
             )
+
+        self._cancel_button.setEnabled(
+            False,
+        )
 
     def reset(
         self,
@@ -355,6 +378,13 @@ class ProgressDialog(QDialog):
 
         self._elapsed_label.setText(
             "Elapsed: 00:00",
+        )
+
+        # Re-enable Cancel for reuse: `finish_activity()` disables
+        # it once an analysis completes, and a dialog reused for a
+        # new analysis needs it clickable again.
+        self._cancel_button.setEnabled(
+            True,
         )
 
         # If the dialog was previously closed (which now
