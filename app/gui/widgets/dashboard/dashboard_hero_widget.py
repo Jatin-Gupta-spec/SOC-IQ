@@ -14,7 +14,7 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QVBoxLayout,
+    QSizePolicy,
     QWidget,
 )
 
@@ -38,11 +38,7 @@ class DashboardHeroWidget(GlassCard):
         super().__init__(parent)
 
         self._greeting_label = QLabel(
-            "SOC-IQ Analyst Command Center"
-        )
-
-        self._sub_label = QLabel(
-            "Real-time operational intelligence, threat monitoring, and automated forensic analysis."
+            "SOC-IQ"
         )
 
         # Small live-status pulse dot shown next to the
@@ -51,12 +47,12 @@ class DashboardHeroWidget(GlassCard):
         self._pulse_dot = QLabel()
 
         self._status_badge = StatusBadge(
-            "SYSTEM OPERATIONAL",
+            "OPERATIONAL",
             BadgeType.SUCCESS,
         )
 
         self._threat_badge = StatusBadge(
-            "THREAT LEVEL: ELEVATED",
+            "THREAT: ELEVATED",
             BadgeType.WARNING,
         )
 
@@ -66,9 +62,21 @@ class DashboardHeroWidget(GlassCard):
         self.refresh_theme()
         self.update_timestamp()
 
+        # No hard-coded height ceiling. Instead, the strip's height
+        # is left to its own natural sizeHint (driven by the label
+        # font, badge heights, and the layout margins below), and
+        # the vertical size policy caps growth at that natural size
+        # -- Maximum means "never grow past sizeHint" without
+        # pinning to a magic pixel number that clips real content
+        # if a badge's font or padding ever changes.
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Maximum,
+        )
+
         # Keep the "System Time" readout genuinely live instead
-        # of only updating on investigation events — matches the
-        # "real-time" language in the subtitle and the pulse dot.
+        # of only updating on investigation events — reinforces
+        # the same "this is a live system" signal as the pulse dot.
         self._clock_timer = QTimer(self)
         self._clock_timer.setInterval(1000)
         self._clock_timer.timeout.connect(self.update_timestamp)
@@ -77,6 +85,12 @@ class DashboardHeroWidget(GlassCard):
     def _build_hero_ui(self) -> None:
         """
         Construct the hero banner layout.
+
+        Single compact horizontal status strip (target ~48-56px)
+        instead of the previous two-column layout built around a
+        large display greeting and a long descriptive subtitle:
+
+            [SOC-IQ]  ...  [pulse] [operational] [threat] [time]
         """
 
         container_layout = QHBoxLayout()
@@ -88,46 +102,22 @@ class DashboardHeroWidget(GlassCard):
             Spacing.MD,
         )
 
-        container_layout.setSpacing(Spacing.LG)
+        container_layout.setSpacing(Spacing.SM)
 
-        # Left side: Greeting & Subtitle
-        left_box = QVBoxLayout()
-        left_box.setSpacing(Spacing.XS)
+        container_layout.addWidget(self._greeting_label)
 
-        self._sub_label.setWordWrap(True)
-
-        left_box.addWidget(self._greeting_label)
-        left_box.addWidget(self._sub_label)
-
-        container_layout.addLayout(left_box, 3)
-
-        # Right side: Status Badges & Timestamp
-        right_box = QVBoxLayout()
-        right_box.setSpacing(Spacing.SM)
-        right_box.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        )
+        container_layout.addStretch()
 
         self._pulse_dot.setFixedSize(8, 8)
 
-        badges_row = QHBoxLayout()
-        badges_row.setSpacing(Spacing.SM)
-        badges_row.addWidget(
+        container_layout.addWidget(
             self._pulse_dot,
             0,
             Qt.AlignmentFlag.AlignVCenter,
         )
-        badges_row.addWidget(self._status_badge)
-        badges_row.addWidget(self._threat_badge)
-
-        self._timestamp_label.setAlignment(
-            Qt.AlignmentFlag.AlignRight
-        )
-
-        right_box.addLayout(badges_row)
-        right_box.addWidget(self._timestamp_label)
-
-        container_layout.addLayout(right_box, 2)
+        container_layout.addWidget(self._status_badge)
+        container_layout.addWidget(self._threat_badge)
+        container_layout.addWidget(self._timestamp_label)
 
         self.add_layout(container_layout)
 
@@ -139,22 +129,35 @@ class DashboardHeroWidget(GlassCard):
     def refresh_theme(self) -> None:
         """
         Refresh hero styling.
+
+        Root-cause fix: this used to call `self.setStyleSheet(...)`,
+        styling the outer DashboardHeroWidget/GlassCard/ModernCard
+        instance. ModernCard's actual paint surface is `self._frame`
+        (a QFrame added with zero margins, filling the entire
+        widget) -- styling `self` instead of `self._frame` had no
+        visible effect, because the frame sits on top and occludes
+        it. `self._frame` was left showing whatever GlassCard's own
+        `refresh_theme()` (never called, since this override didn't
+        chain to `super()`) or ModernCard's base `_apply_theme()`
+        (always applied once at construction via the explicit
+        `ModernCard.refresh_theme(self)` call in `ModernCard.__init__`)
+        had set it to -- i.e. the plain flat-card look, not the
+        intended elevated surface + brand-colored top accent.
+
+        Fixed the same way GlassCard.refresh_theme() does it:
+        target `self._frame` directly with a `QFrame#modernCard`
+        selector.
         """
 
         palette = self.palette
         fonts = self.fonts
 
-        self._greeting_label.setFont(fonts.display())
+        self._greeting_label.setFont(fonts.title())
         self._greeting_label.setStyleSheet(
             f"""
             color: {palette.text_primary};
             font-weight: 700;
             """
-        )
-
-        self._sub_label.setFont(fonts.body())
-        self._sub_label.setStyleSheet(
-            f"color: {palette.text_secondary};"
         )
 
         self._timestamp_label.setFont(fonts.caption())
@@ -169,9 +172,11 @@ class DashboardHeroWidget(GlassCard):
             """
         )
 
-        self.setStyleSheet(
+        assert self._frame is not None
+
+        self._frame.setStyleSheet(
             f"""
-            DashboardHeroWidget {{
+            QFrame#modernCard {{
                 background-color: {palette.surface_elevated};
                 border: 1px solid {palette.border_default};
                 border-top: 2px solid {palette.brand_primary};
@@ -183,15 +188,21 @@ class DashboardHeroWidget(GlassCard):
     def update_timestamp(self) -> None:
         """
         Update the timestamp text.
+
+        Shows time only (no date, no "System Time:" prefix) -- in
+        the compact hero strip, sitting directly next to the live
+        pulse dot and status badges, the shorter live-clock reading
+        is unambiguous and saves the horizontal room the fuller
+        format was costing at the minimum supported window width.
         """
-        now = datetime.now().strftime("%d %b %Y | %H:%M:%S")
-        self._timestamp_label.setText(f"System Time: {now}")
+        now = datetime.now().strftime("%H:%M:%S")
+        self._timestamp_label.setText(f"Time: {now}")
 
     def set_threat_level(self, level: str, badge_type: BadgeType) -> None:
         """
         Update the threat level indicator.
         """
-        self._threat_badge.set_text(f"THREAT LEVEL: {level.upper()}")
+        self._threat_badge.set_text(f"THREAT: {level.upper()}")
         self._threat_badge.set_badge_type(badge_type)
 
         # Keep the pulse dot color aligned with severity so the

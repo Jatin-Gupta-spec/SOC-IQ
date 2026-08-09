@@ -12,6 +12,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -37,28 +38,24 @@ class KPISection(BaseWidget):
             title="Investigations",
             value="0",
             subtitle="Completed Reports",
-            footer="Updated just now",
         )
 
         self._ioc_card = MetricCard(
             title="Indicators",
             value="0",
             subtitle="Extracted IOCs",
-            footer="Across all reports",
         )
 
         self._risk_card = MetricCard(
             title="High Severity",
             value="0",
             subtitle="Critical Investigations",
-            footer="Requires attention",
         )
 
         self._database_card = MetricCard(
             title="Repository",
             value="ONLINE",
             subtitle="SQLite Database",
-            footer="Healthy",
         )
 
         self._outer_layout = QVBoxLayout(self)
@@ -67,6 +64,18 @@ class KPISection(BaseWidget):
         self._build_ui()
         self.refresh_theme()
         self._configure_cards()
+
+        # No hard-coded height ceiling. Each MetricCard already
+        # reports its own natural sizeHint (icon/title + value +
+        # subtitle); a magic pixel ceiling here is what clipped that
+        # content in the previous pass. Maximum lets the section
+        # take exactly what its cards need and no more, so it still
+        # can't grow to compete with Investigation Queue / Featured
+        # / Live Events for space, but it also can't clip.
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Maximum,
+        )
 
     # --------------------------------------------------
     # UI

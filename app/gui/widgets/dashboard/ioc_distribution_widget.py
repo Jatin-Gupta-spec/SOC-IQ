@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
+    QGridLayout,
     QHBoxLayout,
     QLabel,
-    QProgressBar,
     QVBoxLayout,
+    QWidget,
 )
 
 from app.gui.components.cards.modern_card import ModernCard
@@ -74,30 +75,39 @@ class IOCDistributionWidget(ModernCard):
         header_row.addStretch()
         header_row.addWidget(self._total_label)
 
-        self._rows_layout = QVBoxLayout()
-        self._rows_layout.setSpacing(Spacing.SM)
+        # Replaces the previous per-type stacked label+progress-bar
+        # rows (which could run past 300px for 8 IOC types) with a
+        # single segmented horizontal bar plus a compact multi-column
+        # legend, rebuilt fresh into this layout on every
+        # load_distribution() call.
+        self._display_layout = QVBoxLayout()
+        self._display_layout.setSpacing(Spacing.MD)
 
         outer_layout = QVBoxLayout()
         outer_layout.addLayout(header_row)
-        outer_layout.addLayout(self._rows_layout)
+        outer_layout.addLayout(self._display_layout)
 
         self.add_layout(outer_layout)
 
         self._show_empty_state()
 
-    def _clear_rows(self) -> None:
-        while self._rows_layout.count():
+    def _clear_display(self) -> None:
+        while self._display_layout.count():
 
-            item = self._rows_layout.takeAt(0)
+            item = self._display_layout.takeAt(0)
 
             if item.widget():
                 item.widget().deleteLater()
 
     def _show_empty_state(self) -> None:
-        self._clear_rows()
+        self._clear_display()
 
         palette = self.theme.palette
         fonts = self.theme.fonts
+
+        container = QWidget()
+        container_layout = QVBoxLayout(container)
+        container_layout.setContentsMargins(0, 0, 0, 0)
 
         label = QLabel("No IOC statistics available")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -117,10 +127,10 @@ class IOCDistributionWidget(ModernCard):
             f"color: {palette.text_muted};"
         )
 
-        self._rows_layout.addStretch()
-        self._rows_layout.addWidget(label)
-        self._rows_layout.addWidget(description)
-        self._rows_layout.addStretch()
+        container_layout.addWidget(label)
+        container_layout.addWidget(description)
+
+        self._display_layout.addWidget(container)
 
         self._total_label.setText("0 total")
 
@@ -130,9 +140,16 @@ class IOCDistributionWidget(ModernCard):
     ) -> None:
         """
         Populate widget.
+
+        Contract unchanged: takes the same {ioc_type: count} dict as
+        before, preserves IOC_ORDER/_TYPE_COLORS, still accounts for
+        every type present (known or unrecognized), and still shows
+        the empty state when total == 0. Only the presentation
+        changed, from stacked label+progress-bar rows to one
+        segmented bar plus a compact legend.
         """
 
-        self._clear_rows()
+        self._clear_display()
 
         total = sum(distribution.values())
 
@@ -148,13 +165,37 @@ class IOCDistributionWidget(ModernCard):
         # Preserve the preferred ordering for known types, but never
         # silently drop a type the backend returns that isn't in
         # IOC_ORDER yet — append anything unrecognized (alphabetized)
-        # so the bars always account for the full total instead of
-        # under-summing to less than 100%.
+        # so the bar/legend always account for the full total instead
+        # of under-summing to less than 100%.
         ordered_types = [
             t for t in self.IOC_ORDER if t in distribution
         ] + sorted(
             t for t in distribution if t not in self.IOC_ORDER
         )
+
+        # --------------------------------------------------
+        # Segmented bar
+        # --------------------------------------------------
+
+        bar_container = QWidget()
+        bar_container.setFixedHeight(16)
+
+        bar_layout = QHBoxLayout(bar_container)
+        bar_layout.setContentsMargins(0, 0, 0, 0)
+        bar_layout.setSpacing(3)
+
+        # --------------------------------------------------
+        # Compact legend (2-4 columns depending on item count)
+        # --------------------------------------------------
+
+        legend_container = QWidget()
+
+        legend_layout = QGridLayout(legend_container)
+        legend_layout.setContentsMargins(0, 0, 0, 0)
+        legend_layout.setHorizontalSpacing(Spacing.MD)
+        legend_layout.setVerticalSpacing(Spacing.XS)
+
+        columns = min(4, max(len(ordered_types), 1))
 
         for index, ioc_type in enumerate(ordered_types):
 
@@ -163,50 +204,59 @@ class IOCDistributionWidget(ModernCard):
                 0,
             )
 
-            percent = int(
-                (value / total) * 100
-            )
-
             color = self._TYPE_COLORS[index % len(self._TYPE_COLORS)]
 
-            title = QLabel(
-                f"{ioc_type} ({value})"
+            # Segment width proportional to this type's share of the
+            # total. A zero-count type (still present in the
+            # distribution dict) simply gets zero stretch -- it stays
+            # in the legend but contributes no visible bar width.
+            segment = QWidget()
+            segment.setStyleSheet(
+                f"background-color: {color}; border-radius: 2px;"
             )
-            title.setFont(fonts.caption())
-            title.setStyleSheet(
-                f"color: {palette.text_secondary};"
-            )
+            bar_layout.addWidget(segment, max(value, 0))
 
-            progress = QProgressBar()
-
-            progress.setRange(
-                0,
-                100,
-            )
-
-            progress.setValue(percent)
-
-            progress.setFormat(
-                f"{percent}%"
+            swatch = QLabel()
+            swatch.setFixedSize(10, 10)
+            swatch.setStyleSheet(
+                f"background-color: {color}; border-radius: 2px;"
             )
 
-            progress.setFixedHeight(8)
-            progress.setTextVisible(False)
-
-            progress.setStyleSheet(
-                f"""
-                QProgressBar {{
-                    background: {palette.surface_secondary};
-                    border: none;
-                    border-radius: 4px;
-                }}
-
-                QProgressBar::chunk {{
-                    background: {color};
-                    border-radius: 4px;
-                }}
-                """
+            # Type name and count are two labels rather than one
+            # formatted string so the type name can carry slightly
+            # more visual weight than its count, matching the
+            # title -> value hierarchy used elsewhere on the
+            # dashboard (e.g. KPI cards).
+            type_label = QLabel(ioc_type)
+            type_label.setFont(fonts.caption())
+            type_label.setStyleSheet(
+                f"color: {palette.text_secondary}; font-weight: 600;"
             )
 
-            self._rows_layout.addWidget(title)
-            self._rows_layout.addWidget(progress)
+            count_label = QLabel(f"({value})")
+            count_label.setFont(fonts.caption())
+            count_label.setStyleSheet(
+                f"color: {palette.text_muted};"
+            )
+
+            entry = QWidget()
+            entry_layout = QHBoxLayout(entry)
+            entry_layout.setContentsMargins(0, 0, 0, 0)
+            entry_layout.setSpacing(Spacing.XS)
+            entry_layout.addWidget(
+                swatch, 0, Qt.AlignmentFlag.AlignVCenter
+            )
+            entry_layout.addWidget(type_label)
+            entry_layout.addWidget(count_label)
+            entry_layout.addStretch()
+
+            row, column = divmod(index, columns)
+            legend_layout.addWidget(entry, row, column)
+
+        # Even column widths so legend entries line up into a clean
+        # grid instead of each column hugging its widest label.
+        for column in range(columns):
+            legend_layout.setColumnStretch(column, 1)
+
+        self._display_layout.addWidget(bar_container)
+        self._display_layout.addWidget(legend_container)

@@ -9,20 +9,18 @@ SOC-IQ services.
 
 from __future__ import annotations
 
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
-    QGridLayout,
+    QHBoxLayout,
     QLabel,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
-from app.gui.components import (
-    Panel,
-    SectionHeader,
-    StatusBadge,
-)
+from app.gui.components import StatusBadge
 from app.gui.components.feedback.status_badge import BadgeType
-from app.gui.design.tokens import Spacing
+from app.gui.design.tokens import Colors, Spacing, Typography
 
 # Statuses that should render as healthy / degraded / down. Anything
 # reported by the health service that isn't recognized falls back to
@@ -91,72 +89,157 @@ class SystemStatusSection(QWidget):
 
         self._panels: dict[str, dict[str, QWidget]] = {}
 
-        self._layout = QGridLayout(self)
+        self.setObjectName("systemStatusSection")
+
+        # "SYSTEM STATUS" eyebrow, styled to match KPISection's own
+        # eyebrow ("KEY METRICS") exactly -- same font token, same
+        # color/weight/letter-spacing -- so the two utility-band
+        # widgets read as one group instead of KPI looking labeled
+        # and this one looking orphaned.
+        self._eyebrow_label = QLabel("SYSTEM STATUS")
+
+        # Outer layout now holds [eyebrow, status-row layout] rather
+        # than being the status-row QHBoxLayout directly -- the
+        # eyebrow needs to sit above the rows, and this is the same
+        # outer-layout-plus-sub-layout shape KPISection already uses
+        # for its own eyebrow. self._layout keeps its original
+        # meaning (the two-service status row) so load_status() and
+        # friends are unaffected.
+        self._outer_layout = QVBoxLayout(self)
+        self._layout = QHBoxLayout()
 
         self._build_ui()
+        self._apply_grouped_styling()
+
+        # No hard-coded height ceiling. A magic 40px number is what
+        # clips once the grouped-utility padding below is added; a
+        # Maximum size policy still keeps this row from ever
+        # growing to compete with Investigation Queue / Featured /
+        # Live Events for space, it just does so relative to this
+        # row's own natural (label + badge + padding) sizeHint
+        # instead of a fixed pixel guess.
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Maximum,
+        )
+
+    @staticmethod
+    def _build_font(style) -> QFont:
+        """
+        Build a QFont from a Typography TextStyle token.
+
+        This widget extends plain QWidget rather than BaseWidget
+        (unlike every other file in this audit), so it has no
+        `self.fonts`/`self.palette` runtime theme accessor. Rather
+        than inventing one or changing the base class, this builds
+        directly from the same Typography/Colors token modules
+        every other widget's theme is ultimately built from.
+        """
+
+        font = QFont(style.family, style.size)
+        font.setWeight(QFont.Weight(style.weight))
+        return font
+
+    def _apply_grouped_styling(self) -> None:
+        """
+        Subtle grouped-utility treatment: a faint, theme-agnostic
+        panel background so the two status rows read as one
+        cohesive strip rather than floating labels -- without
+        reintroducing the old two-Panel layout.
+        """
+
+        self.setStyleSheet(
+            """
+            QWidget#systemStatusSection {
+                background-color: rgba(255, 255, 255, 12);
+                border: 1px solid rgba(255, 255, 255, 24);
+                border-radius: 8px;
+            }
+            """
+        )
 
     # --------------------------------------------------
     # UI
     # --------------------------------------------------
 
     def _build_ui(self) -> None:
+        """
+        Build a compact "SYSTEM STATUS" eyebrow above a horizontal
+        status strip: one label/badge pair per monitored service,
+        e.g.
+
+            SYSTEM STATUS
+            Database: Operational    Threat Intelligence: Operational
+
+        Replaces the previous two-Panel layout (SectionHeader +
+        badge + permanently-placeholder detail/updated labels),
+        which cost far more vertical space than the flat status
+        data actually justified.
+        """
+
+        self._outer_layout.setContentsMargins(
+            Spacing.LG,
+            Spacing.SM,
+            Spacing.LG,
+            Spacing.SM,
+        )
+        self._outer_layout.setSpacing(Spacing.SM)
+
+        self._eyebrow_label.setFont(
+            self._build_font(Typography.LABEL)
+        )
+        self._eyebrow_label.setStyleSheet(
+            f"""
+            color: {Colors.Text.MUTED};
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            """
+        )
+        self._outer_layout.addWidget(self._eyebrow_label)
 
         self._layout.setContentsMargins(0, 0, 0, 0)
-        self._layout.setHorizontalSpacing(Spacing.LG)
-        self._layout.setVerticalSpacing(Spacing.LG)
+        self._layout.setSpacing(Spacing.LG)
 
-        for column, service in enumerate(self._SERVICES):
+        for service in self._SERVICES:
 
-            panel, widgets = self._create_status_panel(
+            row, widgets = self._create_status_row(
                 service["title"],
-                service["subtitle"],
             )
 
             self._panels[service["id"]] = widgets
 
-            self._layout.addWidget(panel, 0, column)
-            self._layout.setColumnStretch(column, 1)
+            self._layout.addLayout(row)
 
-    def _create_status_panel(
+        self._layout.addStretch()
+
+        self._outer_layout.addLayout(self._layout)
+
+    def _create_status_row(
         self,
         title: str,
-        subtitle: str,
-    ) -> tuple[QWidget, dict[str, QWidget]]:
+    ) -> tuple[QHBoxLayout, dict[str, QWidget]]:
         """
-        Build a single status panel and return it along with
-        references to the widgets load_status() updates.
+        Build a single compact "<title>: <status>" row and return
+        it along with references to the widgets load_status()
+        updates.
         """
 
-        panel = Panel()
+        row = QHBoxLayout()
+        row.setSpacing(Spacing.SM)
 
-        layout = QVBoxLayout(panel)
-        layout.setContentsMargins(
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
-            Spacing.LG,
+        label = QLabel(f"{title}:")
+        label.setFont(self._build_font(Typography.BODY))
+        label.setStyleSheet(
+            f"color: {Colors.Text.SECONDARY};"
         )
-        layout.setSpacing(Spacing.MD)
-
-        layout.addWidget(
-            SectionHeader(title, subtitle)
-        )
+        row.addWidget(label)
 
         badge = StatusBadge("Unknown", BadgeType.DEFAULT)
-        layout.addWidget(badge)
+        row.addWidget(badge)
 
-        detail_label = QLabel("--")
-        layout.addWidget(detail_label)
-
-        updated_label = QLabel("Last Update: --")
-        layout.addWidget(updated_label)
-
-        layout.addStretch()
-
-        return panel, {
+        return row, {
+            "label": label,
             "badge": badge,
-            "detail": detail_label,
-            "updated": updated_label,
         }
 
     # --------------------------------------------------
@@ -187,11 +270,15 @@ class SystemStatusSection(QWidget):
                 "Unknown",
             )
 
+            # detail_key/updated_key stay in _SERVICES (data-driven
+            # definition preserved) but are intentionally not read
+            # here -- the backend does not supply real values for
+            # them today, and the compact strip correctly avoids
+            # inventing/displaying placeholder "--" content.
+
             self._apply_panel_status(
                 widgets,
                 status_text=status_text,
-                detail_text=status.get(service["detail_key"], "--"),
-                updated_text=status.get(service["updated_key"], "--"),
             )
 
     def _apply_panel_status(
@@ -199,17 +286,12 @@ class SystemStatusSection(QWidget):
         widgets: dict[str, QWidget],
         *,
         status_text: str,
-        detail_text: str,
-        updated_text: str,
     ) -> None:
 
         widgets["badge"].set_text(status_text)
         widgets["badge"].set_badge_type(
             self._badge_type_for_status(status_text)
         )
-
-        widgets["detail"].setText(detail_text)
-        widgets["updated"].setText(f"Last Update: {updated_text}")
 
     @staticmethod
     def _badge_type_for_status(status_text: str) -> BadgeType:

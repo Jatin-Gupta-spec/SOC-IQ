@@ -9,9 +9,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QFrame,
-    QGridLayout,
-    QScrollArea,
+    QHBoxLayout,
     QVBoxLayout,
     QWidget,
 )
@@ -32,9 +30,6 @@ from app.gui.widgets.dashboard.featured_investigation_card import (
 from app.gui.widgets.dashboard.investigation_queue_widget import (
     InvestigationQueueWidget,
 )
-from app.gui.widgets.dashboard.threat_intelligence_feed_widget import (
-    ThreatIntelligenceFeedWidget,
-)
 from app.gui.widgets.dashboard.ioc_distribution_widget import (
     IOCDistributionWidget,
 )
@@ -45,6 +40,13 @@ from app.gui.widgets.dashboard.live_security_events_widget import (
 from app.gui.widgets.dashboard.quick_access_widget import QuickAccessWidget
 from app.gui.widgets.dashboard.system_status_section import SystemStatusSection
 from app.gui.widgets.sidebar import NavigationPage
+
+# ThreatIntelligenceFeedWidget is intentionally NOT imported here.
+# It has been confirmed (Batch 3 audit) to be a relabeled rendering
+# of the same recent-investigation data already shown in the
+# Investigation Queue / Featured Investigation, so it has been
+# removed from the dashboard layout. The widget file itself and its
+# backing service are untouched -- only its dashboard usage is gone.
 
 
 class DashboardPage(QWidget):
@@ -62,6 +64,12 @@ class DashboardPage(QWidget):
 
         self._controller = DashboardController()
 
+        # Populated by refresh() from the same get_recent_investigations()
+        # call used for the Investigation Queue, so _open_featured_workspace()
+        # never has to make a second controller round-trip just to get the
+        # investigation the Featured card is already showing.
+        self._latest_investigation = None
+
         self._toast_box = QVBoxLayout()
 
         # --------------------------------------------------
@@ -70,10 +78,7 @@ class DashboardPage(QWidget):
 
         self._header_widget = PageHeader(
             title="SOC-IQ Cyber Operations Center",
-            subtitle=(
-                "Situational awareness, key threat metrics, "
-                "and executive investigation overview."
-            ),
+            subtitle="Live threat status and investigation overview.",
         )
 
         # --------------------------------------------------
@@ -90,10 +95,6 @@ class DashboardPage(QWidget):
 
         self._ioc_distribution = (
             IOCDistributionWidget()
-        )
-
-        self._threat_feed = (
-            ThreatIntelligenceFeedWidget()
         )
 
         self._featured_card = (
@@ -126,123 +127,119 @@ class DashboardPage(QWidget):
         """
         Construct dashboard layout.
 
-        The page is placed directly inside the app's top-level
-        `QStackedWidget` (see `main_window.py`), which never
-        scrolls its pages itself -- it only ever gives a page
-        exactly the viewport's size. `InvestigationWorkspacePage`
-        (the other long page hung off the same stack) accounts for
-        this by wrapping its content in a `QScrollArea`; this page
-        previously didn't, so once the header, hero, KPI row, and
-        three-row workbench grid combined exceeded the viewport
-        height, the grid's bottom row had nowhere to go and was cut
-        off/squeezed instead of becoming reachable by scrolling.
-        Wrapping the same content in a `QScrollArea` here brings the
-        page in line with that established pattern.
+        No page-level QScrollArea. Instead of the previous flat 3x2
+        equal-weight grid (which gave a utility widget like System
+        Status the same visual weight as the Investigation Queue,
+        and needed a page-level scroll area to fit), the dashboard
+        is built as a fixed hierarchy of rows:
+
+            TOP       Hero + Quick Access        (natural height, no stretch)
+            PRIMARY   Investigation Queue + Featured Investigation (stretch 3)
+            SECONDARY IOC Distribution + Live Security Events      (stretch 2)
+            UTILITY   KPI Section + System Status (natural height, no stretch)
+
+        Hero, Quick Access, KPI Section, and System Status each use
+        a (Expanding, Maximum) size policy (see their respective
+        widget files) rather than a hard-coded setMaximumHeight()
+        pixel value: Maximum means each row can never grow past its
+        own natural sizeHint (driven by real font/badge/button
+        sizes), so it can't expand to take space Primary/Secondary
+        need, but it also can't clip its own content the way a
+        fixed pixel guess did in the previous pass -- that guess is
+        what clipped the KPI cards, cramped the Featured card, and
+        caused overlapping Live Events rows, because nothing
+        adapted the cap when real content needed more room than the
+        guess allowed. The Investigation Queue and Live Security
+        Events widgets are unchanged and keep whatever internal/
+        table scrolling they already had.
         """
 
-        content = QWidget()
+        root_layout = QVBoxLayout(self)
 
-        content_layout = QVBoxLayout(content)
-
-        content_layout.setContentsMargins(
-            24,
-            24,
-            24,
-            24,
+        root_layout.setContentsMargins(
+            Spacing.PAGE_MARGIN,
+            Spacing.PAGE_MARGIN,
+            Spacing.PAGE_MARGIN,
+            Spacing.PAGE_MARGIN,
         )
 
-        content_layout.setSpacing(24)
+        root_layout.setSpacing(Spacing.LG)
 
         # Header
 
-        content_layout.addWidget(
+        root_layout.addWidget(
             self._header_widget
         )
 
-        # Hero Banner
-
-        content_layout.addWidget(
-            self._hero_widget
-        )
-
-        # KPI Cards
-
-        content_layout.addWidget(
-            self._kpi_section
-        )
-
-        # Quick Access
-        #
-        # Previously created in __init__ but never added to any
-        # layout, so it never appeared and its navigate_to_*
-        # signals (wired in _connect_signals) had no way to fire.
-
-        content_layout.addWidget(
-            self._quick_access
-        )
-
         # --------------------------------------------------
-        # SOC Workbench
+        # TOP: Hero + Quick Access
         # --------------------------------------------------
 
-        grid = QGridLayout()
+        top_row = QHBoxLayout()
+        top_row.setSpacing(Spacing.LG)
 
-        grid.setHorizontalSpacing(Spacing.LG)
-        grid.setVerticalSpacing(Spacing.LG)
+        # 2:1 rather than a more hero-heavy split -- Quick Access
+        # has three real buttons to fit ("+ Analyze Report",
+        # "Browse History", "Threat Intel Lookup") while the Hero
+        # strip's content (label + pulse dot + two badges + clock)
+        # compresses more gracefully, so Quick Access needs the
+        # larger share of the narrow-width safety margin.
+        top_row.addWidget(self._hero_widget, 2)
+        top_row.addWidget(self._quick_access, 1)
 
-        grid.addWidget(
-            self._investigation_queue,
-            0,
-            0,
-        )
+        root_layout.addLayout(top_row)
 
-        grid.addWidget(
-            self._threat_feed,
-            0,
-            1,
-        )
+        # --------------------------------------------------
+        # PRIMARY: Investigation Queue + Featured Investigation
+        # --------------------------------------------------
 
-        grid.addWidget(
-            self._ioc_distribution,
-            1,
-            0,
-        )
+        primary_row = QHBoxLayout()
+        primary_row.setSpacing(Spacing.LG)
 
-        grid.addWidget(
-            self._live_security_events,
-            1,
-            1,
-        )
+        primary_row.addWidget(self._investigation_queue, 5)
+        primary_row.addWidget(self._featured_card, 2)
 
-        grid.addWidget(
-            self._featured_card,
-            2,
-            0,
-        )
+        # Highest layout priority per the target hierarchy
+        # (investigations are the primary analyst workspace).
+        # Hero/Quick Access above and KPI/System Status below now
+        # size themselves to their own natural content height
+        # (Expanding/Maximum size policy, no stretch factor here),
+        # so all real extra vertical space is free to go to this
+        # row and the Secondary row below -- this is what gives
+        # Featured Investigation's "Open Workspace" button room to
+        # render uncompressed instead of being pushed off the
+        # bottom of an undersized row.
+        root_layout.addLayout(primary_row, 3)
 
-        grid.addWidget(
-            self._system_status_section,
-            2,
-            1,
-        )
+        # --------------------------------------------------
+        # SECONDARY: IOC Distribution + Live Security Events
+        # --------------------------------------------------
 
-        grid.setColumnStretch(0, 1)
-        grid.setColumnStretch(1, 1)
+        secondary_row = QHBoxLayout()
+        secondary_row.setSpacing(Spacing.LG)
 
-        content_layout.addLayout(grid)
+        secondary_row.addWidget(self._ioc_distribution, 1)
+        secondary_row.addWidget(self._live_security_events, 1)
 
-        content_layout.addLayout(self._toast_box)
+        # Second-highest priority -- enough of its own stretch
+        # share that Live Security Events has room to render its
+        # visible rows without overlapping, without taking that
+        # room away from Primary.
+        root_layout.addLayout(secondary_row, 2)
 
-        content_layout.addStretch()
+        # --------------------------------------------------
+        # UTILITY: KPI Section + System Status
+        # --------------------------------------------------
 
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area.setWidget(content)
+        utility_row = QHBoxLayout()
+        utility_row.setSpacing(Spacing.LG)
 
-        root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.addWidget(scroll_area)
+        utility_row.addWidget(self._kpi_section, 3)
+        utility_row.addWidget(self._system_status_section, 1)
+
+        root_layout.addLayout(utility_row)
+
+        root_layout.addLayout(self._toast_box)
 
     # --------------------------------------------------
     # Feedback
@@ -306,19 +303,13 @@ class DashboardPage(QWidget):
     ) -> None:
         """
         Open latest investigation.
+
+        Reuses the investigation already fetched by refresh() (and
+        currently shown on the Featured card) instead of making a
+        second controller/service call for data we already have.
         """
 
-        try:
-            latest = (
-                self._controller
-                .get_latest_investigation()
-            )
-        except Exception as error:
-            self._show_toast(
-                f"Could not open the latest investigation: {error}",
-                ToastType.ERROR,
-            )
-            return
+        latest = self._latest_investigation
 
         if latest is None:
             return
@@ -347,13 +338,17 @@ class DashboardPage(QWidget):
         # anything went wrong, and could misrepresent a data-access failure
         # as "no data" once individual widgets are updated with empty
         # results.
+        #
+        # get_latest_investigation() is intentionally not called here:
+        # recent[0] is the same investigation it would return, so deriving
+        # it from the recent-investigations fetch avoids a redundant
+        # controller round-trip. get_threat_feed() is also gone -- the
+        # dashboard no longer renders the Threat Intelligence Feed widget.
         try:
             threat_level, badge = self._controller.get_threat_status()
             summary = self._controller.get_summary()
-            latest = self._controller.get_latest_investigation()
             recent = self._controller.get_recent_investigations(limit=10)
             distribution = self._controller.get_ioc_distribution()
-            feed = self._controller.get_threat_feed(limit=10)
             status = self._controller.get_system_status()
         except Exception as error:
             self._show_toast(
@@ -361,6 +356,12 @@ class DashboardPage(QWidget):
                 ToastType.ERROR,
             )
             return
+
+        latest = recent[0] if recent else None
+
+        # Stored so _open_featured_workspace() can reuse it rather than
+        # querying the controller again.
+        self._latest_investigation = latest
 
         self._hero_widget.set_threat_level(
             threat_level,
@@ -384,10 +385,6 @@ class DashboardPage(QWidget):
 
         self._ioc_distribution.load_distribution(
             distribution
-        )
-
-        self._threat_feed.load_feed(
-            feed
         )
 
         self._system_status_section.load_status(status)

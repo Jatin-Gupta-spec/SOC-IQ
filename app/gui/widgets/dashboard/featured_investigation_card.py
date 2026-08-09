@@ -252,24 +252,61 @@ class FeaturedInvestigationCard(ModernCard):
             self._open_button
         )
 
-        self.add_layout(
+        # All sections are assembled into one local `card_layout`
+        # (spacing explicitly set to 0) which is then added to
+        # ModernCard's content_layout() via a single add_layout()
+        # call. content_layout() already applies Spacing.CONTENT_GAP
+        # between every item added directly to it -- previously
+        # header_layout/spacer/info_layout/stretch/spacer/
+        # button_layout were each added as separate items straight
+        # onto it, so that automatic gap compounded with every
+        # manual add_spacing() call between them (e.g. the header-
+        # to-info gap was actually 16+8+16=40px, not the intended
+        # 8px). Routing everything through this one local layout
+        # means content_layout() only ever sees a single item, so
+        # its own spacing never enters the picture -- every gap
+        # here is controlled purely by the addSpacing()/addStretch()
+        # calls below, at exactly their token values.
+        card_layout = QVBoxLayout()
+        card_layout.setSpacing(0)
+
+        card_layout.addLayout(
             header_layout
         )
 
-        self.add_spacing(
+        card_layout.addSpacing(
             Spacing.SM
         )
 
-        self.add_layout(
+        card_layout.addLayout(
             info_layout
         )
 
-        self.add_spacing(
+        # Root cause of both the dead-space and button-clipping
+        # complaints: the card gets more vertical height than its
+        # content needs (primary_row gives it stretch factor 2 in
+        # dashboard_page.py), but there was no stretch item to
+        # absorb that extra space -- so it either sat as blank room
+        # below the button (if the outer content layout supplies
+        # its own trailing stretch) or, if the row was allocated
+        # less height than the natural content, pushed the button
+        # toward being cut off. Placing addStretch() here makes the
+        # info block sit at its natural size at the top and lets
+        # any extra height self-collapse to zero at 1100x700 while
+        # still leaving the button anchored directly below the
+        # content at 1440x900.
+        card_layout.addStretch()
+
+        card_layout.addSpacing(
             Spacing.MD
         )
 
-        self.add_layout(
+        card_layout.addLayout(
             button_layout
+        )
+
+        self.add_layout(
+            card_layout
         )
 
     def _apply_risk_bar_color(self, color: str) -> None:
