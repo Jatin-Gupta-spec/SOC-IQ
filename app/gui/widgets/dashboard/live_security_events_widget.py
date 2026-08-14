@@ -236,9 +236,19 @@ class LiveSecurityEventsWidget(ModernCard):
         fonts = self.theme.fonts
 
         row = QWidget()
+        row.setObjectName("liveEventRow")
+
+        row.setStyleSheet(
+            f"""
+            QWidget#liveEventRow {{
+                background: transparent;
+                border-bottom: 1px solid {palette.border_subtle};
+            }}
+            """
+        )
 
         row_layout = QHBoxLayout(row)
-        row_layout.setContentsMargins(0, 0, 0, 0)
+        row_layout.setContentsMargins(0, 0, Spacing.XS, Spacing.SM)
         row_layout.setSpacing(Spacing.MD)
 
         badge_type = _SEVERITY_BADGE_MAP.get(

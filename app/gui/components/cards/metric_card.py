@@ -9,6 +9,7 @@ Enterprise KPI card built on top of ModernCard.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -171,6 +172,25 @@ class MetricCard(ModernCard):
 
         self.content_layout().addLayout(card_layout)
 
+    @staticmethod
+    def _tinted(hex_color: str, alpha: int) -> str:
+        """
+        Return an rgba() string for the given hex color at
+        the given alpha (0-255), for use in QSS.
+
+        Mirrors StatusBadge._tinted() so the badge here reads
+        as the same restrained tinted-pill treatment used
+        elsewhere in the design system, without importing from
+        or modifying StatusBadge itself.
+        """
+
+        color = QColor(hex_color)
+
+        return (
+            f"rgba({color.red()}, {color.green()}, "
+            f"{color.blue()}, {alpha})"
+        )
+
     def refresh_theme(self) -> None:
 
         palette = self.palette
@@ -220,10 +240,16 @@ class MetricCard(ModernCard):
             f"color:{palette.text_secondary};"
         )
 
+        accent = palette.brand_primary
+        badge_tint = self._tinted(accent, alpha=32)
+        badge_border = self._tinted(accent, alpha=90)
+
         self._badge_label.setStyleSheet(
             f"""
-            color:{palette.text_primary};
-            background:{palette.accent};
+            color:{accent};
+            background-color:{badge_tint};
+            border: 1px solid {badge_border};
+            font-weight: 600;
             padding: {Spacing.XXS}px {Spacing.SM}px;
             border-radius: {Radius.BADGE}px;
             """

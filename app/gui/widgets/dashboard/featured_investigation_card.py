@@ -143,7 +143,7 @@ class FeaturedInvestigationCard(ModernCard):
         )
 
         self._report_name_label.setFont(
-            fonts.title()
+            fonts.heading()
         )
 
         self._report_name_label.setWordWrap(True)
@@ -151,8 +151,6 @@ class FeaturedInvestigationCard(ModernCard):
         self._report_name_label.setStyleSheet(
             f"""
             color:{palette.text_primary};
-            font-size:22px;
-            font-weight:700;
             """
         )
 
@@ -182,18 +180,9 @@ class FeaturedInvestigationCard(ModernCard):
         )
 
         self._risk_bar.setStyleSheet(
-            f"""
-            QProgressBar{{
-                background:{palette.surface_secondary};
-                border:none;
-                border-radius:5px;
-            }}
-
-            QProgressBar::chunk{{
-                background:{palette.brand_primary};
-                border-radius:5px;
-            }}
-            """
+            self._progress_bar_stylesheet(
+                palette.brand_primary
+            )
         )
 
         header_layout = QHBoxLayout()
@@ -309,26 +298,39 @@ class FeaturedInvestigationCard(ModernCard):
             card_layout
         )
 
+    def _progress_bar_stylesheet(self, chunk_color: str) -> str:
+        """
+        Build the QProgressBar QSS for the risk bar.
+
+        Shared by both the initial (neutral) style set in
+        _build_card_ui() and the severity-driven style applied by
+        _apply_risk_bar_color(), so the two call sites can't drift
+        apart -- only the chunk color varies between them; the
+        track color, border, and radius are identical either way.
+        """
+
+        palette = self.theme.palette
+
+        return f"""
+        QProgressBar {{
+            background: {palette.surface_secondary};
+            border: none;
+            border-radius: 5px;
+        }}
+
+        QProgressBar::chunk {{
+            background: {chunk_color};
+            border-radius: 5px;
+        }}
+        """
+
     def _apply_risk_bar_color(self, color: str) -> None:
         """
         Style the risk bar using the given color.
         """
 
-        palette = self.theme.palette
-
         self._risk_bar.setStyleSheet(
-            f"""
-            QProgressBar {{
-                background: {palette.surface_secondary};
-                border: none;
-                border-radius: 5px;
-            }}
-
-            QProgressBar::chunk {{
-                background: {color};
-                border-radius: 5px;
-            }}
-            """
+            self._progress_bar_stylesheet(color)
         )
 
 

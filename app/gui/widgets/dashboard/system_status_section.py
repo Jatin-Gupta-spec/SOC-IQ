@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 
 from app.gui.components import StatusBadge
 from app.gui.components.feedback.status_badge import BadgeType
-from app.gui.design.tokens import Colors, Spacing, Typography
+from app.gui.design.tokens import Colors, Radius, Spacing, Typography
 
 # Statuses that should render as healthy / degraded / down. Anything
 # reported by the health service that isn't recognized falls back to
@@ -149,12 +149,12 @@ class SystemStatusSection(QWidget):
         """
 
         self.setStyleSheet(
-            """
-            QWidget#systemStatusSection {
+            f"""
+            QWidget#systemStatusSection {{
                 background-color: rgba(255, 255, 255, 12);
                 border: 1px solid rgba(255, 255, 255, 24);
-                border-radius: 8px;
-            }
+                border-radius: {Radius.CARD}px;
+            }}
             """
         )
 

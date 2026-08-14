@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from app.gui.components.buttons.animated_button import (
     AnimatedButton,
+    ButtonVariant,
 )
 from app.gui.components.cards.modern_card import (
     ModernCard,
@@ -48,11 +49,13 @@ class QuickAccessWidget(ModernCard):
         )
 
         self._btn_history = AnimatedButton(
-            "Browse History"
+            "Browse History",
+            variant=ButtonVariant.OUTLINE,
         )
 
         self._btn_intel = AnimatedButton(
-            "Threat Intel Lookup"
+            "Threat Intel Lookup",
+            variant=ButtonVariant.OUTLINE,
         )
 
         super().__init__(parent)

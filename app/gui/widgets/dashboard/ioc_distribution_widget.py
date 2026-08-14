@@ -178,7 +178,7 @@ class IOCDistributionWidget(ModernCard):
         # --------------------------------------------------
 
         bar_container = QWidget()
-        bar_container.setFixedHeight(16)
+        bar_container.setFixedHeight(Spacing.LG)
 
         bar_layout = QHBoxLayout(bar_container)
         bar_layout.setContentsMargins(0, 0, 0, 0)

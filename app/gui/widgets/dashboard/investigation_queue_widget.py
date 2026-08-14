@@ -26,6 +26,7 @@ from app.gui.models.investigation_proxy_model import (
 from app.gui.models.investigation_table_model import (
     InvestigationTableModel,
 )
+from app.gui.design.tokens import Spacing
 
 
 class InvestigationQueueWidget(ModernCard):
@@ -73,6 +74,7 @@ class InvestigationQueueWidget(ModernCard):
         fonts = self.theme.fonts
 
         layout = QVBoxLayout()
+        layout.setSpacing(Spacing.SM)
 
         header_row = QHBoxLayout()
 
@@ -147,6 +149,43 @@ class InvestigationQueueWidget(ModernCard):
 
         self._table.horizontalHeader().setHighlightSections(
             False
+        )
+
+        self._table.setFont(
+            fonts.body()
+        )
+
+        self._table.setStyleSheet(
+            f"""
+            QTableView {{
+                background-color: {palette.surface_primary};
+                alternate-background-color: {palette.surface_secondary};
+                gridline-color: transparent;
+                border: none;
+                color: {palette.text_primary};
+                selection-background-color: {palette.surface_elevated};
+                selection-color: {palette.text_primary};
+            }}
+
+            QTableView::item {{
+                padding: {Spacing.TABLE_CELL_PADDING}px;
+                border: none;
+            }}
+
+            QTableView::item:selected {{
+                background-color: {palette.surface_elevated};
+                color: {palette.text_primary};
+            }}
+
+            QHeaderView::section {{
+                background-color: {palette.surface_primary};
+                color: {palette.text_muted};
+                border: none;
+                border-bottom: 1px solid {palette.border_default};
+                padding: {Spacing.TABLE_CELL_PADDING}px;
+                font-weight: 600;
+            }}
+            """
         )
 
         # Empty state — shown instead of a zero-row table, matching
