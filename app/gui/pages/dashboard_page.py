@@ -127,31 +127,36 @@ class DashboardPage(QWidget):
         """
         Construct dashboard layout.
 
-        No page-level QScrollArea. Instead of the previous flat 3x2
-        equal-weight grid (which gave a utility widget like System
-        Status the same visual weight as the Investigation Queue,
-        and needed a page-level scroll area to fit), the dashboard
-        is built as a fixed hierarchy of rows:
+        Fixed hierarchy of rows:
 
             TOP       Hero + Quick Access        (natural height, no stretch)
-            PRIMARY   Investigation Queue + Featured Investigation (stretch 3)
-            SECONDARY IOC Distribution + Live Security Events      (stretch 2)
+            PRIMARY   Investigation Queue + Featured Investigation (stretch 4)
+            SECONDARY IOC Distribution + Live Security Events      (stretch 3)
             UTILITY   KPI Section + System Status (natural height, no stretch)
+
+        BATCH 04: layout/geometry is unchanged from Batch 03B -- this
+        batch only wires interaction signals, it does not touch
+        _build_ui().
+
+        BATCH 03B: Primary/Secondary were previously 3:2. At 1280x720
+        that split left Secondary (which carries Live Security Events,
+        a row-based feed with real per-row height needs) short on
+        absolute pixels, producing the observed row overlap/clipping.
+        Moving to 4:3 gives Secondary materially more room while still
+        keeping Primary -- the investigation workbench -- the larger
+        share, per the stated hierarchy. Root layout spacing is also
+        trimmed from MD to SM so more of the page's vertical budget
+        goes to content rows instead of inter-row gaps; Hero/Quick
+        Access/KPI/System Status keep their own internal margins
+        untouched, so this doesn't compress their readability, only
+        the dead space between the four stacked rows.
 
         Hero, Quick Access, KPI Section, and System Status each use
         a (Expanding, Maximum) size policy (see their respective
         widget files) rather than a hard-coded setMaximumHeight()
         pixel value: Maximum means each row can never grow past its
-        own natural sizeHint (driven by real font/badge/button
-        sizes), so it can't expand to take space Primary/Secondary
-        need, but it also can't clip its own content the way a
-        fixed pixel guess did in the previous pass -- that guess is
-        what clipped the KPI cards, cramped the Featured card, and
-        caused overlapping Live Events rows, because nothing
-        adapted the cap when real content needed more room than the
-        guess allowed. The Investigation Queue and Live Security
-        Events widgets are unchanged and keep whatever internal/
-        table scrolling they already had.
+        own natural sizeHint, so it can't take space Primary/
+        Secondary need, but it also can't clip its own content.
         """
 
         root_layout = QVBoxLayout(self)
@@ -163,7 +168,12 @@ class DashboardPage(QWidget):
             Spacing.PAGE_MARGIN,
         )
 
-        root_layout.setSpacing(Spacing.LG)
+        # SM rather than MD: frees vertical budget for the Primary/
+        # Secondary content rows, which is where the actual runtime
+        # clipping/overlap was observed. The four rows still read as
+        # a dense, analyst-workbench composition -- tighter row-to-row
+        # rhythm, not tighter content padding within any one row.
+        root_layout.setSpacing(Spacing.SM)
 
         # Header
 
@@ -178,14 +188,15 @@ class DashboardPage(QWidget):
         top_row = QHBoxLayout()
         top_row.setSpacing(Spacing.LG)
 
-        # 2:1 rather than a more hero-heavy split -- Quick Access
-        # has three real buttons to fit ("+ Analyze Report",
-        # "Browse History", "Threat Intel Lookup") while the Hero
-        # strip's content (label + pulse dot + two badges + clock)
-        # compresses more gracefully, so Quick Access needs the
-        # larger share of the narrow-width safety margin.
+        # BATCH 03B: was 2:1 (Hero favored). Quick Access has three
+        # real button labels ("+ Analyze Report", "Browse History",
+        # "Threat Intel Lookup") that were being truncated at that
+        # width share. Hero's content (wordmark + pulse dot + two
+        # badges + clock) compresses far more gracefully than button
+        # labels can (a button either fits its label or visibly
+        # truncates it), so Quick Access now gets the larger share.
         top_row.addWidget(self._hero_widget, 2)
-        top_row.addWidget(self._quick_access, 1)
+        top_row.addWidget(self._quick_access, 3)
 
         root_layout.addLayout(top_row)
 
@@ -196,20 +207,13 @@ class DashboardPage(QWidget):
         primary_row = QHBoxLayout()
         primary_row.setSpacing(Spacing.LG)
 
-        primary_row.addWidget(self._investigation_queue, 5)
-        primary_row.addWidget(self._featured_card, 2)
+        # 7:3 -- Queue is the dominant workbench (~70% width), Featured
+        # keeps enough width for its metadata block and action button.
+        primary_row.addWidget(self._investigation_queue, 7)
+        primary_row.addWidget(self._featured_card, 3)
 
-        # Highest layout priority per the target hierarchy
-        # (investigations are the primary analyst workspace).
-        # Hero/Quick Access above and KPI/System Status below now
-        # size themselves to their own natural content height
-        # (Expanding/Maximum size policy, no stretch factor here),
-        # so all real extra vertical space is free to go to this
-        # row and the Secondary row below -- this is what gives
-        # Featured Investigation's "Open Workspace" button room to
-        # render uncompressed instead of being pushed off the
-        # bottom of an undersized row.
-        root_layout.addLayout(primary_row, 3)
+        # BATCH 03B: stretch raised 3 -> 4 (see _build_ui docstring).
+        root_layout.addLayout(primary_row, 4)
 
         # --------------------------------------------------
         # SECONDARY: IOC Distribution + Live Security Events
@@ -221,11 +225,10 @@ class DashboardPage(QWidget):
         secondary_row.addWidget(self._ioc_distribution, 1)
         secondary_row.addWidget(self._live_security_events, 1)
 
-        # Second-highest priority -- enough of its own stretch
-        # share that Live Security Events has room to render its
-        # visible rows without overlapping, without taking that
-        # room away from Primary.
-        root_layout.addLayout(secondary_row, 2)
+        # BATCH 03B: stretch raised 2 -> 3 (see _build_ui docstring) --
+        # this is what gives Live Security Events room to render its
+        # rows without overlapping.
+        root_layout.addLayout(secondary_row, 3)
 
         # --------------------------------------------------
         # UTILITY: KPI Section + System Status
@@ -280,6 +283,21 @@ class DashboardPage(QWidget):
             self._open_featured_workspace
         )
 
+        # BATCH 04: Investigation Queue row activation (double-click
+        # / Enter) and Live Security Events row click both resolve to
+        # a real Investigation object and go through the same shared
+        # _open_investigation() as the Featured card action -- one
+        # "select + navigate" path for every dashboard surface that
+        # identifies a concrete investigation, per the architecture
+        # rule against parallel selection flows.
+        self._investigation_queue.investigation_activated.connect(
+            self._open_investigation
+        )
+
+        self._live_security_events.investigation_activated.connect(
+            self._open_investigation
+        )
+
         self._quick_access.navigate_to_analyze.connect(
             lambda: self.navigate_to_page.emit(NavigationPage.ANALYZE)
         )
@@ -298,6 +316,32 @@ class DashboardPage(QWidget):
     # Navigation
     # --------------------------------------------------
 
+    def _open_investigation(
+        self,
+        investigation,
+    ) -> None:
+        """
+        Make `investigation` the active investigation and navigate to
+        the workspace to view it.
+
+        BATCH 04: single shared implementation of "select + navigate",
+        used by the Featured card action, Investigation Queue row
+        activation, and Live Security Events row click alike -- so
+        there is exactly one place in DashboardPage that performs
+        this transition, rather than three copies that could drift.
+        Guards against `None` (e.g. a row that no longer exists after
+        a race with refresh()) so no caller has to re-check first.
+        """
+
+        if investigation is None:
+            return
+
+        ApplicationState.select_investigation(
+            investigation
+        )
+
+        self.navigate_to_page.emit(NavigationPage.WORKSPACE)
+
     def _open_featured_workspace(
         self,
     ) -> None:
@@ -309,16 +353,9 @@ class DashboardPage(QWidget):
         second controller/service call for data we already have.
         """
 
-        latest = self._latest_investigation
-
-        if latest is None:
-            return
-
-        ApplicationState.select_investigation(
-            latest
+        self._open_investigation(
+            self._latest_investigation
         )
-
-        self.navigate_to_page.emit(NavigationPage.WORKSPACE)
 
     # --------------------------------------------------
     # Refresh

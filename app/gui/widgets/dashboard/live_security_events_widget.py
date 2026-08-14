@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -48,6 +48,26 @@ _SEVERITY_BADGE_MAP: dict[str, BadgeType] = {
 }
 
 
+class _EventRow(QWidget):
+    """
+    Single clickable row in the live events feed.
+
+    BATCH 04: a thin QWidget subclass rather than e.g. wrapping the
+    row's contents in a QPushButton, so the existing row
+    layout/content built in _build_event_row is completely
+    untouched -- this only adds a mousePressEvent override that
+    turns "this row represents investigation X" into a `clicked`
+    signal the caller can attach the actual Investigation to.
+    """
+
+    clicked = Signal()
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+        super().mousePressEvent(event)
+
+
 class LiveSecurityEventsWidget(ModernCard):
     """
     Live-updating feed of the most recent investigations.
@@ -56,9 +76,18 @@ class LiveSecurityEventsWidget(ModernCard):
     `InvestigationService`, and the widget only re-renders
     in response to `event_bus.investigation_created` — it
     contains no business logic of its own.
+
+    BATCH 04: each row now emits investigation_activated with the
+    exact Investigation it was built from on click. This is still
+    presentational -- the widget doesn't decide what "opening" an
+    investigation means (ApplicationState/navigation), it only
+    reports which Investigation the user clicked.
     """
 
     _MAX_EVENTS = 5
+
+    # BATCH 04: carries the Investigation the clicked row represents.
+    investigation_activated = Signal(object)
 
     def __init__(
         self,
@@ -74,6 +103,13 @@ class LiveSecurityEventsWidget(ModernCard):
         )
 
         self._events_layout = QVBoxLayout()
+        # BATCH 03B: SM rather than XS between rows. Each row already
+        # carries its own border-bottom separator, but XS was tight
+        # enough that adjacent rows' text (report name + timestamp
+        # stacked in a 2px-spaced column, see _build_event_row) read
+        # as overlapping/crowded rather than merely dense -- this is
+        # the direct fix for the reported "event rows overlap /
+        # clip" symptom.
         self._events_layout.setSpacing(Spacing.SM)
 
         self._empty_state_label = self._build_empty_state_label()
@@ -235,8 +271,20 @@ class LiveSecurityEventsWidget(ModernCard):
         palette = self.theme.palette
         fonts = self.theme.fonts
 
-        row = QWidget()
+        # BATCH 04: _EventRow (not a bare QWidget) so the row can
+        # emit `clicked`; everything else about row construction is
+        # unchanged from Batch 03B.
+        row = _EventRow()
         row.setObjectName("liveEventRow")
+
+        # BATCH 04: pointing-hand cursor + a hover background (new
+        # :hover rule) are the interaction-feedback signal for this
+        # row -- reusing the same "hover -> surface_secondary"
+        # pattern already used by the Investigation Queue table
+        # rows, rather than inventing a new visual language.
+        row.setCursor(
+            Qt.CursorShape.PointingHandCursor
+        )
 
         row.setStyleSheet(
             f"""
@@ -244,11 +292,20 @@ class LiveSecurityEventsWidget(ModernCard):
                 background: transparent;
                 border-bottom: 1px solid {palette.border_subtle};
             }}
+
+            QWidget#liveEventRow:hover {{
+                background: {palette.surface_secondary};
+            }}
             """
         )
 
         row_layout = QHBoxLayout(row)
-        row_layout.setContentsMargins(0, 0, Spacing.XS, Spacing.SM)
+        # BATCH 03B: added a small top margin (was 0,0,XS,XS) so
+        # each row has breathing room on both sides of its
+        # border-bottom separator, not just below it -- paired with
+        # the events_layout spacing bump above, this is what stops
+        # rows from reading as touching/overlapping.
+        row_layout.setContentsMargins(0, Spacing.XS, Spacing.XS, Spacing.XS)
         row_layout.setSpacing(Spacing.MD)
 
         badge_type = _SEVERITY_BADGE_MAP.get(
@@ -262,7 +319,10 @@ class LiveSecurityEventsWidget(ModernCard):
         )
 
         details_layout = QVBoxLayout()
-        details_layout.setSpacing(2)
+        # BATCH 03B: XS rather than a bare 2px -- token-based, and
+        # gives the report name / timestamp pair enough line-height
+        # separation to read cleanly at the row spacing above.
+        details_layout.setSpacing(Spacing.XS)
 
         report_label = QLabel(investigation.report_name or "Untitled report")
         report_label.setFont(fonts.body())
@@ -293,6 +353,14 @@ class LiveSecurityEventsWidget(ModernCard):
         row_layout.addWidget(severity_badge)
         row_layout.addLayout(details_layout, 1)
         row_layout.addWidget(risk_label)
+
+        # BATCH 04: bind this specific investigation into the click
+        # handler via default-arg capture (avoids the classic
+        # late-binding closure bug if this were a `for` loop variable
+        # referenced without a default).
+        row.clicked.connect(
+            lambda inv=investigation: self.investigation_activated.emit(inv)
+        )
 
         return row
 

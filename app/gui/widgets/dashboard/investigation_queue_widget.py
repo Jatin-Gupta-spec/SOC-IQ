@@ -7,11 +7,12 @@ inside the SOC-IQ dashboard.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QHeaderView,
+    QSizePolicy,
     QStackedLayout,
     QTableView,
     QVBoxLayout,
@@ -43,6 +44,13 @@ class InvestigationQueueWidget(ModernCard):
     # current default sort behavior; confirm against the model.
     _DEFAULT_SORT_COLUMN = 5
 
+    # BATCH 04: emitted when a row is *activated* (double-click, or
+    # Enter/Return with a row selected) -- not on plain single-click
+    # selection, so existing single-click row highlighting behavior
+    # is unchanged. Carries the actual Investigation the activated
+    # row represents.
+    investigation_activated = Signal(object)
+
     def __init__(self) -> None:
 
         # self._model / self._proxy must be set before
@@ -59,7 +67,26 @@ class InvestigationQueueWidget(ModernCard):
             self._model
         )
 
+        # BATCH 04: mirrors exactly what load_investigations() hands
+        # to self._model.set_investigations(), in the same order, so
+        # an activated row's *source* row index can be mapped back to
+        # the Investigation object it represents without depending on
+        # any undocumented data-role contract on InvestigationTableModel
+        # (which is out of scope for this batch).
+        self._investigations: list[Investigation] = []
+
         super().__init__()
+
+        # BATCH 03B: Investigation Queue is the dominant workbench
+        # per the target hierarchy, so it should never be capped
+        # below its container's available height -- explicit
+        # Expanding/Expanding rather than relying on ModernCard's
+        # default, so this doesn't silently regress if that default
+        # ever changes.
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
 
     # --------------------------------------------------
     # UI
@@ -74,7 +101,12 @@ class InvestigationQueueWidget(ModernCard):
         fonts = self.theme.fonts
 
         layout = QVBoxLayout()
-        layout.setSpacing(Spacing.SM)
+        # XS rather than SM: the Queue is the primary workbench and
+        # gets the most of the row's vertical budget in
+        # dashboard_page.py -- every bit not spent on chrome here is
+        # a bit more room the table itself gets before its own
+        # internal scrolling kicks in.
+        layout.setSpacing(Spacing.XS)
 
         header_row = QHBoxLayout()
 
@@ -151,8 +183,33 @@ class InvestigationQueueWidget(ModernCard):
             False
         )
 
+        # BATCH 03B: the table itself must expand to fill whatever
+        # height the Queue's row/stack layout gives it, rather than
+        # sizing to its own sizeHint -- this is what lets
+        # resizeRowsToContents() (called on every load) actually use
+        # the full allocated height instead of the table settling at
+        # a smaller natural size and letting its own internal
+        # scrollbar hide rows below the fold.
+        self._table.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+
         self._table.setFont(
             fonts.body()
+        )
+
+        # BATCH 04: pointing-hand cursor + tooltip are the row-level
+        # interaction feedback called for in the batch objective --
+        # reusing existing hover styling below (QTableView::item:hover
+        # was already present pre-Batch-04) rather than adding new
+        # animation or restyling the table.
+        self._table.setCursor(
+            Qt.CursorShape.PointingHandCursor
+        )
+
+        self._table.setToolTip(
+            "Double-click a row to open it in the Investigation Workspace"
         )
 
         self._table.setStyleSheet(
@@ -170,6 +227,11 @@ class InvestigationQueueWidget(ModernCard):
             QTableView::item {{
                 padding: {Spacing.TABLE_CELL_PADDING}px;
                 border: none;
+                border-bottom: 1px solid {palette.border_subtle};
+            }}
+
+            QTableView::item:hover {{
+                background-color: {palette.surface_secondary};
             }}
 
             QTableView::item:selected {{
@@ -184,8 +246,18 @@ class InvestigationQueueWidget(ModernCard):
                 border-bottom: 1px solid {palette.border_default};
                 padding: {Spacing.TABLE_CELL_PADDING}px;
                 font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }}
             """
+        )
+
+        # BATCH 04: `activated` fires on double-click and on
+        # Enter/Return with a row selected -- covers mouse and
+        # keyboard "open this row" without touching single-click
+        # selection behavior at all.
+        self._table.activated.connect(
+            self._on_row_activated
         )
 
         # Empty state — shown instead of a zero-row table, matching
@@ -242,6 +314,44 @@ class InvestigationQueueWidget(ModernCard):
         )
 
     # --------------------------------------------------
+    # Interaction
+    # --------------------------------------------------
+
+    def _on_row_activated(self, proxy_index) -> None:
+        """
+        Resolve an activated proxy-model row to the Investigation it
+        represents and emit investigation_activated.
+
+        Deliberately does not read the value back off the model via
+        a data role: InvestigationTableModel's data-role contract
+        isn't defined in the files in scope for this batch, so this
+        instead maps the activated row back through the proxy to a
+        *source* row index and indexes into self._investigations,
+        which was populated in the same order and from the same list
+        given to self._model.set_investigations() in
+        load_investigations(). If the table is ever resorted/filtered,
+        mapToSource() still returns the correct pre-sort/pre-filter
+        row, so this stays correct under both.
+        """
+
+        if not proxy_index.isValid():
+            return
+
+        source_index = self._proxy.mapToSource(proxy_index)
+
+        row = source_index.row()
+
+        if not (0 <= row < len(self._investigations)):
+            # Selected row no longer corresponds to loaded data
+            # (e.g. a refresh raced with the activation) -- do
+            # nothing rather than emit a stale/wrong investigation.
+            return
+
+        investigation = self._investigations[row]
+
+        self.investigation_activated.emit(investigation)
+
+    # --------------------------------------------------
     # Public API
     # --------------------------------------------------
 
@@ -249,6 +359,8 @@ class InvestigationQueueWidget(ModernCard):
         """
         Clear queue.
         """
+
+        self._investigations = []
 
         self._model.set_investigations(
             []
@@ -265,6 +377,11 @@ class InvestigationQueueWidget(ModernCard):
         """
         Populate investigation queue.
         """
+
+        # BATCH 04: kept in lockstep with what's handed to the model
+        # so row-activation can resolve back to an Investigation --
+        # see _on_row_activated().
+        self._investigations = investigations
 
         self._model.set_investigations(
             investigations
