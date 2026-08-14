@@ -95,11 +95,17 @@ class DashboardHeroWidget(GlassCard):
 
         container_layout = QHBoxLayout()
 
+        # Vertical margin trimmed from MD to SM: the hero is meant to
+        # read as a slim status bar (operational + threat + clock),
+        # not a banner, so it should sit closer to the KPI-strip's own
+        # compactness than to a full ModernCard's default padding.
+        # Horizontal margin stays LG so the "SOC-IQ" wordmark and the
+        # trailing timestamp don't crowd the card edges.
         container_layout.setContentsMargins(
             Spacing.LG,
-            Spacing.MD,
+            Spacing.SM,
             Spacing.LG,
-            Spacing.MD,
+            Spacing.SM,
         )
 
         container_layout.setSpacing(Spacing.SM)

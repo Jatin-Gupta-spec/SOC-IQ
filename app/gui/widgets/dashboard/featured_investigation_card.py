@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QProgressBar,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -56,6 +57,17 @@ class FeaturedInvestigationCard(ModernCard):
 
         self._investigation: Investigation | None = None
 
+        # BATCH 03B: explicit Expanding/Expanding so the card fully
+        # occupies whatever height primary_row's stretch factor gives
+        # it in dashboard_page.py, rather than relying on ModernCard's
+        # default and settling at a smaller natural size that then
+        # leaves the button-anchoring addStretch() below with less
+        # room than the row actually has available.
+        self.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding,
+        )
+
         # --------------------------------------------------
         # Header
         # --------------------------------------------------
@@ -75,12 +87,6 @@ class FeaturedInvestigationCard(ModernCard):
 
         self._report_name_label = QLabel(
             "No Investigation Available"
-        )
-
-        # TODO: wire to Investigation.malware_family once that field
-        # is exposed on the model — currently always "Unknown".
-        self._family_label = QLabel(
-            "Malware Family : Unknown"
         )
 
         self._ioc_label = QLabel(
@@ -117,7 +123,7 @@ class FeaturedInvestigationCard(ModernCard):
 
         self._build_card_ui()
 
-            # --------------------------------------------------
+    # --------------------------------------------------
     # UI
     # --------------------------------------------------
 
@@ -155,7 +161,6 @@ class FeaturedInvestigationCard(ModernCard):
         )
 
         for label in (
-            self._family_label,
             self._ioc_label,
             self._date_label,
         ):
@@ -199,16 +204,18 @@ class FeaturedInvestigationCard(ModernCard):
 
         info_layout = QVBoxLayout()
 
+        # BATCH 03B: XS rather than SM between the info rows
+        # (report name / IOC count / risk score+bar / date). This is
+        # a real content-density change, not the addStretch() below
+        # -- it reduces the info block's own natural height, which
+        # is what leaves the button more room to render uncompressed
+        # inside a card whose total height it doesn't control.
         info_layout.setSpacing(
-            Spacing.SM
+            Spacing.XS
         )
 
         info_layout.addWidget(
             self._report_name_label
-        )
-
-        info_layout.addWidget(
-            self._family_label
         )
 
         info_layout.addWidget(
@@ -244,18 +251,10 @@ class FeaturedInvestigationCard(ModernCard):
         # All sections are assembled into one local `card_layout`
         # (spacing explicitly set to 0) which is then added to
         # ModernCard's content_layout() via a single add_layout()
-        # call. content_layout() already applies Spacing.CONTENT_GAP
-        # between every item added directly to it -- previously
-        # header_layout/spacer/info_layout/stretch/spacer/
-        # button_layout were each added as separate items straight
-        # onto it, so that automatic gap compounded with every
-        # manual add_spacing() call between them (e.g. the header-
-        # to-info gap was actually 16+8+16=40px, not the intended
-        # 8px). Routing everything through this one local layout
-        # means content_layout() only ever sees a single item, so
-        # its own spacing never enters the picture -- every gap
-        # here is controlled purely by the addSpacing()/addStretch()
-        # calls below, at exactly their token values.
+        # call, so content_layout()'s own automatic spacing never
+        # compounds with the addSpacing()/addStretch() calls below --
+        # every gap here is controlled purely at exactly its token
+        # value.
         card_layout = QVBoxLayout()
         card_layout.setSpacing(0)
 
@@ -263,8 +262,10 @@ class FeaturedInvestigationCard(ModernCard):
             header_layout
         )
 
+        # BATCH 03B: XS rather than SM (see info_layout note above --
+        # same reasoning, this is the header-to-info gap).
         card_layout.addSpacing(
-            Spacing.SM
+            Spacing.XS
         )
 
         card_layout.addLayout(
@@ -272,22 +273,22 @@ class FeaturedInvestigationCard(ModernCard):
         )
 
         # Root cause of both the dead-space and button-clipping
-        # complaints: the card gets more vertical height than its
-        # content needs (primary_row gives it stretch factor 2 in
-        # dashboard_page.py), but there was no stretch item to
-        # absorb that extra space -- so it either sat as blank room
-        # below the button (if the outer content layout supplies
-        # its own trailing stretch) or, if the row was allocated
-        # less height than the natural content, pushed the button
-        # toward being cut off. Placing addStretch() here makes the
-        # info block sit at its natural size at the top and lets
-        # any extra height self-collapse to zero at 1100x700 while
-        # still leaving the button anchored directly below the
-        # content at 1440x900.
+        # complaints previously: the card can get more vertical
+        # height than its content needs, but there was no stretch
+        # item to absorb that extra space. Placing addStretch() here
+        # makes the info block sit at its natural size at the top
+        # and lets any extra height self-collapse to zero when the
+        # row is short, while the info block itself is now shorter
+        # (tighter spacing above) so there's more slack before the
+        # button is the thing that has to give.
         card_layout.addStretch()
 
+        # BATCH 03B: SM rather than MD before the button -- the last
+        # remaining bit of padding trimmed to give the button the
+        # most room possible in a short row without touching the
+        # button's own geometry.
         card_layout.addSpacing(
-            Spacing.MD
+            Spacing.SM
         )
 
         card_layout.addLayout(
@@ -373,10 +374,6 @@ class FeaturedInvestigationCard(ModernCard):
                 "No Investigation Available"
             )
 
-            self._family_label.setText(
-                "Malware Family : Unknown"
-            )
-
             self._ioc_label.setText(
                 "IOC Count : --"
             )
@@ -416,10 +413,6 @@ class FeaturedInvestigationCard(ModernCard):
 
         self._ioc_label.setText(
             f"IOC Count : {ioc_count}"
-        )
-
-        self._family_label.setText(
-            "Malware Family : Unknown"
         )
 
         self._risk_label.setText(

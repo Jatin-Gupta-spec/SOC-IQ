@@ -27,6 +27,7 @@ class PageHeader(BaseWidget):
 
     Displays:
 
+    • Eyebrow / context (optional)
     • Title
     • Subtitle
     • Status information
@@ -38,10 +39,12 @@ class PageHeader(BaseWidget):
         self,
         title: str,
         subtitle: str = "",
+        eyebrow: str = "",
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
 
+        self._eyebrow_label = QLabel(eyebrow)
         self._title_label = QLabel(title)
         self._subtitle_label = QLabel(subtitle)
 
@@ -62,13 +65,23 @@ class PageHeader(BaseWidget):
 
     def _build_ui(self) -> None:
 
-        # True display-scale title — this is the top of the
-        # typography ladder for the whole app (bigger than any
-        # hero or card title downstream).
+        # Heading-scale title (Typography.HEADING via
+        # FontFactory.heading()), not display-scale. DISPLAY is
+        # reserved for the app-level hero/marketing-style title;
+        # every in-page header — Dashboard, Analyze, IOC Viewer,
+        # Threat Intelligence, Risk Dashboard, History, Settings —
+        # sits one rung below that on the typography ladder so it
+        # reads as a compact, professional page title rather than
+        # a landing-page hero.
 
         title_layout = QVBoxLayout()
         title_layout.setContentsMargins(0, 0, 0, 0)
         title_layout.setSpacing(Spacing.XS)
+
+        if self._eyebrow_label.text():
+            title_layout.addWidget(self._eyebrow_label)
+        else:
+            self._eyebrow_label.hide()
 
         title_layout.addWidget(self._title_label)
 
@@ -106,11 +119,15 @@ class PageHeader(BaseWidget):
 
         root = QHBoxLayout(self)
 
+        # Bottom margin tightened from Spacing.MD to Spacing.SM: the
+        # header no longer carries a display-scale title, so it no
+        # longer needs as much breathing room below it before the
+        # page's own content begins.
         root.setContentsMargins(
             0,
             0,
             0,
-            Spacing.MD,
+            Spacing.SM,
         )
 
         root.setSpacing(Spacing.LG)
@@ -129,7 +146,16 @@ class PageHeader(BaseWidget):
         palette = self.palette
         fonts = self.fonts
 
-        self._title_label.setFont(fonts.display())
+        self._eyebrow_label.setFont(fonts.caption())
+        self._eyebrow_label.setStyleSheet(
+            f"""
+            color: {palette.text_muted};
+            font-weight: 600;
+            letter-spacing: 1px;
+            """
+        )
+
+        self._title_label.setFont(fonts.heading())
         self._title_label.setStyleSheet(
             f"""
             color: {palette.text_primary};
@@ -173,6 +199,17 @@ class PageHeader(BaseWidget):
         self._subtitle_label.setText(subtitle)
         self._subtitle_label.setVisible(
             bool(subtitle)
+        )
+        self.refresh_theme()
+
+    def set_eyebrow(
+        self,
+        eyebrow: str,
+    ) -> None:
+        """Update the eyebrow / context label above the title."""
+        self._eyebrow_label.setText(eyebrow)
+        self._eyebrow_label.setVisible(
+            bool(eyebrow)
         )
         self.refresh_theme()
 

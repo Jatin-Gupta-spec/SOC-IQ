@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.gui.design.tokens import Spacing
+
 
 class Panel(QFrame):
     """
@@ -36,13 +38,13 @@ class Panel(QFrame):
         layout = QVBoxLayout()
 
         layout.setContentsMargins(
-            16,
-            16,
-            16,
-            16,
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
+            Spacing.LG,
         )
 
-        layout.setSpacing(12)
+        layout.setSpacing(Spacing.MD)
 
         self._content_layout.setContentsMargins(
             0,
@@ -51,6 +53,9 @@ class Panel(QFrame):
             0,
         )
 
+        # 10px has no exact match in the Spacing scale (SM=8,
+        # MD=12) — left as a literal per the audit finding rather
+        # than rounding to a token that doesn't represent it.
         self._content_layout.setSpacing(10)
 
         layout.addLayout(
@@ -77,22 +82,6 @@ class Panel(QFrame):
         Add a widget to the panel.
         """
 
-        print(
-            "===================================="
-        )
-        print(
-            "ADDING:",
-            type(widget).__name__,
-        )
-
         self._content_layout.addWidget(
             widget,
-        )
-
-        print(
-            "COUNT:",
-            self._content_layout.count(),
-        )
-        print(
-            "===================================="
         )

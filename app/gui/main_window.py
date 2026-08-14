@@ -11,6 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import (
+    QSize,
     Qt,
     QUrl,
 )
@@ -34,6 +35,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from app.gui.design.tokens import Spacing
 
 from app.gui.events.application_state import (
     ApplicationState,
@@ -171,6 +174,16 @@ class MainWindow(QMainWindow):
     def _create_tool_bar(self) -> None:
         """
         Create the main application toolbar.
+
+        Fixed to the `Spacing.TOOLBAR_HEIGHT` token (52px) instead of
+        letting Qt size the bar from its default icon size. A QToolBar
+        with no explicit icon size reserves room for a 24x24 icon per
+        action even when, as here, the only action ("Analyze") is
+        text-only -- that reserved icon geometry plus the toolbar's own
+        default margins is what produced the large, mostly-empty band
+        underneath the menu bar. Shrinking the icon size and pinning the
+        height to the existing spacing token removes that reserved space
+        without touching the action itself or its wiring.
         """
 
         toolbar = QToolBar(
@@ -179,6 +192,14 @@ class MainWindow(QMainWindow):
 
         toolbar.setMovable(
             False,
+        )
+
+        toolbar.setIconSize(
+            QSize(16, 16),
+        )
+
+        toolbar.setFixedHeight(
+            Spacing.TOOLBAR_HEIGHT,
         )
 
         self.addToolBar(

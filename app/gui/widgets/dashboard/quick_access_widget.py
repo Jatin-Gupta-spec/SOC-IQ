@@ -79,17 +79,6 @@ class QuickAccessWidget(ModernCard):
         DashboardHeroWidget so the two read as one coherent
         command area (status + actions) instead of two unrelated
         cards sitting next to each other.
-
-        Previously this styled a separate inset `_top_accent`
-        widget sitting 16px inside the card's padded content area
-        -- not flush with the card's actual edge, and inconsistent
-        with Hero's border once Hero's own styling bug (targeting
-        `self` instead of `self._frame`) is fixed. Now that Hero
-        correctly overrides `self._frame`'s `border-top`, Quick
-        Access does the same directly on its own `self._frame`
-        instead of drawing a second, misaligned accent bar --
-        giving both cards a matching, flush top edge with no
-        redundant widget.
         """
 
         assert self._frame is not None
@@ -128,27 +117,58 @@ class QuickAccessWidget(ModernCard):
         """
         Build widget layout.
 
-        Compact horizontal action row -- replaces the previous
-        full ModernCard (title + description + three vertically
-        stacked full-width buttons), which cost far more vertical
-        space than three navigation actions need. The top accent
-        is now the card frame's own border-top (see
-        _apply_coherent_styling) rather than a separate inset bar
-        widget, so there's no extra wrapper layout needed here.
+        Compact horizontal action row. The top accent is the card
+        frame's own border-top (see _apply_coherent_styling) rather
+        than a separate inset bar widget, so there's no extra
+        wrapper layout needed here.
+
+        BATCH 03B: label truncation ("Analyze Report" / "Threat
+        Intel Lookup" not fully fitting) was primarily a width-
+        allocation problem at the dashboard_page.py level (this
+        panel only had 1/3 of the top row's width against three
+        real button labels -- fixed there, now 3/5 of the row).
+        On top of that, each button is given an explicit
+        (Minimum, Fixed) size policy here so Qt sizes it to its
+        own text sizeHint rather than letting the QHBoxLayout
+        compress it below that when space is tight -- a button
+        that can't fit will now push its siblings or get clipped
+        at the panel edge (visible, actionable) instead of silently
+        truncating its own label (invisible, easy to miss in review).
+        Margins/spacing are also trimmed slightly (MD/SM -> SM/XS)
+        to give the buttons themselves more of the panel's width.
         """
 
         main_layout = QHBoxLayout()
 
+        # SM/XS rather than MD/SM: every point of margin/spacing
+        # trimmed here is a point handed back to the three button
+        # labels, which is what was actually clipping.
         main_layout.setContentsMargins(
-            Spacing.MD,
-            Spacing.MD,
-            Spacing.MD,
-            Spacing.MD,
+            Spacing.SM,
+            Spacing.SM,
+            Spacing.SM,
+            Spacing.SM,
         )
 
         main_layout.setSpacing(
-            Spacing.SM,
+            Spacing.XS,
         )
+
+        for button in (
+            self._btn_analyze,
+            self._btn_history,
+            self._btn_intel,
+        ):
+            # Fixed horizontal policy: never shrink a button below
+            # its label's natural width. If the panel is ever too
+            # narrow for all three, the layout will clip/overflow
+            # visibly at the edge rather than silently truncating
+            # the label text inside a button that still looks "full
+            # width".
+            button.setSizePolicy(
+                QSizePolicy.Policy.Fixed,
+                QSizePolicy.Policy.Fixed,
+            )
 
         main_layout.addWidget(
             self._btn_analyze,

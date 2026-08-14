@@ -81,7 +81,11 @@ class IOCDistributionWidget(ModernCard):
         # legend, rebuilt fresh into this layout on every
         # load_distribution() call.
         self._display_layout = QVBoxLayout()
-        self._display_layout.setSpacing(Spacing.MD)
+        # SM rather than MD between the segmented bar and the legend
+        # grid below it -- they're two views of the same dataset, not
+        # two separate sections, so a tighter gap reads as "one
+        # compact visualization" rather than two stacked widgets.
+        self._display_layout.setSpacing(Spacing.SM)
 
         outer_layout = QVBoxLayout()
         outer_layout.addLayout(header_row)
@@ -178,7 +182,12 @@ class IOCDistributionWidget(ModernCard):
         # --------------------------------------------------
 
         bar_container = QWidget()
-        bar_container.setFixedHeight(Spacing.LG)
+        # MD rather than LG: a slimmer segmented bar reads closer to
+        # the dense "command-center" bars in the reference than the
+        # previous, taller strip -- the legend below still carries
+        # the exact counts, so the bar itself only needs to be a
+        # readable proportion indicator, not a large focal element.
+        bar_container.setFixedHeight(Spacing.MD)
 
         bar_layout = QHBoxLayout(bar_container)
         bar_layout.setContentsMargins(0, 0, 0, 0)

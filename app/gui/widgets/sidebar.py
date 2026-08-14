@@ -56,6 +56,11 @@ class SidebarWidget(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
+        # Named so a scoped stylesheet (background + separator
+        # border) can target this widget specifically without
+        # leaking onto other QWidget instances in the app.
+        self.setObjectName("sidebar")
+
         self.setFixedWidth(240)
 
         self._buttons: dict[int, QPushButton] = {}
@@ -67,6 +72,22 @@ class SidebarWidget(QWidget):
         Build the sidebar user interface.
         """
 
+        palette = theme_manager.palette
+
+        # A dedicated surface color plus a single hairline border is
+        # the whole "separation from content" story here — anything
+        # heavier (a drop shadow, a thicker border) would read as
+        # the "excessive borders" the design brief calls out.
+        self.setStyleSheet(
+            f"""
+            QWidget#sidebar {{
+                background-color: {palette.background_secondary};
+                border: none;
+                border-right: 1px solid {palette.border_subtle};
+            }}
+            """
+        )
+
         layout = QVBoxLayout()
 
         layout.setContentsMargins(
@@ -76,7 +97,10 @@ class SidebarWidget(QWidget):
             Spacing.LG,
         )
 
-        layout.setSpacing(Spacing.SM)
+        # Tighter than Batch 01's SM spacing — the sidebar density
+        # requirement calls for a compact nav list, not loosely
+        # spaced buttons.
+        layout.setSpacing(Spacing.XS)
 
         title = QLabel("SOC-IQ")
 
@@ -86,14 +110,31 @@ class SidebarWidget(QWidget):
 
         title.setStyleSheet(
             f"""
-            color: {theme_manager.palette.text_primary};
+            color: {palette.text_primary};
             font-size: 20px;
             font-weight: 700;
-            padding-bottom: 12px;
+            padding-bottom: 4px;
             """
         )
 
         layout.addWidget(title)
+
+        # Small section eyebrow so the sidebar reads as
+        # "identity -> primary navigation" rather than the nav
+        # buttons appearing to float directly under the wordmark.
+        section_label = QLabel("NAVIGATION")
+
+        section_label.setStyleSheet(
+            f"""
+            color: {palette.text_muted};
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            padding: 0 12px {Spacing.SM}px 12px;
+            """
+        )
+
+        layout.addWidget(section_label)
 
         buttons = (
             ("Dashboard", NavigationPage.DASHBOARD),
@@ -107,6 +148,12 @@ class SidebarWidget(QWidget):
 
         for text, page in buttons:
             button = QPushButton(text)
+
+            # Stable identity for the button, independent of the
+            # in-memory _buttons dict — useful for tests/QSS scoping,
+            # and harmless to anything that consumed this widget
+            # before (nothing previously relied on an object name).
+            button.setObjectName(f"nav_button_{int(page)}")
 
             button.setSizePolicy(
                 QSizePolicy.Policy.Expanding,
@@ -154,9 +201,10 @@ class SidebarWidget(QWidget):
                 f"""
                 QPushButton {{
                     text-align: left;
-                    padding: 8px 12px;
+                    padding: 9px 12px;
                     border: none;
                     border-left: 3px solid {palette.brand_primary};
+                    border-radius: 0 6px 6px 0;
                     background-color: {palette.surface_elevated};
                     color: {palette.text_primary};
                     font-weight: 600;
@@ -168,9 +216,10 @@ class SidebarWidget(QWidget):
                 f"""
                 QPushButton {{
                     text-align: left;
-                    padding: 8px 12px;
+                    padding: 9px 12px;
                     border: none;
                     border-left: 3px solid transparent;
+                    border-radius: 0 6px 6px 0;
                     background-color: transparent;
                     color: {palette.text_secondary};
                     font-weight: 400;

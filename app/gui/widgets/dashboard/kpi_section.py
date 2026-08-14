@@ -68,10 +68,10 @@ class KPISection(BaseWidget):
         # No hard-coded height ceiling. Each MetricCard already
         # reports its own natural sizeHint (icon/title + value +
         # subtitle); a magic pixel ceiling here is what clipped that
-        # content in the previous pass. Maximum lets the section
-        # take exactly what its cards need and no more, so it still
-        # can't grow to compete with Investigation Queue / Featured
-        # / Live Events for space, but it also can't clip.
+        # content in a previous pass. Maximum lets the section take
+        # exactly what its cards need and no more, so it still can't
+        # grow to compete with Investigation Queue / Featured / Live
+        # Events for space, but it also can't clip.
         self.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Maximum,
@@ -84,13 +84,25 @@ class KPISection(BaseWidget):
     def _build_ui(self) -> None:
 
         self._outer_layout.setContentsMargins(0, 0, 0, 0)
-        self._outer_layout.setSpacing(Spacing.SM)
+        # Tighter gap between the "KEY METRICS" eyebrow and the card
+        # row -- XS instead of SM, since the eyebrow is a label, not
+        # a card, and doesn't need a full card-gap of separation.
+        self._outer_layout.setSpacing(Spacing.XS)
 
         self._outer_layout.addWidget(self._eyebrow_label)
 
         self._layout.setContentsMargins(0, 0, 0, 0)
-        self._layout.setHorizontalSpacing(Spacing.LG)
-        self._layout.setVerticalSpacing(Spacing.LG)
+
+        # BATCH 03B: SM rather than MD between the four metric cards.
+        # This section still reads as one compact instrument-panel
+        # strip (per the Fortexa reference), but the tighter gap
+        # meaningfully reduces the strip's total footprint, which was
+        # the specific complaint ("still consumes too much vertical
+        # space" / "reads as four generic cards instead of a compact
+        # strip") -- this is a real spacing reduction, not a
+        # comment-only change.
+        self._layout.setHorizontalSpacing(Spacing.SM)
+        self._layout.setVerticalSpacing(Spacing.SM)
 
         self._layout.addWidget(self._reports_card, 0, 0)
         self._layout.addWidget(self._ioc_card, 0, 1)

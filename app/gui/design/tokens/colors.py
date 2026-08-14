@@ -44,7 +44,10 @@ class Colors:
 
         STRONG = "#495365"
 
-        FOCUS = "#4F8CFF"
+        # Migrated from the old brand blue (#4F8CFF) to the new
+        # purple brand primary so focus rings/active states read
+        # as part of the same accent family as buttons and links.
+        FOCUS = "#8B5CF6"
 
     class Text:
         """Text colors."""
@@ -56,11 +59,18 @@ class Colors:
         INVERSE = "#111827"
 
     class Brand:
-        """Primary SOC-IQ brand colors."""
+        """
+        Primary SOC-IQ brand colors.
 
-        PRIMARY = "#4F8CFF"
-        HOVER = "#6BA3FF"
-        PRESSED = "#3B74DB"
+        Migrated from blue to purple (violet-500/400/600) to match
+        the reference design. Chosen to be coherent with the
+        existing Colors.Chart.PURPLE ("#8B5CF6") token rather than
+        introducing an unrelated purple.
+        """
+
+        PRIMARY = "#8B5CF6"
+        HOVER = "#A78BFA"
+        PRESSED = "#7C3AED"
 
     class Status:
         """Generic application status colors."""
@@ -103,7 +113,10 @@ class Colors:
         """Overlay colors."""
 
         MODAL = "#00000099"
-        SELECTION = "#4F8CFF33"
+
+        # Migrated alpha-blended selection tint to match the new
+        # purple brand primary (was "#4F8CFF33").
+        SELECTION = "#8B5CF633"
 
     class Divider:
         """Divider and separator colors."""

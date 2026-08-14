@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from app.gui.design.theme.palette import DEFAULT_PALETTE
 from app.gui.design.theme.stylesheet_builder import StylesheetBuilder
+from app.gui.design.tokens import Radius, Spacing, Typography
 
 
 class Stylesheet:
@@ -27,14 +28,23 @@ class Stylesheet:
 
         parts = [
             self._base(),
-            self._builder.button_primary(),
+            self._default_button(),
             self._builder.line_edit(),
             self._builder.card(),
+            self._page_container(),
+            self._section_header(),
+            self._panel(),
+            self._badge(),
+            self._key_value(),
+            self._dashboard_empty_state(),
+            self._summary_card(),
             self._scrollbars(),
             self._tables(),
             self._headers(),
             self._menus(),
             self._toolbar(),
+            self._status_bar(),
+            self._stacked_widget(),
             self._tooltip(),
         ]
 
@@ -56,6 +66,294 @@ class Stylesheet:
         QLabel {{
             color: {palette.text_primary};
             background: transparent;
+        }}
+        """.strip()
+
+    def _default_button(self) -> str:
+        """
+        Default styling for the bare `QPushButton` selector.
+
+        Deliberately NOT `StylesheetBuilder.button_primary()` —
+        that fragment fills the button with `palette.brand_primary`
+        (now purple), which would make every generic button in the
+        app read as a primary CTA.
+
+        This only affects a plain `QPushButton` used directly,
+        outside of `AnimatedButton`. `AnimatedButton` sets its own
+        per-variant stylesheet directly on its internal QPushButton
+        instance via `setStyleSheet()`, which takes precedence over
+        this application-level rule for that widget — so this
+        neutral default and AnimatedButton's PRIMARY/SECONDARY/
+        OUTLINE/DANGER variants do not conflict. See
+        animated_button.py.
+        """
+
+        palette = DEFAULT_PALETTE
+
+        return f"""
+        QPushButton {{
+            background-color: {palette.surface_secondary};
+            color: {palette.text_primary};
+            border: 1px solid {palette.border_default};
+            border-radius: {Radius.BUTTON}px;
+            padding: {Spacing.SM}px {Spacing.MD}px;
+        }}
+
+        QPushButton:hover {{
+            background-color: {palette.surface_elevated};
+            border: 1px solid {palette.border_strong};
+        }}
+
+        QPushButton:pressed {{
+            background-color: {palette.surface_primary};
+        }}
+
+        QPushButton:disabled {{
+            color: {palette.text_disabled};
+            background-color: {palette.surface_secondary};
+            border: 1px solid transparent;
+        }}
+        """.strip()
+
+    def _page_container(self) -> str:
+        """
+        PageContainer chrome: the transparent wrapping frame plus
+        its title/description labels.
+
+        Migrated from the legacy theme.py selectors
+        `QFrame#pageContainer`, `QLabel#pageTitle`,
+        `QLabel#pageDescription`. `PageContainer` itself
+        (page_container.py) is unchanged — it only sets these
+        objectNames, so styling continues to apply without any
+        widget code changes.
+        """
+
+        palette = DEFAULT_PALETTE
+        title = Typography.HEADING
+        description = Typography.BODY
+
+        return f"""
+        QFrame#pageContainer {{
+            background-color: transparent;
+            border: none;
+        }}
+
+        QLabel#pageTitle {{
+            font-size: {title.size}pt;
+            font-weight: {title.weight};
+            color: {palette.text_primary};
+        }}
+
+        QLabel#pageDescription {{
+            font-size: {description.size}pt;
+            color: {palette.text_muted};
+        }}
+        """.strip()
+
+    def _section_header(self) -> str:
+        """
+        SectionHeader chrome, migrated from the legacy
+        `QLabel#sectionHeaderTitle` / `QLabel#sectionHeaderDescription`
+        selectors. `SectionHeader` (section_header.py) only sets
+        these objectNames, so it needs no code changes.
+        """
+
+        palette = DEFAULT_PALETTE
+        title = Typography.TITLE
+        description = Typography.BODY
+
+        return f"""
+        QLabel#sectionHeaderTitle {{
+            font-size: {title.size}pt;
+            font-weight: {title.weight};
+            color: {palette.text_primary};
+        }}
+
+        QLabel#sectionHeaderDescription {{
+            font-size: {description.size}pt;
+            color: {palette.text_muted};
+        }}
+        """.strip()
+
+    def _panel(self) -> str:
+        """
+        The shared `Panel` container (panel.py), object name
+        "panel". Distinct from `StylesheetBuilder.card()`'s
+        `QFrame#legacyCard`, which is a separate opt-in fragment
+        for legacy direct consumers.
+        """
+
+        palette = DEFAULT_PALETTE
+
+        return f"""
+        QFrame#panel {{
+            background-color: {palette.surface_primary};
+            border: 1px solid {palette.border_default};
+            border-radius: {Radius.PANEL}px;
+        }}
+
+        QFrame#panel:hover {{
+            border: 1px solid {palette.border_strong};
+        }}
+        """.strip()
+
+    def _badge(self) -> str:
+        """
+        Small status/label pill, object name "badge". Migrated
+        from the legacy `QLabel#badge` selector; now uses the
+        brand accent (purple) instead of the old hardcoded blue.
+
+        Radius stays a literal 10px: no Radius token equals 10
+        (SM=4, MD=6, LG=8, XL=12, XXL=16), and approximating to
+        the nearest token was explicitly rejected in favor of
+        preserving the exact original value.
+        """
+
+        palette = DEFAULT_PALETTE
+        label = Typography.LABEL
+
+        return f"""
+        QLabel#badge {{
+            background-color: {palette.brand_primary};
+            color: {palette.text_primary};
+            border: none;
+            border-radius: 10px;
+            padding: {Spacing.XS}px {Spacing.MD}px;
+            font-size: {label.size}pt;
+            font-weight: {label.weight};
+        }}
+        """.strip()
+
+    def _key_value(self) -> str:
+        """
+        Key/value label pairs, migrated from the legacy
+        `QLabel#keyValueKey` / `QLabel#keyValueValue` selectors.
+        """
+
+        palette = DEFAULT_PALETTE
+        key = Typography.LABEL
+        value = Typography.BODY
+
+        return f"""
+        QLabel#keyValueKey {{
+            color: {palette.text_muted};
+            font-size: {key.size}pt;
+            font-weight: {key.weight};
+        }}
+
+        QLabel#keyValueValue {{
+            color: {palette.text_primary};
+            font-size: {value.size}pt;
+            font-weight: 600;
+        }}
+        """.strip()
+
+    def _dashboard_empty_state(self) -> str:
+        """
+        Empty-state placeholder shown on the dashboard, migrated
+        from the legacy `QLabel#dashboardEmptyState` selector.
+
+        Radius stays a literal 10px for the same reason as badge()
+        above — no exact Radius token exists for it.
+        """
+
+        palette = DEFAULT_PALETTE
+        body = Typography.BODY
+
+        return f"""
+        QLabel#dashboardEmptyState {{
+            background-color: {palette.surface_secondary};
+            border: 1px solid {palette.border_default};
+            border-radius: 10px;
+            padding: {Spacing.XL}px;
+            font-size: {body.size}pt;
+            color: {palette.text_muted};
+        }}
+        """.strip()
+
+    def _summary_card(self) -> str:
+        """
+        Dashboard summary/stat cards, migrated from the legacy
+        `QFrame#summaryCard` + child label selectors. Hover accent
+        and trend color now come from the brand/status tokens
+        instead of hardcoded hex.
+        """
+
+        palette = DEFAULT_PALETTE
+        title = Typography.LABEL
+        value = Typography.DISPLAY
+        subtitle = Typography.BODY
+        footer = Typography.CAPTION
+        trend = Typography.CAPTION
+
+        return f"""
+        QFrame#summaryCard {{
+            background-color: {palette.surface_elevated};
+            border: 1px solid {palette.border_subtle};
+            border-radius: {Radius.XXL}px;
+        }}
+
+        QFrame#summaryCard:hover {{
+            background-color: {palette.surface_secondary};
+            border: 1px solid {palette.brand_primary};
+        }}
+
+        QLabel#summaryCardTitle {{
+            font-size: {title.size}pt;
+            font-weight: 700;
+            color: {palette.text_secondary};
+            text-transform: uppercase;
+        }}
+
+        QLabel#summaryCardValue {{
+            font-size: {value.size}pt;
+            font-weight: 800;
+            color: {palette.text_primary};
+        }}
+
+        QLabel#summaryCardSubtitle {{
+            font-size: {subtitle.size}pt;
+            color: {palette.info};
+        }}
+
+        QLabel#summaryCardFooter {{
+            font-size: {footer.size}pt;
+            color: {palette.text_muted};
+        }}
+
+        QLabel#summaryCardTrend {{
+            font-size: {trend.size}pt;
+            font-weight: 600;
+            color: {palette.success};
+        }}
+        """.strip()
+
+    def _status_bar(self) -> str:
+        """
+        Application status bar, migrated from the legacy
+        `QStatusBar` selector.
+        """
+
+        palette = DEFAULT_PALETTE
+
+        return f"""
+        QStatusBar {{
+            background-color: {palette.background_secondary};
+            border-top: 1px solid {palette.border_default};
+        }}
+        """.strip()
+
+    def _stacked_widget(self) -> str:
+        """
+        Page-hosting stacked widget, migrated from the legacy
+        `QStackedWidget` selector.
+        """
+
+        palette = DEFAULT_PALETTE
+
+        return f"""
+        QStackedWidget {{
+            background-color: {palette.background_primary};
         }}
         """.strip()
 
@@ -248,6 +546,15 @@ class Stylesheet:
     def _toolbar(self) -> str:
         """
         Application toolbar.
+
+        Padding tightened from Spacing.SM/`10px` to Spacing.XS/
+        Spacing.SM (4px/8px) on both the bar and its buttons. The
+        toolbar's height is now pinned explicitly in
+        `MainWindow._create_tool_bar()` via `Spacing.TOOLBAR_HEIGHT`
+        and a reduced icon size; this padding reduction is the
+        matching QSS-level change so the "Analyze" band reads as an
+        intentional, compact bar rather than a large mostly-empty
+        one.
         """
 
         palette = DEFAULT_PALETTE
@@ -257,14 +564,14 @@ class Stylesheet:
             background-color: {palette.background_secondary};
             border: none;
             border-bottom: 1px solid {palette.border_default};
-            padding: 6px 10px;
-            spacing: 6px;
+            padding: {Spacing.XS}px {Spacing.SM}px;
+            spacing: {Spacing.XS}px;
         }}
 
         QToolBar QToolButton {{
             background: transparent;
             color: {palette.text_secondary};
-            padding: 6px 12px;
+            padding: {Spacing.XS}px {Spacing.SM}px;
             border-radius: 6px;
             border: 1px solid transparent;
         }}
