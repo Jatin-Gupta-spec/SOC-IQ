@@ -67,14 +67,6 @@ class InvestigationQueueWidget(ModernCard):
             self._model
         )
 
-        # BATCH 04: mirrors exactly what load_investigations() hands
-        # to self._model.set_investigations(), in the same order, so
-        # an activated row's *source* row index can be mapped back to
-        # the Investigation object it represents without depending on
-        # any undocumented data-role contract on InvestigationTableModel
-        # (which is out of scope for this batch).
-        self._investigations: list[Investigation] = []
-
         super().__init__()
 
         # BATCH 03B: Investigation Queue is the dominant workbench
@@ -322,16 +314,22 @@ class InvestigationQueueWidget(ModernCard):
         Resolve an activated proxy-model row to the Investigation it
         represents and emit investigation_activated.
 
-        Deliberately does not read the value back off the model via
-        a data role: InvestigationTableModel's data-role contract
-        isn't defined in the files in scope for this batch, so this
-        instead maps the activated row back through the proxy to a
-        *source* row index and indexes into self._investigations,
-        which was populated in the same order and from the same list
-        given to self._model.set_investigations() in
-        load_investigations(). If the table is ever resorted/filtered,
-        mapToSource() still returns the correct pre-sort/pre-filter
-        row, so this stays correct under both.
+        BATCH 06: this now maps the activated row back through the
+        proxy to a *source* row index and asks
+        InvestigationTableModel.investigation_at() for the
+        Investigation stored there, instead of indexing into a
+        second list mirrored on this widget. The mirrored list
+        (`self._investigations`, populated in `load_investigations()`)
+        was only ever a positional copy of what was handed to
+        `self._model.set_investigations()` -- it was never updated
+        when the model's *own* `sort()`/`filter()` reordered
+        `self._model._investigations` internally, so a sort or filter
+        happening after load could leave this widget's copy in a
+        different order than the model's authoritative one. Since
+        `investigation_at(row)` reads directly from the model's
+        current (post sort/filter) state, a source row index always
+        resolves to the Investigation actually shown at that row,
+        under every combination of sorting and filtering.
         """
 
         if not proxy_index.isValid():
@@ -339,15 +337,16 @@ class InvestigationQueueWidget(ModernCard):
 
         source_index = self._proxy.mapToSource(proxy_index)
 
-        row = source_index.row()
+        investigation = self._model.investigation_at(
+            source_index.row()
+        )
 
-        if not (0 <= row < len(self._investigations)):
+        if investigation is None:
             # Selected row no longer corresponds to loaded data
-            # (e.g. a refresh raced with the activation) -- do
-            # nothing rather than emit a stale/wrong investigation.
+            # (e.g. a refresh raced with the activation, or the row
+            # index fell out of range) -- do nothing rather than
+            # emit a stale/wrong investigation.
             return
-
-        investigation = self._investigations[row]
 
         self.investigation_activated.emit(investigation)
 
@@ -359,8 +358,6 @@ class InvestigationQueueWidget(ModernCard):
         """
         Clear queue.
         """
-
-        self._investigations = []
 
         self._model.set_investigations(
             []
@@ -377,11 +374,6 @@ class InvestigationQueueWidget(ModernCard):
         """
         Populate investigation queue.
         """
-
-        # BATCH 04: kept in lockstep with what's handed to the model
-        # so row-activation can resolve back to an Investigation --
-        # see _on_row_activated().
-        self._investigations = investigations
 
         self._model.set_investigations(
             investigations
