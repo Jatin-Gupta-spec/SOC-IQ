@@ -4,6 +4,7 @@ SOC-IQ analysis engine.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
@@ -20,22 +21,53 @@ from app.threat_intel.exceptions import MissingAPIKeyError
 from app.threat_intel.service import ThreatIntelService
 
 
+@dataclass(frozen=True)
+class AnalysisOptions:
+    """
+    User-selectable options for a single analysis run.
+
+    extract_iocs
+        When False, IOC extraction is skipped entirely and an empty
+        IOC representation -- one empty list per known IOC type,
+        derived from ``COMPILED_PATTERNS`` -- is used instead. This
+        mirrors the shape a genuine "nothing found" extraction would
+        produce, so downstream consumers (risk scoring, the
+        Investigation record) see a normal result rather than a
+        shape they'd need to special-case.
+
+    enrich_threat_intel
+        When False, the VirusTotal enrichment call is skipped
+        entirely and the existing degraded threat-intelligence shape
+        is used, with status/reason explicitly recording that the
+        analyst disabled the check -- distinct from the
+        ``"unavailable"`` cases below, where enrichment was
+        attempted and could not complete.
+    """
+
+    extract_iocs: bool = True
+    enrich_threat_intel: bool = True
+
+
 def analyze_report(
     report_path: Path,
     progress_callback: Callable[[int, str], None] | None = None,
+    options: AnalysisOptions | None = None,
 ) -> dict[str, Any]:
     """
     Analyze a malware report.
 
     Workflow:
     1. Read report
-    2. Extract IOCs
+    2. Extract IOCs (or use an empty representation if disabled)
     3. Check duplicate investigation
-    4. Enrich using VirusTotal
+    4. Enrich using VirusTotal (or skip if disabled)
     5. Calculate risk score
     6. Save investigation
     7. Return investigation
     """
+
+    if options is None:
+        options = AnalysisOptions()
 
     investigation_repository = (
         InvestigationRepository()
@@ -63,18 +95,35 @@ def analyze_report(
             "Extracting Indicators of Compromise...",
         )
 
-    logger.info(
-        "Extracting IOCs."
-    )
+    if options.extract_iocs:
 
-    extracted_iocs = extract_iocs(
-        report_text,
-        COMPILED_PATTERNS,
-    )
+        logger.info(
+            "Extracting IOCs."
+        )
 
-    logger.info(
-        "IOC extraction completed."
-    )
+        extracted_iocs = extract_iocs(
+            report_text,
+            COMPILED_PATTERNS,
+        )
+
+        logger.info(
+            "IOC extraction completed."
+        )
+
+    else:
+
+        logger.info(
+            "IOC extraction skipped by user selection."
+        )
+
+        # Same shape a genuine zero-hit extraction would produce --
+        # one empty list per known IOC type -- rather than a
+        # differently-shaped stand-in downstream code would need to
+        # special-case.
+        extracted_iocs = {
+            ioc_type: []
+            for ioc_type in COMPILED_PATTERNS
+        }
 
     if progress_callback is not None:
 
@@ -130,58 +179,78 @@ def analyze_report(
         "reason": "not_attempted",
     }
 
-    try:
+    if not options.enrich_threat_intel:
 
-        with ThreatIntelService() as service:
-
-            logger.info(
-                "Starting threat intelligence enrichment."
-            )
-
-            if progress_callback is not None:
-
-                progress_callback(
-                    60,
-                    "Running Threat Intelligence...",
-                )
-
-            threat_intelligence = (
-                service.enrich_results(
-                    extracted_iocs,
-                )
-            )
-
-            logger.info(
-                "Threat intelligence enrichment completed "
-                "(status=%s).",
-                threat_intelligence.get("status"),
-            )
-
-    except MissingAPIKeyError:
-
-        logger.warning(
-            "VirusTotal API key not configured. "
-            "Skipping enrichment."
+        logger.info(
+            "Threat intelligence enrichment skipped by user "
+            "selection."
         )
 
+        # Distinct from "unavailable": nothing was attempted
+        # because the analyst chose not to check, not because the
+        # check failed or a key was missing. Collapsing this into
+        # "unavailable" would misrepresent an intentional skip as
+        # a failure.
         threat_intelligence = {
             "hashes": [],
-            "status": "unavailable",
-            "reason": "missing_api_key",
+            "status": "skipped",
+            "reason": "disabled_by_user",
         }
 
-    except Exception as error:
+    else:
 
-        logger.exception(
-            "Threat intelligence failed: %s",
-            error,
-        )
+        try:
 
-        threat_intelligence = {
-            "hashes": [],
-            "status": "unavailable",
-            "reason": "error",
-        }
+            with ThreatIntelService() as service:
+
+                logger.info(
+                    "Starting threat intelligence enrichment."
+                )
+
+                if progress_callback is not None:
+
+                    progress_callback(
+                        60,
+                        "Running Threat Intelligence...",
+                    )
+
+                threat_intelligence = (
+                    service.enrich_results(
+                        extracted_iocs,
+                    )
+                )
+
+                logger.info(
+                    "Threat intelligence enrichment completed "
+                    "(status=%s).",
+                    threat_intelligence.get("status"),
+                )
+
+        except MissingAPIKeyError:
+
+            logger.warning(
+                "VirusTotal API key not configured. "
+                "Skipping enrichment."
+            )
+
+            threat_intelligence = {
+                "hashes": [],
+                "status": "unavailable",
+                "reason": "missing_api_key",
+            }
+
+        except Exception as error:
+
+            logger.exception(
+                "Threat intelligence failed: %s",
+                error,
+            )
+
+            threat_intelligence = {
+                "hashes": [],
+                "status": "unavailable",
+                "reason": "error",
+            }
 
     if progress_callback is not None:
 

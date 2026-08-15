@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
-from app.analyzer import analyze_report
+from app.analyzer import AnalysisOptions, analyze_report
 
 
 class AnalysisService:
@@ -27,6 +27,7 @@ class AnalysisService:
         self,
         report_path: Path,
         progress_callback: Callable[[int, str], None] | None = None,
+        options: AnalysisOptions | None = None,
     ) -> dict[str, Any]:
         """
         Analyze a malware report.
@@ -35,6 +36,9 @@ class AnalysisService:
         ----------
         report_path
             Path to the report selected by the user.
+        options
+            User-selected analysis options (IOC extraction, VirusTotal
+            enrichment). Defaults to both enabled when omitted.
 
         Returns
         -------
@@ -53,4 +57,5 @@ class AnalysisService:
         return analyze_report(
             report_path,
             progress_callback=progress_callback,
+            options=options,
         )

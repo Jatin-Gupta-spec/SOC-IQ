@@ -12,6 +12,7 @@ from typing import Any
 
 from PySide6.QtCore import QObject, Signal, Slot
 
+from app.analyzer import AnalysisOptions
 from app.gui.controllers.analyze_controller import (
     AnalyzeController,
 )
@@ -23,14 +24,15 @@ class AnalysisWorker(QObject):
     """
     Executes report analysis in a background thread.
 
-    Each instance is bound to a single ``report_path`` and is meant
-    to be run exactly once. Nothing in the surrounding thread/signal
-    wiring (owned outside this file, e.g. by the page that creates
-    the ``QThread``) is visible here, so this class defends itself
-    against being entered twice for the same instance — e.g. because
-    of a duplicate ``started``/``run`` signal connection — since that
-    would otherwise emit ``started``/``finished``/``failed`` twice
-    and could trigger duplicate downstream side effects (persistence,
+    Each instance is bound to a single ``report_path`` (and a fixed
+    set of ``options``) and is meant to be run exactly once. Nothing
+    in the surrounding thread/signal wiring (owned outside this
+    file, e.g. by the page that creates the ``QThread``) is visible
+    here, so this class defends itself against being entered twice
+    for the same instance — e.g. because of a duplicate
+    ``started``/``run`` signal connection — since that would
+    otherwise emit ``started``/``finished``/``failed`` twice and
+    could trigger duplicate downstream side effects (persistence,
     investigation creation) via the controller.
     """
 
@@ -48,10 +50,12 @@ class AnalysisWorker(QObject):
     def __init__(
         self,
         report_path: str,
+        options: AnalysisOptions | None = None,
     ) -> None:
         super().__init__()
 
         self._report_path = report_path
+        self._options = options
 
         self._controller = AnalyzeController()
 
@@ -83,6 +87,7 @@ class AnalysisWorker(QObject):
                 self._controller.analyze(
                     self._report_path,
                     progress_callback=self.progress_changed.emit,
+                    options=self._options,
                 )
             )
 

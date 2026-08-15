@@ -11,6 +11,7 @@ import logging
 from pathlib import Path
 from typing import Any, Callable
 
+from app.analyzer import AnalysisOptions
 from app.gui.services.analysis_service import (
     AnalysisService,
 )
@@ -41,6 +42,7 @@ class AnalyzeController:
         self,
         report_path: str,
         progress_callback: Callable[[int, str], None] | None = None,
+        options: AnalysisOptions | None = None,
     ) -> dict[str, Any]:
         """
         Analyze the selected report.
@@ -49,6 +51,9 @@ class AnalyzeController:
         ----------
         report_path
             Path to the selected report.
+        options
+            User-selected analysis options (IOC extraction, VirusTotal
+            enrichment). Defaults to both enabled when omitted.
 
         Returns
         -------
@@ -83,6 +88,7 @@ class AnalyzeController:
         return self._analysis_service.analyze(
             Path(report_path),
             progress_callback=progress_callback,
+            options=options,
         )
 
     def validate_report(
