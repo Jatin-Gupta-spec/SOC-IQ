@@ -4,12 +4,13 @@ Investigation history page for the SOC-IQ desktop application.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QModelIndex
+from PySide6.QtCore import QModelIndex, Qt
 from PySide6.QtWidgets import (
     QFileDialog,
     QMessageBox,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QLineEdit,
     QPushButton,
     QTableView,
@@ -17,6 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.gui.components.layout.component_section import ComponentSection
 from app.gui.controllers.history_controller import HistoryController
 from app.gui.events.application_state import ApplicationState
 from app.gui.events.event_bus import event_bus
@@ -30,7 +32,6 @@ from app.gui.widgets.investigation_statistics_widget import (
     InvestigationStatisticsWidget,
 )
 from app.gui.widgets.page_container import PageContainer
-from app.gui.widgets.section_header import SectionHeader
 
 
 class HistoryPage(QWidget):
@@ -65,11 +66,43 @@ class HistoryPage(QWidget):
             InvestigationStatisticsWidget()
         )
 
+        # Shown in place of the table when there are zero rows to
+        # display -- either because the database has no investigations
+        # yet, or because the current search text matches nothing.
+        # Previously this state rendered as a bare, blank table grid,
+        # which is indistinguishable from "the page is still loading"
+        # or "something broke" to an analyst.
+        self._empty_state_label = QLabel()
+        self._empty_state_label.setAlignment(
+            Qt.AlignmentFlag.AlignCenter,
+        )
+        self._empty_state_label.setWordWrap(True)
+        self._empty_state_label.hide()
+
         self._container = PageContainer(
             title="Investigation History",
             description=(
                 "Browse investigations stored in the "
                 "SOC-IQ database."
+            ),
+        )
+
+        # Previously this page's "Recent Investigations" heading was
+        # a bare SectionHeader added directly to the page layout,
+        # with the toolbar/stats/table added as page-level siblings
+        # underneath it. Every other page (IOC Viewer, Risk
+        # Dashboard, Threat Intel, Settings) instead wraps its
+        # content inside a ComponentSection, which owns the header
+        # AND the spacing to its content via add_widget()/
+        # add_layout(). ComponentSection already builds its header
+        # from the same title/description constructor shape, so this
+        # is a drop-in swap that brings History in line with the
+        # rest of the app's section composition.
+        self._section = ComponentSection(
+            title="Recent Investigations",
+            description=(
+                "Latest completed investigations "
+                "stored in the database."
             ),
         )
 
@@ -86,16 +119,6 @@ class HistoryPage(QWidget):
 
         layout = self._container.content_layout()
 
-        layout.addWidget(
-            SectionHeader(
-                "Recent Investigations",
-                (
-                    "Latest completed investigations "
-                    "stored in the database."
-                ),
-            )
-        )
-
         toolbar_layout = QHBoxLayout()
 
         toolbar_layout.addWidget(
@@ -106,11 +129,11 @@ class HistoryPage(QWidget):
             self._export_button,
         )
 
-        layout.addLayout(
+        self._section.add_layout(
             toolbar_layout,
         )
 
-        layout.addWidget(
+        self._section.add_widget(
             self._statistics_widget,
         )
 
@@ -150,8 +173,16 @@ class HistoryPage(QWidget):
             QHeaderView.ResizeMode.ResizeToContents,
         )
 
-        layout.addWidget(
+        self._section.add_widget(
             self._table,
+        )
+
+        self._section.add_widget(
+            self._empty_state_label,
+        )
+
+        layout.addWidget(
+            self._section,
         )
 
         root_layout = QVBoxLayout()
@@ -221,8 +252,37 @@ class HistoryPage(QWidget):
         """
 
         self._model.filter(
-        text,
-    )
+            text,
+        )
+
+        self._update_empty_state()
+
+    def _update_empty_state(self) -> None:
+        """
+        Show a message in place of the table when it has zero
+        rows, and distinguish "no investigations exist yet" from
+        "no investigations match the current search" so the
+        analyst knows whether to clear the search box or run an
+        investigation.
+        """
+
+        has_rows = self._model.rowCount() > 0
+
+        self._table.setVisible(has_rows)
+        self._empty_state_label.setVisible(not has_rows)
+
+        if has_rows:
+            return
+
+        if self._search_box.text().strip():
+            self._empty_state_label.setText(
+                "No investigations match your search."
+            )
+        else:
+            self._empty_state_label.setText(
+                "No investigations yet. Completed investigations "
+                "will appear here."
+            )
 
     def _export_csv(
         self,
@@ -321,5 +381,7 @@ class HistoryPage(QWidget):
         )
 
         self._model.filter(
-        self._search_box.text(),
-    )
+            self._search_box.text(),
+        )
+
+        self._update_empty_state()

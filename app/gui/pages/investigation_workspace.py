@@ -22,7 +22,6 @@ from app.gui.events.application_state import ApplicationState
 from app.gui.events.event_bus import event_bus
 from app.gui.widgets.detail_section import DetailSection
 from app.gui.widgets.investigation_header_card import InvestigationHeaderCard
-from app.gui.widgets.investigation_metrics_widget import InvestigationMetricsWidget
 from app.gui.widgets.investigation_timeline_widget import InvestigationTimelineWidget
 from app.gui.widgets.ioc_details_widget import IOCDetailsWidget
 from app.gui.widgets.ioc_summary_widget import IOCSummaryWidget
@@ -56,11 +55,24 @@ class InvestigationWorkspacePage(QWidget):
         self._tab_widget = QTabWidget()
 
         # Section Widgets
+        #
+        # `InvestigationMetricsWidget` ("Scoring & Metrics") was
+        # previously built and shown here as its own Overview
+        # section. Its four rows (Confidence, IOC Score, Threat
+        # Intelligence, CVE Score) are an exact subset of what
+        # `RiskSummaryWidget` ("Risk Assessment") already displays
+        # -- so the Overview tab showed the same four numbers
+        # twice, back-to-back, with no additional information the
+        # second time. `RiskSummaryWidget` alone (Risk Score,
+        # Severity, Confidence, IOC Score, Threat Intelligence, CVE
+        # Score, plus the gauge) already covers everything a
+        # "Scoring & Metrics" section would have added, so that
+        # section and widget are removed here rather than kept as
+        # dead duplication.
         self._ioc_summary_widget = IOCSummaryWidget()
         self._ioc_details_widget = IOCDetailsWidget()
         self._threat_summary_widget = ThreatIntelligenceWidget()
         self._risk_summary_widget = RiskSummaryWidget()
-        self._metrics_widget = InvestigationMetricsWidget()
         self._timeline_widget = InvestigationTimelineWidget()
 
         self._build_ui()
@@ -86,10 +98,6 @@ class InvestigationWorkspacePage(QWidget):
         risk_sec = DetailSection("Risk Assessment", "Overall investigation risk posture.")
         risk_sec.add_widget(self._risk_summary_widget)
         overview_layout.addWidget(risk_sec)
-
-        metrics_sec = DetailSection("Scoring & Metrics", "Detailed threat calculation breakdown.")
-        metrics_sec.add_widget(self._metrics_widget)
-        overview_layout.addWidget(metrics_sec)
 
         timeline_sec = DetailSection("Investigation Timeline", "Chronological event logs.")
         timeline_sec.add_widget(self._timeline_widget)
@@ -171,7 +179,6 @@ class InvestigationWorkspacePage(QWidget):
         self._ioc_details_widget.reset()
         self._threat_summary_widget.reset()
         self._risk_summary_widget.reset()
-        self._metrics_widget.reset()
         self._timeline_widget.reset()
 
     def load_investigation(self, investigation: Investigation) -> None:
@@ -183,7 +190,6 @@ class InvestigationWorkspacePage(QWidget):
         self._ioc_details_widget.reset()
         self._threat_summary_widget.load_investigation(investigation)
         self._risk_summary_widget.load_investigation(investigation)
-        self._metrics_widget.load_investigation(investigation)
         self._timeline_widget.load_investigation(investigation)
 
     def refresh(self) -> None:

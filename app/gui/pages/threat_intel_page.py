@@ -7,10 +7,11 @@ and threat actor intelligence tracking.
 
 from __future__ import annotations
 
+import html
 import logging
 import re
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -211,10 +212,20 @@ class ThreatIntelPage(QWidget):
         self._res_title.setFont(fonts.title())
         self._res_title.setStyleSheet(f"color: {palette.text_primary}; font-weight: 600;")
 
-        self._res_detail = QLabel("Enter a SHA256 hash above and click 'Query Indicator' to retrieve live VirusTotal threat telemetry.")
+        self._res_detail = QLabel(
+            "Enter a SHA256 hash above and click 'Query Indicator' to "
+            "retrieve live VirusTotal threat telemetry."
+        )
         self._res_detail.setFont(fonts.body())
         self._res_detail.setStyleSheet(f"color: {palette.text_secondary};")
         self._res_detail.setWordWrap(True)
+
+        # Result lines are rendered as rich text below so malicious /
+        # suspicious counts can be color-emphasized -- a SOC analyst
+        # scanning many lookups needs the hit count to jump out, not
+        # to be read line-by-line against harmless/undetected counts
+        # in identical styling.
+        self._res_detail.setTextFormat(Qt.TextFormat.RichText)
 
         res_layout.addWidget(self._res_title)
         res_layout.addWidget(self._res_detail)
@@ -318,6 +329,7 @@ class ThreatIntelPage(QWidget):
 
         if self._vt_client is None:
             self._res_title.setText("VirusTotal Not Configured")
+            self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
             self._res_detail.setText(
                 "No VirusTotal API key is configured. Add one on "
                 "the Settings page to enable live reputation lookups."
@@ -334,6 +346,7 @@ class ThreatIntelPage(QWidget):
             # only exposes `lookup_sha256`), so anything else is
             # now reported honestly as unsupported instead of faked.
             self._res_title.setText("Unsupported Indicator Type")
+            self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
             self._res_detail.setText(
                 "Live lookups currently support SHA256 file hashes "
                 "only. IP address, domain, and URL reputation "
@@ -345,6 +358,7 @@ class ThreatIntelPage(QWidget):
         self._search_input.setEnabled(False)
 
         self._res_title.setText(f"Threat Intelligence Report: {query}")
+        self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
         self._res_detail.setText("Querying VirusTotal...")
 
         # Deliberately not parented to `self`: if this page is torn
@@ -402,22 +416,47 @@ class ThreatIntelPage(QWidget):
         if self._is_destroyed:
             return
 
+        palette = self._result_card.theme.palette
+        sha256 = html.escape(str(result.get("sha256", "")))
+
         if not result.get("found", False):
+            self._res_detail.setTextFormat(Qt.TextFormat.RichText)
             self._res_detail.setText(
-                f"Indicator: {result['sha256']}\n"
+                f"Indicator: {sha256}<br>"
                 "Status: Not found in VirusTotal."
             )
             return
 
+        malicious = result["malicious"]
+        suspicious = result["suspicious"]
+
+        # Emphasize the numbers an analyst actually needs to react
+        # to. A malicious/suspicious count of zero stays in the
+        # normal text color; a nonzero count is bolded and colored
+        # using the existing severity palette so it reads as a hit
+        # at a glance instead of blending into harmless/undetected.
+        malicious_color = (
+            palette.severity_critical if malicious > 0 else palette.text_secondary
+        )
+        suspicious_color = (
+            palette.severity_medium if suspicious > 0 else palette.text_secondary
+        )
+
+        permalink = html.escape(str(result["permalink"]))
+
+        self._res_detail.setTextFormat(Qt.TextFormat.RichText)
         self._res_detail.setText(
-            f"Indicator: {result['sha256']}\n"
-            f"Malicious: {result['malicious']}\n"
-            f"Suspicious: {result['suspicious']}\n"
-            f"Harmless: {result['harmless']}\n"
-            f"Undetected: {result['undetected']}\n"
-            f"Reputation: {result['reputation']}\n"
-            f"Last Analysis: {result['last_analysis_date']}\n"
-            f"Permalink: {result['permalink']}"
+            f"Indicator: {sha256}<br>"
+            f"<span style='color:{malicious_color}; font-weight:700;'>"
+            f"Malicious: {malicious}</span><br>"
+            f"<span style='color:{suspicious_color}; font-weight:700;'>"
+            f"Suspicious: {suspicious}</span><br>"
+            f"Harmless: {result['harmless']}<br>"
+            f"Undetected: {result['undetected']}<br>"
+            f"Reputation: {result['reputation']}<br>"
+            f"Last Analysis: {html.escape(str(result['last_analysis_date']))}<br>"
+            f"Permalink: <a href='{permalink}' style='color:{palette.text_secondary};'>"
+            f"{permalink}</a>"
         )
 
     def _on_lookup_failed(self, message: str) -> None:
@@ -429,4 +468,5 @@ class ThreatIntelPage(QWidget):
             return
 
         self._res_title.setText("Query Failed")
+        self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
         self._res_detail.setText(message)
