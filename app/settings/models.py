@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from app.config import EXPORTS_DIR
+
 
 @dataclass(slots=True)
 class ApplicationSettings:
@@ -30,9 +32,7 @@ class ApplicationSettings:
 
     virustotal_api_key: str = ""
 
-    export_directory: str = str(
-        Path("output").resolve()
-    )
+    export_directory: str = str(EXPORTS_DIR.resolve())
 
     theme: str = "Dark Mode (SOC-IQ Standard)"
 

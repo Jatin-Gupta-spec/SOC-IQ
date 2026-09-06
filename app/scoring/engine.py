@@ -195,45 +195,54 @@ class RiskScoringEngine:
  
         return score
  
-    def _calculate_threat_intel_score(
+    # Threat intel consumer categories. All four enrichable IOC
+    # categories are scored identically to the original hash-only
+    # behavior -- this is a parity fix (Phase 3E), not a new
+    # scoring formula.
+    TI_CATEGORIES: tuple[str, ...] = (
+        "hashes",
+        "ips",
+        "domains",
+        "urls",
+    )
+
+    def _score_threat_intel_records(
         self,
-        threat_intelligence: dict[str, Any],
+        records: list[dict[str, Any]],
     ) -> int:
         """
-        Calculate the threat intelligence
-        contribution.
+        Calculate the score contribution for a single
+        threat-intelligence category's list of records.
+
+        This is the same per-record formula previously applied
+        only to `threat_intelligence["hashes"]`.
         """
- 
+
         score = 0
- 
-        hashes = threat_intelligence.get(
-            "hashes",
-            [],
-        )
- 
-        for result in hashes:
- 
+
+        for result in records:
+
             malicious = int(
                 result.get(
                     "malicious",
                     0,
                 )
             )
- 
+
             suspicious = int(
                 result.get(
                     "suspicious",
                     0,
                 )
             )
- 
+
             reputation = result.get(
                 "reputation",
             )
- 
+
             score += malicious * 5
             score += suspicious * 2
- 
+
             if (
                 reputation is not None
                 and reputation < 0
@@ -241,14 +250,46 @@ class RiskScoringEngine:
                 score += abs(
                     reputation
                 )
- 
+
+        return score
+
+    def _calculate_threat_intel_score(
+        self,
+        threat_intelligence: dict[str, Any],
+    ) -> int:
+        """
+        Calculate the threat intelligence
+        contribution.
+
+        Consumes all four enrichable TI categories (hashes, ips,
+        domains, urls) so that a malicious IP/domain/URL
+        contributes to the threat-intel score just as a malicious
+        SHA256 already did. Each record is scored once, in
+        whichever single category it appears under -- there is no
+        cross-category double counting because ThreatIntelService
+        stores each enriched value under exactly one category.
+        """
+
+        score = 0
+
+        for category in self.TI_CATEGORIES:
+
+            records = threat_intelligence.get(
+                category,
+                [],
+            )
+
+            score += self._score_threat_intel_records(
+                records,
+            )
+
         logger.debug(
             "Threat Intelligence score: %d",
             score,
         )
- 
+
         return score
- 
+
     def _calculate_cve_score(
         self,
         iocs: dict[str, list[str]],

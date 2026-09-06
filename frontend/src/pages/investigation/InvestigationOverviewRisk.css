@@ -1,0 +1,100 @@
+.investigation-overview-risk__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.investigation-overview-risk__severity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.investigation-overview-risk__severity-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* PD-08-P2 — Risk Explanation. Reuses `--space-*`/`--color-*`/
+   `--font-size-*` tokens exclusively, matching this file's own
+   pre-existing rule (no new visual system). */
+
+.investigation-overview-risk__explanation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-default);
+}
+
+.investigation-overview-risk__explanation-heading {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.investigation-overview-risk__narrative {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.investigation-overview-risk__narrative-line {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Same bordered-box treatment `InvestigationOverviewTimeline`'s own
+   items already establish -- reused here rather than inventing a
+   second table container style. */
+.investigation-overview-risk__breakdown {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-body);
+}
+
+.investigation-overview-risk__breakdown-caption {
+  text-align: left;
+  padding-bottom: var(--space-xs);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.investigation-overview-risk__breakdown th,
+.investigation-overview-risk__breakdown td {
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border-default);
+  color: var(--color-text-primary);
+}
+
+.investigation-overview-risk__breakdown thead th {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.investigation-overview-risk__explanation-warnings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

@@ -39,3 +39,8 @@ class InvestigationReport:
     iocs: dict[str, list[str]]
 
     threat_intelligence: dict[str, Any]
+
+    # Optional so existing call sites and tests that construct an
+    # InvestigationReport without an investigation_id (e.g. reports
+    # built outside the database-backed workflow) keep working.
+    investigation_id: int | None = None

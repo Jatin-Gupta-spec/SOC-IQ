@@ -1,0 +1,36 @@
+{
+  "name": "soc-iq-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "SOC-IQ React + TypeScript frontend (Tauri desktop shell). Dashboard, Analyze, Investigations, Investigation Workspace, Reports, and Settings' Appearance/Export Directory/Integrations controls are real, backend-integrated. Settings additionally retains a clearly-labeled, read-only mock section (Application/Notifications/Security/Density) that saves nothing, by explicit design (see SettingsPage.tsx). There is no standalone Risk page or route -- risk is real and backend-scored, surfaced only inside the Investigation Workspace (InvestigationOverviewRisk.tsx). Per PD-05, the former top-level IOC Explorer and Threat Intel mock pages have been retired from primary navigation; real, investigation-scoped IOC and Threat Intel views remain available inside the Investigation Workspace.",
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.1.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-fs": "^2.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^30.0.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^4.1.11"
+  }
+}

@@ -8,7 +8,7 @@ Provides timeline events for the dashboard.
 from __future__ import annotations
 
 from app.database.service import InvestigationService
-from app.gui.components.timeline.timeline_widget import TimelineEvent
+from app.services.models import TimelineEvent
 
 
 class DashboardTimelineService:

@@ -3,15 +3,30 @@ Threat Intelligence Page for the SOC-IQ desktop application.
 
 Provides indicator reputation lookups, VirusTotal enrichment searches,
 and threat actor intelligence tracking.
+
+Phase 4C, Stage 2
+(`docs/phase4/PHASE4C_THREAT_INTEL_ARCHITECTURE.md` SS13/SS14): this
+page no longer constructs `VirusTotalClient` directly. It goes
+through `ThreatIntelService` -- the same provider-backed abstraction
+`app/analyzer.py`'s bulk enrichment uses -- via
+`ThreatIntelService.lookup_indicator()`, which returns the same
+VT-shaped, verdict-annotated dict `VirusTotalClient.lookup_*` always
+returned (see that method's docstring for why: the raw
+malicious/suspicious/harmless/undetected/reputation/
+last_analysis_date/permalink breakdown this page displays has no
+lossless home in the provider-neutral `ProviderResult` model, so the
+service resolves that through `VirusTotalProvider`'s VT-specific
+`lookup_raw()` escape hatch rather than the general
+`ThreatIntelProvider` protocol). The concrete `VirusTotalClient`
+stays behind that boundary; this module has no import of it anymore.
 """
 
 from __future__ import annotations
 
-import html
 import logging
 import re
 
-from PySide6.QtCore import QObject, Qt, QThread, Signal
+from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -29,7 +44,7 @@ from app.gui.components.layout.component_section import ComponentSection
 from app.gui.design.tokens import Spacing
 from app.gui.events.application_events import events
 from app.gui.widgets.page_container import PageContainer
-from app.threat_intel.virustotal import VirusTotalClient
+from app.threat_intel.service import ThreatIntelService
 
 logger = logging.getLogger(__name__)
 
@@ -39,39 +54,51 @@ logger = logging.getLogger(__name__)
 # another module's underscore-prefixed implementation detail
 # is itself a maintainability smell.
 _SHA256_PATTERN = re.compile(r"^[A-Fa-f0-9]{64}$")
+_IPV4_PATTERN = re.compile(
+    r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
+    r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+)
+_DOMAIN_PATTERN = re.compile(
+    r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+"
+    r"[a-zA-Z]{2,}$"
+)
+_URL_PATTERN = re.compile(r"^https?://")
 
 
 class _VirusTotalLookupWorker(QObject):
     """
-    Executes a single VirusTotal SHA256 lookup on a
-    background thread so a network call never blocks the
-    GUI event loop.
+    Executes a single indicator lookup on a background thread so a
+    network call never blocks the GUI event loop.
+
+    Dispatches through `ThreatIntelService.lookup_indicator()`
+    (Stage 2) rather than calling a `VirusTotalClient` method
+    directly -- see this module's docstring. `lookup_indicator`
+    itself does the `query_type` -> lookup dispatch and raises on
+    failure exactly as the old direct `VirusTotalClient.lookup_*`
+    calls did, so this worker's own dispatch/error handling is
+    unchanged.
     """
 
     finished = Signal(dict)
     failed = Signal(str)
 
-    def __init__(self, client: VirusTotalClient, sha256: str) -> None:
+    def __init__(self, service: ThreatIntelService, query: str, query_type: str) -> None:
         super().__init__()
 
-        self._client = client
-        self._sha256 = sha256
+        self._service = service
+        self._query = query
+        self._query_type = query_type
 
     def run(self) -> None:
-
         try:
-
-            result = self._client.lookup_sha256(self._sha256)
+            result = self._service.lookup_indicator(self._query_type, self._query)
 
         except Exception as error:
-
             logger.exception(
                 "VirusTotal lookup failed for '%s'.",
-                self._sha256,
+                self._query,
             )
-
             self.failed.emit(str(error))
-
             return
 
         self.finished.emit(result)
@@ -85,17 +112,21 @@ class ThreatIntelPage(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self._vt_client: VirusTotalClient | None = None
+        # Holds a `ThreatIntelService` (Stage 2), or `None` when no
+        # provider is configured -- the attribute name is kept from
+        # before Stage 2's migration off `VirusTotalClient`, since
+        # this page's provider today is still VirusTotal-only.
+        self._vt_client: ThreatIntelService | None = None
         self._init_vt_client()
 
         self._thread: QThread | None = None
         self._worker: _VirusTotalLookupWorker | None = None
 
-        # A client that was swapped out by `_on_settings_changed`
+        # A service that was swapped out by `_on_settings_changed`
         # while a lookup was still in flight on it. Closed once that
         # lookup finishes rather than immediately -- see
         # `_on_settings_changed` for why.
-        self._pending_client_close: VirusTotalClient | None = None
+        self._pending_client_close: ThreatIntelService | None = None
 
         # Set once this page is torn down, so any callback that was
         # already queued from a background thread (lookup finished/
@@ -141,15 +172,21 @@ class ThreatIntelPage(QWidget):
 
     def _init_vt_client(self) -> None:
         """
-        (Re)build the VirusTotal client from current settings.
+        (Re)build the threat intel service from current settings.
+
+        `ThreatIntelService()`'s default `VirusTotalProvider` is
+        lazily configured -- unlike the old direct
+        `VirusTotalClient()` construction, building it never raises
+        just because no API key is set yet, so configuration is
+        checked explicitly via `is_configured()` instead of via a
+        try/except around construction.
         """
 
-        try:
+        service = ThreatIntelService()
 
-            self._vt_client = VirusTotalClient()
-
-        except Exception:
-
+        if service.is_configured():
+            self._vt_client = service
+        else:
             logger.warning(
                 "VirusTotal client unavailable — no valid "
                 "API key is configured."
@@ -180,7 +217,7 @@ class ThreatIntelPage(QWidget):
         search_box = QHBoxLayout()
         search_box.setSpacing(Spacing.MD)
 
-        self._search_input.setPlaceholderText("e.g. a SHA256 file hash...")
+        self._search_input.setPlaceholderText("e.g. SHA256, IP, Domain, or URL")
         search_box.addWidget(self._search_input, 4)
         search_box.addWidget(self._search_btn, 1)
 
@@ -212,20 +249,10 @@ class ThreatIntelPage(QWidget):
         self._res_title.setFont(fonts.title())
         self._res_title.setStyleSheet(f"color: {palette.text_primary}; font-weight: 600;")
 
-        self._res_detail = QLabel(
-            "Enter a SHA256 hash above and click 'Query Indicator' to "
-            "retrieve live VirusTotal threat telemetry."
-        )
+        self._res_detail = QLabel("Enter a SHA256, IPv4, Domain, or URL above and click 'Query Indicator' to retrieve live VirusTotal threat telemetry.")
         self._res_detail.setFont(fonts.body())
         self._res_detail.setStyleSheet(f"color: {palette.text_secondary};")
         self._res_detail.setWordWrap(True)
-
-        # Result lines are rendered as rich text below so malicious /
-        # suspicious counts can be color-emphasized -- a SOC analyst
-        # scanning many lookups needs the hit count to jump out, not
-        # to be read line-by-line against harmless/undetected counts
-        # in identical styling.
-        self._res_detail.setTextFormat(Qt.TextFormat.RichText)
 
         res_layout.addWidget(self._res_title)
         res_layout.addWidget(self._res_detail)
@@ -329,28 +356,27 @@ class ThreatIntelPage(QWidget):
 
         if self._vt_client is None:
             self._res_title.setText("VirusTotal Not Configured")
-            self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
             self._res_detail.setText(
                 "No VirusTotal API key is configured. Add one on "
                 "the Settings page to enable live reputation lookups."
             )
             return
 
-        if not _SHA256_PATTERN.fullmatch(query):
-            # Previously ANY input — including garbage — produced
-            # a hardcoded, fabricated "42 / 70 vendors flagged
-            # malicious" result. Showing invented threat
-            # intelligence in a SOC tool is actively dangerous:
-            # an analyst could act on it. Only SHA256 lookups are
-            # wired to a real backend today (VirusTotalClient
-            # only exposes `lookup_sha256`), so anything else is
-            # now reported honestly as unsupported instead of faked.
+        query_type = None
+        if _SHA256_PATTERN.fullmatch(query):
+            query_type = "sha256"
+        elif _IPV4_PATTERN.fullmatch(query):
+            query_type = "ipv4"
+        elif _DOMAIN_PATTERN.fullmatch(query):
+            query_type = "domain"
+        elif _URL_PATTERN.match(query):
+            query_type = "url"
+
+        if not query_type:
             self._res_title.setText("Unsupported Indicator Type")
-            self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
             self._res_detail.setText(
-                "Live lookups currently support SHA256 file hashes "
-                "only. IP address, domain, and URL reputation "
-                "lookups are not yet implemented."
+                "Live lookups currently support SHA256, IPv4, domains, and URLs. "
+                "Other indicator types are not supported."
             )
             return
 
@@ -358,7 +384,6 @@ class ThreatIntelPage(QWidget):
         self._search_input.setEnabled(False)
 
         self._res_title.setText(f"Threat Intelligence Report: {query}")
-        self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
         self._res_detail.setText("Querying VirusTotal...")
 
         # Deliberately not parented to `self`: if this page is torn
@@ -370,7 +395,7 @@ class ThreatIntelPage(QWidget):
         # the `_is_destroyed` guard keeps its completion callbacks
         # from touching widgets that may already be gone.
         self._thread = QThread()
-        self._worker = _VirusTotalLookupWorker(self._vt_client, query)
+        self._worker = _VirusTotalLookupWorker(self._vt_client, query, query_type)
         self._worker.moveToThread(self._thread)
 
         self._thread.started.connect(self._worker.run)
@@ -416,47 +441,24 @@ class ThreatIntelPage(QWidget):
         if self._is_destroyed:
             return
 
-        palette = self._result_card.theme.palette
-        sha256 = html.escape(str(result.get("sha256", "")))
+        indicator_value = result.get("sha256") or result.get("ip") or result.get("domain") or result.get("url") or "Unknown"
 
         if not result.get("found", False):
-            self._res_detail.setTextFormat(Qt.TextFormat.RichText)
             self._res_detail.setText(
-                f"Indicator: {sha256}<br>"
+                f"Indicator: {indicator_value}\n"
                 "Status: Not found in VirusTotal."
             )
             return
 
-        malicious = result["malicious"]
-        suspicious = result["suspicious"]
-
-        # Emphasize the numbers an analyst actually needs to react
-        # to. A malicious/suspicious count of zero stays in the
-        # normal text color; a nonzero count is bolded and colored
-        # using the existing severity palette so it reads as a hit
-        # at a glance instead of blending into harmless/undetected.
-        malicious_color = (
-            palette.severity_critical if malicious > 0 else palette.text_secondary
-        )
-        suspicious_color = (
-            palette.severity_medium if suspicious > 0 else palette.text_secondary
-        )
-
-        permalink = html.escape(str(result["permalink"]))
-
-        self._res_detail.setTextFormat(Qt.TextFormat.RichText)
         self._res_detail.setText(
-            f"Indicator: {sha256}<br>"
-            f"<span style='color:{malicious_color}; font-weight:700;'>"
-            f"Malicious: {malicious}</span><br>"
-            f"<span style='color:{suspicious_color}; font-weight:700;'>"
-            f"Suspicious: {suspicious}</span><br>"
-            f"Harmless: {result['harmless']}<br>"
-            f"Undetected: {result['undetected']}<br>"
-            f"Reputation: {result['reputation']}<br>"
-            f"Last Analysis: {html.escape(str(result['last_analysis_date']))}<br>"
-            f"Permalink: <a href='{permalink}' style='color:{palette.text_secondary};'>"
-            f"{permalink}</a>"
+            f"Indicator: {indicator_value}\n"
+            f"Malicious: {result['malicious']}\n"
+            f"Suspicious: {result['suspicious']}\n"
+            f"Harmless: {result['harmless']}\n"
+            f"Undetected: {result['undetected']}\n"
+            f"Reputation: {result['reputation']}\n"
+            f"Last Analysis: {result['last_analysis_date']}\n"
+            f"Permalink: {result['permalink']}"
         )
 
     def _on_lookup_failed(self, message: str) -> None:
@@ -468,5 +470,4 @@ class ThreatIntelPage(QWidget):
             return
 
         self._res_title.setText("Query Failed")
-        self._res_detail.setTextFormat(Qt.TextFormat.PlainText)
         self._res_detail.setText(message)

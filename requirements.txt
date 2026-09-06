@@ -1,6 +1,76 @@
+# SOC-IQ backend dependencies (minimum-version constraints, not locked).
+# See docs/architecture/18-packaging-release-architecture.md and
+# docs/security/dependency-supply-chain-security-model.md for the
+# packaging/locking rationale. This file was missing from the
+# Phase 4H-P4 audit baseline despite being referenced throughout
+# docs/ and by app/api/entrypoint.py's own runtime error message;
+# reconstructed here from the actual third-party imports in app/
+# and tests/, using the version floors already documented in prior
+# phase reports where stated, and the versions available in this
+# audit's verification environment otherwise.
+
+# --- Sidecar API (Phase 4C+) ---
+fastapi>=0.141.1
+uvicorn>=0.52.4
+pydantic>=2.13.5
+
+# --- Desktop GUI (legacy, partially retired) ---
+# Phase A1 investigation (mandatory PySide6 determination): app/gui/**
+# (66 files) is imported only by itself and by tests/gui/** (104 tests,
+# all passing) -- nothing on the app.api.entrypoint import path reaches
+# it, no app/gui/main_window.py or QApplication call exists anywhere in
+# the tree, and packaging/pyinstaller/socq_backend.spec explicitly
+# excludes app/gui/** as "retired per PD-06, not imported by anything
+# on the app.api.entrypoint import path." This matches this project's
+# own documented history (docs/phase4/PD06_STANDALONE_RISK_RETIREMENT.md,
+# PHASE4O_PART3_LEGACY_GUI_PARITY_AUDIT.md, PHASE4O_PART4_LEGACY_GUI_
+# RETIREMENT.md): a *partial* legacy-GUI retirement already happened:
+# the majority that remains was kept because it still lacks a modern
+# (React) equivalent for those specific screens, not because retirement
+# stalled. PySide6 stays a real, live dependency for as long as
+# tests/gui/** exists and is expected to pass -- it is CLASSIFICATION
+# "PARTIALLY RETAINED", not dead weight and not a stalled migration.
+PySide6>=6.11.2
+
+# --- CLI / reporting ---
 rich>=15.0.0
-requests>=2.34.2
+reportlab>=4.4.10
+requests>=2.33.1
 python-dotenv>=1.2.2
+Jinja2>=3.1.6
+
+# --- Persistent application-data path resolution (R2-B) ---
+# Resolves the OS-conventional per-user application-data directory
+# (%APPDATA%, ~/Library/Application Support, XDG_DATA_HOME) for the
+# database/logs/settings location -- see app/config.py::APP_DATA_ROOT
+# and docs/audits/SOC-IQ-R2-A-PERSISTENCE-PATH-INVENTORY.md.
+platformdirs>=4.5.0
+
+# --- Testing ---
 pytest>=9.1.1
-PySide6>=6.9.0
-reportlab
+
+# --- Testing (Phase A3 finding) ---
+# httpx was previously declared under "Sidecar API" above, implying a
+# production runtime need. Independently re-verified in Phase A3
+# (`grep -rn "httpx" app/`): zero matches -- app/threat_intel/virustotal.py
+# (the sidecar's one outbound HTTP client) uses `requests`, not `httpx`.
+# httpx's only real consumers are test-side: `fastapi.testclient.TestClient`
+# imports it internally (used throughout tests/test_api_layer.py,
+# tests/test_integration_e2e.py), and tests/test_api_layer.py's async-transport
+# regression test imports `httpx.AsyncClient` directly. Reclassified here,
+# not removed -- the test suite genuinely needs it -- purely so this file
+# accurately reflects what app/ actually requires at runtime vs. what the
+# test suite requires.
+httpx>=0.28.1
+
+# --- Testing, optional (Phase A1 finding) ---
+# pypdf is imported only by tests/test_reporting.py::test_pdf_exporter_includes_all_four_ti_categories,
+# to read back and assert on PDF bytes that PDFReportExporter (reportlab,
+# already declared above) produced -- it is not imported anywhere under
+# app/. That test already self-guards with both @pytest.mark.skipif and
+# pytest.importorskip, so it was already safe to run without this line;
+# it was simply undeclared. Confirmed: without it, that one test is
+# skipped (not failed) and the other 882 non-GUI tests pass unaffected.
+# Declared here, not merged into the required block above, because it
+# genuinely is optional -- nothing outside this one test needs it.
+pypdf>=5.9.0

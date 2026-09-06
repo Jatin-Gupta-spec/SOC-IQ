@@ -1,0 +1,20 @@
+.dashboard-recent-investigations__table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.dashboard-recent-investigations__table-wrap .data-table {
+  min-width: 34rem;
+}
+
+.dashboard-recent-investigations__table-wrap .data-table th,
+.dashboard-recent-investigations__table-wrap .data-table td {
+  padding: var(--space-sm);
+}
+
+@media (max-width: 900px) {
+  .dashboard-recent-investigations__table-wrap .data-table {
+    min-width: 31rem;
+  }
+}

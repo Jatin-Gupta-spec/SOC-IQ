@@ -14,7 +14,7 @@ from PySide6.QtCore import (
 from PySide6.QtGui import QColor
 
 from app.database.models import Investigation
-from app.gui.design.theme.theme_manager import theme_manager
+from app.gui.design.tokens.colors import Colors
 
 
 class InvestigationTableModel(QAbstractTableModel):
@@ -50,22 +50,6 @@ class InvestigationTableModel(QAbstractTableModel):
 
         self._investigations = list(
             self._all_investigations
-        )
-
-        # BATCH 06: severity colors are read live from
-        # theme_manager.palette inside data() below (see the
-        # ForegroundRole branch) rather than cached on the model, so
-        # a runtime palette swap is reflected the next time a cell
-        # is painted. Qt views don't repaint on their own just
-        # because the underlying palette object changed, though --
-        # they only ask for ForegroundRole again when the model
-        # tells them to via dataChanged. Connecting here mirrors the
-        # pattern ThemeManager already documents for ModernCard
-        # ("Widgets that cache palette-derived stylesheets ...
-        # should connect to this"): this model doesn't cache colors,
-        # but it does need to prompt the view to re-fetch them.
-        theme_manager.palette_changed.connect(
-            self._on_palette_changed
         )
 
     def rowCount(
@@ -171,63 +155,19 @@ class InvestigationTableModel(QAbstractTableModel):
                 else ""
             )
 
-            # BATCH 06: severity colors now come from the same
-            # semantic source RiskGaugeWidget already uses
-            # (theme_manager.palette.severity_*) instead of a
-            # second, independently hardcoded hex palette living
-            # only in this model. Read live (not cached on
-            # `self`) so a runtime palette swap is picked up the
-            # next time this cell is painted -- see
-            # `_on_palette_changed()` for how the view is told to
-            # re-ask for it.
-            palette = theme_manager.palette
-
             if severity == "LOW":
-                return QColor(palette.severity_low)
+                return QColor(Colors.Severity.LOW)
 
             if severity == "MEDIUM":
-                return QColor(palette.severity_medium)
+                return QColor(Colors.Severity.MEDIUM)
 
             if severity == "HIGH":
-                return QColor(palette.severity_high)
+                return QColor(Colors.Severity.HIGH)
 
             if severity == "CRITICAL":
-                return QColor(palette.severity_critical)
+                return QColor(Colors.Severity.CRITICAL)
 
         return None
-
-    def _on_palette_changed(self) -> None:
-        """
-        Prompt the view to re-fetch severity cell colors after a
-        theme switch.
-
-        Nothing here actually changes: `data()` above already reads
-        `theme_manager.palette` live, so the *next* paint of any
-        Severity cell already returns the new color. The problem is
-        that nothing triggers that next paint on its own -- Qt views
-        only re-ask a model for a given role when the model emits
-        `dataChanged` for it. This just emits that signal, scoped to
-        the Severity column and `ForegroundRole`, so already-rendered
-        rows pick up the new palette immediately instead of only
-        updating whenever some unrelated reset/scroll happens to
-        repaint them.
-        """
-
-        if not self._investigations:
-            return
-
-        top_left = self.index(0, 2)
-
-        bottom_right = self.index(
-            self.rowCount() - 1,
-            2,
-        )
-
-        self.dataChanged.emit(
-            top_left,
-            bottom_right,
-            [Qt.ItemDataRole.ForegroundRole],
-        )
 
     def set_investigations(
         self,
@@ -391,14 +331,6 @@ class InvestigationTableModel(QAbstractTableModel):
     ) -> Investigation | None:
         """
         Return the investigation stored at the given row.
-
-        This is the authoritative lookup for "what Investigation is
-        currently shown at source row N" -- it always reflects
-        whatever `self._investigations` holds right now (post
-        sort/filter), so callers resolving an activated row should
-        use this instead of keeping a second, independently-ordered
-        copy of the investigation list that could drift out of sync
-        with what the model last reset/reordered to.
         """
 
         if row < 0:

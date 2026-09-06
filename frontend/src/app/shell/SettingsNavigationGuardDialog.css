@@ -1,0 +1,76 @@
+/**
+ * Settings navigation guard dialog layout (MAX-18 Phase 2A-3).
+ * Reuses only existing tokens from `styles/tokens.css` and the
+ * existing `.transition-fade` utility (`styles/motion.css`) — no new
+ * color, spacing, radius, duration, or easing value is introduced.
+ * Confirmation UI polish is explicitly out of this checkpoint's
+ * scope; this mirrors `CommandPalette.css`'s existing
+ * backdrop+dialog structure at the minimum weight this finding needs.
+ */
+
+.settings-nav-guard-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--elevation-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-overlay-modal);
+}
+
+.settings-nav-guard {
+  position: relative;
+  z-index: var(--elevation-dialog);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: 420px;
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-default);
+  background-color: var(--color-surface-elevated);
+  box-shadow: 0 8px 24px var(--color-shadow-strong);
+}
+
+.settings-nav-guard__title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-medium);
+}
+
+.settings-nav-guard__description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+}
+
+.settings-nav-guard__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+.settings-nav-guard__button {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-default);
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  cursor: pointer;
+}
+
+.settings-nav-guard__button--leave {
+  border-color: var(--color-status-error);
+  color: var(--color-status-error);
+}
+
+.settings-nav-guard__button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}

@@ -1,0 +1,168 @@
+.investigation-workspace__shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.investigation-workspace__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  border-bottom: 1px solid var(--color-border-default);
+  padding-bottom: var(--space-sm);
+}
+
+.investigation-workspace__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition-property: background-color, color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.investigation-workspace__tab:disabled {
+  cursor: not-allowed;
+}
+
+.investigation-workspace__tab:not(:disabled):hover {
+  background-color: var(--color-interactive-hover);
+}
+
+.investigation-workspace__tab--active {
+  color: var(--color-text-primary);
+  background-color: var(--color-interactive-selected);
+  cursor: default;
+}
+
+.investigation-workspace__tab--active:hover {
+  background-color: var(--color-interactive-selected);
+}
+
+.investigation-workspace__warnings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.investigation-workspace__content {
+  min-width: 0;
+}
+
+/* MAX-4: restrained Level-2 entrance signalling "this tab's content
+ * changed" on tab switch. Opacity-only (no transform/height change)
+ * so it cannot introduce layout shift or overflow at any breakpoint. */
+.investigation-workspace__content--enter {
+  animation: investigation-workspace-content-enter var(--duration-normal) var(--easing-out);
+}
+
+@keyframes investigation-workspace-content-enter {
+  from {
+    opacity: var(--opacity-transparent);
+  }
+  to {
+    opacity: var(--opacity-opaque);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .investigation-workspace__content--enter {
+    animation: none;
+  }
+}
+
+.investigation-workspace__overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.investigation-workspace__message {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+
+.investigation-workspace__message--muted {
+  color: var(--color-text-muted);
+}
+
+.investigation-workspace__actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.investigation-workspace__secondary-button {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-lg);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  border: 1px solid var(--color-border-default);
+}
+
+.investigation-workspace__secondary-button:hover {
+  background-color: var(--color-interactive-hover);
+}
+
+/* Loading skeleton -- structural only (task brief §5: "A simple
+   structural skeleton is enough", "no fake investigation values"). */
+.investigation-workspace__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.investigation-workspace__skeleton-block {
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.investigation-workspace__skeleton-header {
+  height: 96px;
+}
+
+.investigation-workspace__skeleton-tabs {
+  height: 40px;
+  width: 320px;
+  max-width: 100%;
+}
+
+.investigation-workspace__skeleton-content {
+  height: 160px;
+}
+
+.investigation-workspace__skeleton-block--pulse {
+  animation: investigation-workspace-pulse var(--duration-slowest) var(--easing-in-out) infinite;
+}
+
+@keyframes investigation-workspace-pulse {
+  0%,
+  100% {
+    opacity: var(--opacity-opaque);
+  }
+  50% {
+    opacity: var(--opacity-muted);
+  }
+}
+
+/* Belt-and-braces: even if `reducedMotion` somehow isn't threaded
+   through (e.g. a consumer that renders this CSS without the JS
+   hook's class toggle), the project-wide reduced-motion media query
+   convention (`styles/motion.css`) still disables the pulse. */
+@media (prefers-reduced-motion: reduce) {
+  .investigation-workspace__skeleton-block--pulse {
+    animation: none;
+  }
+}

@@ -1,0 +1,78 @@
+.investigation-correlations {
+  min-width: 0;
+}
+
+.investigation-correlations__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Same bordered-box treatment `ProviderDetail`'s disclosure already
+   established -- reused rather than a new card style (task brief
+   §15's "do not introduce a new card language"). */
+.investigation-correlations__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  padding: var(--space-sm) var(--space-card-padding);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+
+.investigation-correlations__relationship {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  min-width: 0;
+  /* Real IOC values (hashes/URLs/domains) can be long -- wrap safely
+     at any responsive width rather than clipping or forcing
+     horizontal scroll (task brief §17), same approach already used by
+     `InvestigationThreatIntel`/`ProviderDetail`. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.investigation-correlations__context {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-small);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Matches the existing `__copy`/`__reset`/`__detail-close` button
+   treatment (`InvestigationIocWorkspace.css`) rather than inventing a
+   new interactive style (task brief §15). Text label is what carries
+   expanded/collapsed meaning (task brief §17); focus ring comes from
+   the global `:focus-visible` rule (`styles/globals.css`). */
+.investigation-correlations__toggle {
+  align-self: flex-start;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xxs) var(--space-sm);
+  cursor: pointer;
+  transition-property: background-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.investigation-correlations__toggle:hover {
+  background-color: var(--color-interactive-hover);
+}
+
+.investigation-correlations__toggle:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}

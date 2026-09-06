@@ -1,0 +1,107 @@
+.provider-detail__disclosure {
+  min-width: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-card-padding);
+}
+
+.provider-detail__summary {
+  cursor: pointer;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  list-style: none;
+}
+
+/* Hide the default marker in browsers that render one, so the
+   summary's own arrow (::before) is the single, consistent
+   disclosure indicator across browsers. */
+.provider-detail__summary::-webkit-details-marker {
+  display: none;
+}
+
+.provider-detail__summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: var(--space-xs);
+  transition-property: transform;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--easing-out);
+}
+
+.provider-detail__disclosure[open] > .provider-detail__summary::before {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .provider-detail__summary::before {
+    transition-duration: var(--duration-instant);
+  }
+}
+
+.provider-detail__content {
+  margin-top: var(--space-md);
+  min-width: 0;
+}
+
+.provider-detail__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  min-width: 0;
+}
+
+.provider-detail__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+
+.provider-detail__field-label {
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.provider-detail__field-value {
+  margin: 0;
+  color: var(--color-text-secondary);
+  min-width: 0;
+  /* Real provider payloads can carry long hashes/URLs/error strings --
+     wrap safely at any responsive width rather than clipping or
+     forcing horizontal scroll (task brief §12/§17). */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.provider-detail__scalar--empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.provider-detail__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding-left: var(--space-lg);
+  min-width: 0;
+}
+
+.provider-detail__list-item {
+  min-width: 0;
+}
+
+.provider-detail__list-item--truncated {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Nested field groups get a subtle left rule so hierarchy depth stays
+   legible without introducing new color/spacing tokens. */
+.provider-detail__field .provider-detail__fields {
+  padding-left: var(--space-md);
+  border-left: 1px solid var(--color-border-default);
+}

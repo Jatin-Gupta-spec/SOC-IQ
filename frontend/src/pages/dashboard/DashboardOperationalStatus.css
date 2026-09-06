@@ -1,0 +1,11 @@
+.dashboard-operational-status__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.dashboard-operational-status__label {
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-secondary);
+}

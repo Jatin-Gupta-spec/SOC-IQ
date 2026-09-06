@@ -1,0 +1,30 @@
+.page-layout {
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-page-margin);
+}
+
+.page-layout__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-section-gap);
+}
+
+.page-layout__section:last-child {
+  margin-bottom: 0;
+}
+
+.page-layout__section-title {
+  margin: 0;
+  font-size: var(--font-size-subtitle);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.page-layout__grid {
+  display: grid;
+  gap: var(--space-lg);
+}

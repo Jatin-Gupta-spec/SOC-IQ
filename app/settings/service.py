@@ -63,10 +63,17 @@ class SettingsService:
     ) -> None:
         """
         Update the VirusTotal API key.
+
+        Routed straight to `SettingsRepository.save_api_key()`
+        (secret store), not through `load_settings()` +
+        `save_settings()` -- unlike `export_directory`/`theme`, the
+        key is never part of the JSON settings file (Phase 4M Part
+        2B), so there is nothing to load-mutate-save here. Any
+        failure to reach the secret store propagates to the caller
+        as `SecretStoreUnavailableError` rather than being swallowed,
+        so a failed save is never reported as a success.
         """
-        settings = self.load_settings()
-        settings.virustotal_api_key = api_key.strip()
-        self.save_settings(settings)
+        self._repository.save_api_key(api_key)
 
     def update_export_directory(
         self,

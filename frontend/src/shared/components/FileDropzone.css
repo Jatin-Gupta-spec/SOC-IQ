@@ -1,0 +1,85 @@
+.file-dropzone {
+  position: relative;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-secondary);
+  transition-property: border-color, background-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-dropzone {
+    transition-duration: var(--duration-instant);
+  }
+}
+
+.file-dropzone--drag-over {
+  border-color: var(--color-border-focus);
+  background-color: var(--color-surface-elevated);
+}
+
+.file-dropzone--disabled {
+  opacity: var(--opacity-disabled);
+}
+
+.file-dropzone__label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-xxl);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.file-dropzone--disabled .file-dropzone__label {
+  cursor: not-allowed;
+}
+
+.file-dropzone__text {
+  margin: 0;
+  max-width: 100%;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body);
+  text-align: center;
+  /* Long filenames wrap instead of overflowing or being silently
+     truncated (§12: "Long filenames must not break the layout";
+     §13 favors a fully-visible accessible name over a truncated one
+     that would need a redundant `title` attribute to recover). */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.file-dropzone__filename {
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-monospace);
+}
+
+.file-dropzone__browse-button {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+}
+
+/* Visually hidden, not `display:none` — stays in the tab order and
+   keeps native click/keyboard/focus behavior (§13). */
+.file-dropzone__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

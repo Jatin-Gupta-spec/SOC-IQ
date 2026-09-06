@@ -1,0 +1,105 @@
+# SOC-IQ project manifest — machine-readable invariants.
+# Human-readable narrative lives in PROJECT_CONSTITUTION.md; this file is the compact
+# cross-check a tool or a fast-reading Claude session can parse without prose.
+
+project:
+  name: SOC-IQ
+  type: desktop_soc_platform
+  architecture_status: migration
+  architecture_version: "Phase 4 Architecture v1.0"
+  # Verified directly against the SOC-IQ-Phase4O-MIGRATION-FINAL-CLOSURE
+  # checkpoint (fresh inspection + test execution, not carried forward
+  # from an older manifest revision).
+  current_phase: "4O (complete — Option B: intentional retained legacy)"
+  phases_complete: ["4A", "4B", "4C", "4D", "4E", "4F", "4G", "4H", "4I", "4J", "4K", "4L", "4N"]
+  phases_design_only: []
+  phases_in_progress: []
+  # 4M (security hardening) and 4P+ have no evidence of implementation
+  # work in this checkpoint and are left not-started rather than guessed.
+  phases_not_started: ["4M", "4P"]
+
+stack:
+  frontend:
+    language: TypeScript
+    framework: React
+    exists_in_source: true
+    note: "232 files under frontend/src; 70 Vitest files / 965 tests passing, tsc --noEmit clean, vite build succeeds (193 modules) — verified fresh this session"
+  desktop:
+    framework: Tauri
+    language: Rust
+    exists_in_source: true
+    note: "src-tauri/ and sidecar-core/ present (22 .rs files); cargo/rustc not available in this sandbox, so cargo check/test are ENVIRONMENT BLOCKED, not verified"
+  backend:
+    language: Python
+    framework: FastAPI
+    exists_in_source: true
+    note: "app/api/app.py present and imports cleanly; full non-GUI suite (780 tests) passing fresh this session"
+  database:
+    engine: SQLite
+    migration_runner_exists: false
+
+boundaries:
+  frontend_business_logic: false
+  rust_business_logic: false
+  frontend_direct_database_access: false
+  frontend_direct_internet_access: false
+  rust_calls_python_directly: false
+  ipc_mechanism: "local loopback HTTP + SSE, Tauri-supervised sidecar (ADR-006)"
+
+ti:
+  abstraction_required: true
+  abstraction_implemented_in_source: false
+  not_found_equals_clean: false
+  current_provider_count: 1
+  current_provider: "VirusTotal"
+
+security:
+  api_key_storage_current: "plaintext on disk, redacted from logs only"
+  api_key_storage_target: "OS secure storage (ADR-008)"
+  tauri_shell_capability_allowed: false
+  tauri_unrestricted_fs_capability_allowed: false
+  backend_bind_address: "127.0.0.1 only"
+
+testing:
+  # Freshly executed this session (Phase 4O final closure remediation),
+  # superseding the older 542/399 figures from an earlier manifest
+  # revision, which predate the frontend and most of Phase 4 entirely.
+  backend_tests_verified_this_session: 780
+  frontend_tests_verified_this_session: 965
+  frontend_test_files_verified_this_session: 70
+  gui_tests_verified_this_session: 104
+  typescript_check: "clean (tsc --noEmit)"
+  frontend_build: "succeeds (193 modules)"
+  rust_check: "ENVIRONMENT BLOCKED — no cargo/rustc in this sandbox"
+  baseline_must_remain_green: true
+
+directories:
+  current_domain_root: "app/"
+  target_domain_root: "backend/app/"
+  frontend_root_target: "frontend/"
+  tauri_root_target: "src-tauri/"
+  gui_root_current: "app/gui/"
+  gui_target: null   # 66 files intentionally retained (Phase 4O Option B) —
+                      # no target directory; see docs/phase4/PHASE4O_FINAL_CLOSURE_AUDIT.md
+
+authority_hierarchy:
+  - PROJECT_CONSTITUTION.md
+  - NON_NEGOTIABLE_RULES.md
+  - docs/architecture/PHASE4_NEXT_GENERATION_ARCHITECTURE_MASTER_PLAN.md
+  - docs/adr/*
+  - docs/architecture/0N-*.md, docs/phase4/*, docs/migration/*
+  - docs/contracts/*
+  - IMPLEMENTATION_STATUS.md
+  - code/comments
+
+non_negotiable_highlights:
+  - "NOT_FOUND != CLEAN in TI verdicts"
+  - "no second event system"
+  - "no second state source of truth"
+  - "PySide6 retired only after React frontend reaches parity (Phase 4O)"
+  - "no YARA/Sigma/sandbox before MVP native-capability layer is solid"
+  - "no second TI provider before ThreatIntelProvider abstraction is implemented and stable"
+
+git:
+  history_present_in_archive: false
+  note: "confirm directly in a live checkout; do not assume this snapshot's condition still holds"

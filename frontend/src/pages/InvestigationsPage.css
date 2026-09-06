@@ -1,0 +1,161 @@
+.investigations-page__message {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+
+.investigations-page__message--muted {
+  color: var(--color-text-muted);
+}
+
+.investigations-page__actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.investigations-page__row-link {
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.investigations-page__row-link:hover {
+  text-decoration: underline;
+}
+
+.investigations-page__export-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  align-items: flex-end;
+}
+
+.investigations-page__export-disabled {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-disabled);
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-sm);
+  display: inline-block;
+}
+
+.investigations-page__export-note {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-muted);
+  word-break: break-all;
+  text-align: right;
+  max-width: 40ch;
+}
+
+.investigations-page__export-note--error {
+  color: var(--color-status-error);
+}
+
+/* Structural loading skeleton (MAX-2) -- approximates the real
+   DataTable's header + row rhythm using the shared SkeletonBlock
+   primitive (components/Skeleton.css). No fake investigation data. */
+.investigations-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.investigations-page__skeleton-header {
+  height: 36px;
+}
+
+.investigations-page__skeleton-row {
+  height: 44px;
+}
+
+/* MAX7-F-03: search/filter toolbar, mirroring
+   InvestigationIocWorkspace.css's identical toolbar block class-for-
+   class (page-scoped names only) -- same flex-wrap-driven responsive
+   behavior, no new breakpoint token. */
+.investigations-page__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.investigations-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 160px;
+}
+
+.investigations-page__field-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.investigations-page__search-input,
+.investigations-page__status-filter {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.investigations-page__search-input {
+  min-width: 200px;
+}
+
+.investigations-page__search-input:focus,
+.investigations-page__status-filter:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}
+
+.investigations-page__reset {
+  align-self: flex-end;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition-property: background-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.investigations-page__reset:hover {
+  background-color: var(--color-interactive-hover);
+}
+
+.investigations-page__reset:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}
+
+.investigations-page__count {
+  margin-left: auto;
+  align-self: center;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.investigations-page__no-matches {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-md);
+}

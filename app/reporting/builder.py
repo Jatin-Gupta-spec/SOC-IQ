@@ -41,4 +41,7 @@ class ReportBuilder:
             threat_intelligence=(
                 investigation.threat_intelligence
             ),
+            investigation_id=(
+                investigation.investigation_id
+            ),
         )

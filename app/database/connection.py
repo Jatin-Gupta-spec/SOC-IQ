@@ -8,10 +8,7 @@ import sqlite3
 from pathlib import Path
 from sqlite3 import Connection
 
-from app.config import (
-    DATABASE_DIR,
-    DATABASE_PATH,
-)
+from app.config import DATABASE_PATH
 from app.logger import logger
 
 
@@ -39,6 +36,21 @@ class DatabaseConnection:
         self._database_path = database_path
         self._connection: Connection | None = None
 
+    @property
+    def database_path(self) -> Path:
+        """
+        The filesystem path of the SQLite database this instance
+        manages.
+
+        Exposed so callers that need the raw path -- currently only
+        the migration runner (see app.database.migration_runner),
+        which opens its own short-lived connection to apply schema
+        migrations before this connection is first used -- do not
+        need to reach into a private attribute.
+        """
+
+        return self._database_path
+
     def connect(self) -> Connection:
         """
         Create and return a SQLite connection.
@@ -49,7 +61,16 @@ class DatabaseConnection:
 
         if self._connection is None:
 
-            DATABASE_DIR.mkdir(
+            # Create the parent directory of the *actual* configured
+            # database path, not the global default DATABASE_DIR.
+            # A DatabaseConnection constructed with a custom
+            # database_path (e.g. in tests, or any future caller
+            # that points at a different location) previously had
+            # its target directory silently skipped whenever it
+            # differed from DATABASE_DIR, causing sqlite3.connect()
+            # to fail with "unable to open database file" if that
+            # directory did not already exist.
+            self._database_path.parent.mkdir(
                 parents=True,
                 exist_ok=True,
             )

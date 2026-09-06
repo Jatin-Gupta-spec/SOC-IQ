@@ -1,0 +1,230 @@
+.investigation-ioc-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.investigation-ioc-workspace__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: var(--space-lg);
+}
+
+.investigation-ioc-workspace__table {
+  min-width: 0;
+}
+
+/* Long indicator values (hashes, registry paths, URLs) wrap within
+   their column rather than growing the table past its container --
+   `DataTable.css` already applies `overflow-wrap`/`word-break` at the
+   cell level; this just constrains the value's own display box so it
+   participates in that wrapping instead of forcing a wide inline
+   run. */
+.investigation-ioc-workspace__value {
+  display: inline-block;
+  max-width: 100%;
+}
+
+/* Part 2B: search/filter toolbar sitting above the indicator table.
+   `flex-wrap` (rather than a hard-coded breakpoint) lets the count and
+   reset button drop to their own line on narrower widths (task brief
+   §16) without a new breakpoint token -- the same "wrap naturally"
+   approach a `max-width` override elsewhere in the project once used
+   supplements, just without needing an override at all here since
+   nothing in this toolbar is a fixed-width multi-column grid. */
+.investigation-ioc-workspace__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.investigation-ioc-workspace__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 160px;
+}
+
+.investigation-ioc-workspace__field-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.investigation-ioc-workspace__search-input,
+.investigation-ioc-workspace__type-filter {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.investigation-ioc-workspace__search-input {
+  min-width: 200px;
+}
+
+.investigation-ioc-workspace__search-input:focus,
+.investigation-ioc-workspace__type-filter:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}
+
+.investigation-ioc-workspace__reset {
+  align-self: flex-end;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition-property: background-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.investigation-ioc-workspace__reset:hover {
+  background-color: var(--color-interactive-hover);
+}
+
+.investigation-ioc-workspace__reset:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}
+
+.investigation-ioc-workspace__count {
+  margin-left: auto;
+  align-self: center;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.investigation-ioc-workspace__no-matches {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+/* Part 2C: focused single-IOC detail panel. A plain block below the
+   table (no drawer/modal system exists elsewhere in the project to
+   reuse, task brief §4) -- `min-width: 0` plus the value field's own
+   wrapping keeps a long hash/URL/registry-path value from forcing
+   horizontal overflow at any of the responsive widths in task brief
+   §12. */
+.investigation-ioc-workspace__detail {
+  min-width: 0;
+}
+
+.investigation-ioc-workspace__detail-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin: 0 0 var(--space-lg) 0;
+}
+
+.investigation-ioc-workspace__detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.investigation-ioc-workspace__detail-field dt {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.investigation-ioc-workspace__detail-field dd {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.investigation-ioc-workspace__detail-value {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Part 2D: the value plus its copy action sit on one flex line that
+   wraps naturally at any of the responsive widths in task brief §12
+   -- `flex-wrap` (matching the toolbar's own approach above) rather
+   than a fixed breakpoint, and `min-width: 0` on the value itself so
+   a long hash/URL/registry-path keeps wrapping inside its own flex
+   basis instead of pushing the Copy button off the panel. */
+.investigation-ioc-workspace__detail-value-row {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.investigation-ioc-workspace__detail-value-row .investigation-ioc-workspace__detail-value {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.investigation-ioc-workspace__copy {
+  flex: 0 0 auto;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xxs) var(--space-sm);
+  cursor: pointer;
+  transition-property: background-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.investigation-ioc-workspace__copy:hover {
+  background-color: var(--color-interactive-hover);
+}
+
+.investigation-ioc-workspace__copy:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}
+
+/* Real text, not a color flash (task brief §8) -- empty and
+   invisible when idle so it never reserves visible space or draws
+   the eye before a copy actually happens. */
+.investigation-ioc-workspace__copy-status {
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-muted);
+  align-self: center;
+}
+
+.investigation-ioc-workspace__detail-close {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: none;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition-property: background-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.investigation-ioc-workspace__detail-close:hover {
+  background-color: var(--color-interactive-hover);
+}
+
+.investigation-ioc-workspace__detail-close:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}

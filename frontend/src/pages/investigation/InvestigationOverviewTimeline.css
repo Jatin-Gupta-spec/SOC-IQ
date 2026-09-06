@@ -1,0 +1,67 @@
+.investigation-overview-timeline__events {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Same bordered-box item treatment `InvestigationCorrelations` already
+   established (`.investigation-correlations__item`) -- reused here
+   rather than inventing a second card-like item style. */
+.investigation-overview-timeline__event {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  padding: var(--space-sm) var(--space-card-padding);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+
+/* The Part 1D fallback single event keeps the original inline
+   badge+timestamp layout (no summary/semantics/border-box treatment)
+   -- it is one honest status line, not a real event card. */
+.investigation-overview-timeline__event--fallback {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-md);
+  border: none;
+  padding: 0;
+}
+
+.investigation-overview-timeline__event-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.investigation-overview-timeline__event-type {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+}
+
+.investigation-overview-timeline__event-timestamp {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+}
+
+.investigation-overview-timeline__event-summary {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  min-width: 0;
+  /* Real event summaries can be long -- wrap safely at any responsive
+     width rather than clipping or forcing horizontal scroll, matching
+     `InvestigationCorrelations`/`ProviderDetail`'s own convention. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.investigation-overview-timeline__event-semantics {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-caption);
+}

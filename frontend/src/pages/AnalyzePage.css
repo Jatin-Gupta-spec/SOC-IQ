@@ -1,0 +1,140 @@
+.analyze-page__status {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.analyze-page__validation-message {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-status-error);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  overflow-wrap: anywhere;
+}
+
+.analyze-page__validation-message--success {
+  border-color: var(--color-status-success);
+}
+
+/* Base treatment now lives on the shared Button (`variant="secondary"`,
+   MAX-6 F-01/F-02/F-04) -- this class only keeps the page-specific
+   layout tweaks the primitive has no opinion about. */
+.analyze-page__native-browse-button {
+  align-self: flex-start;
+  margin-top: var(--space-sm);
+}
+
+.analyze-page__execution {
+  margin-bottom: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.analyze-page__start-button {
+  align-self: flex-start;
+}
+
+/* Shared by Start Analysis and Try Again (MAX-6 F-02): both are the
+   page's "accent" action, using the info-blue border the secondary
+   Button variant doesn't apply by default. The shared Button's own
+   `:disabled` rule (border-divider-secondary) still wins over this on
+   disable, exactly matching the pre-migration behavior -- this only
+   ever colors the enabled resting/hover border. No `:focus-visible`
+   override here on purpose: focus now uses the one global MAX-1
+   treatment instead of this page's former info-blue focus ring. */
+.analyze-page__accent-button {
+  border-color: var(--color-status-info);
+}
+
+.analyze-page__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.analyze-page__progress-bar {
+  width: 100%;
+}
+
+.analyze-page__progress-message {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-secondary);
+}
+
+.analyze-page__retry-button {
+  align-self: flex-start;
+}
+
+.analysis-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.analysis-result__heading {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+
+.analysis-result__report-name {
+  font-family: var(--font-family-monospace);
+  overflow-wrap: anywhere;
+}
+
+.analysis-result__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-md);
+  max-width: 320px;
+}
+
+.analysis-result__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  margin: 0;
+}
+
+.analysis-result__badge-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.analysis-result__badge-row dt {
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-secondary);
+}
+
+.analysis-result__badge-row dd {
+  margin: 0;
+}
+
+.analysis-result__handoff-link {
+  display: inline-block;
+  align-self: flex-start;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-status-success);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  text-decoration: none;
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.analysis-result__handoff-link:hover,
+.analysis-result__handoff-link:focus-visible {
+  background-color: var(--color-surface-secondary);
+}
+
+.analysis-result__handoff-link:focus-visible {
+  outline: 2px solid var(--color-status-success);
+  outline-offset: 2px;
+}

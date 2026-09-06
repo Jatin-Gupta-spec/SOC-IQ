@@ -1,0 +1,40 @@
+@import "./tokens.css";
+@import "./motion.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-normal);
+  /* NON_NEGOTIABLE_RULES.md #19 — the dashboard targets 1440x900
+     without page-level scroll; individual panels scroll internally,
+     the page shell does not. Feature screens opt into internal
+     scrolling on their own scroll containers, not here. */
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+}
+
+a {
+  color: var(--color-brand-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}

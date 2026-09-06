@@ -1,0 +1,28 @@
+{
+  "capabilities": {
+    "default": {
+      "identifier": "default",
+      "permissions": [
+        "core:default",
+        "dialog:allow-open",
+        "dialog:allow-save",
+        "fs:allow-read-file"
+      ],
+      "windows": [
+        "main"
+      ]
+    }
+  },
+  "effective_config": {
+    "security": {
+      "capabilities": [
+        "default"
+      ],
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:*"
+    },
+    "window_labels": [
+      "main"
+    ]
+  },
+  "unreferenced_capability_files": []
+}

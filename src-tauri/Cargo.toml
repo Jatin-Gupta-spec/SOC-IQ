@@ -1,0 +1,114 @@
+[package]
+name = "soc-iq"
+version = "0.1.0"
+description = "SOC-IQ desktop shell (Tauri) — Phase 4E Part 1 foundation"
+authors = ["SOC-IQ"]
+edition = "2021"
+# G2-F2 remediation (Gate 2, Step 2): the declared floor was inaccurate.
+# The locked dependency graph pulls in `dlopen2` 0.8.2 transitively via
+# `tauri` -> `tauri-runtime-wry` -> `tao` (tao's Linux/BSD-only windowing
+# dependency on dynamic-library loading). dlopen2 0.8.2 itself declares
+# `edition = "2024"` and `rust-version = "1.85"` (verified directly from
+# its published Cargo.toml on crates.io). Cargo must be able to parse
+# every crate's `edition` field to resolve the full dependency graph,
+# regardless of that crate's target-cfg gating, so any Cargo/rustc older
+# than 1.85 (the release that stabilized edition 2024) cannot resolve
+# this graph at all -- this project's own prior verification notes
+# (README.md, docs/audits/SOC-IQ-R3-C-RUST-TAURI-BUILD-GATE.md) already
+# recorded the same `edition2024`/1.85 finding independently. 1.85 is
+# also the correct Cargo floor: edition 2024 support shipped together in
+# the Rust 1.85 / Cargo 1.85 release, so the compiler and Cargo floors
+# are identical here (no version skew between the two to call out).
+# dlopen2 0.8.1 (last pre-edition2024 release) satisfies tao's declared
+# `dlopen2 = "0.8.0"` requirement, but is intentionally NOT pinned down
+# to preserve 1.77: that would be a dependency-graph change made solely
+# to keep a stale floor alive, which this remediation's own scope rule
+# forbids without proven necessity. Correcting the declared floor to
+# match reality is the correct fix.
+rust-version = "1.85"
+
+# See https://v2.tauri.app/develop/
+[lib]
+# `_lib` suffix required for cdylib on mobile targets; matches the
+# standard `tauri init` template so this stays a drop-in foundation.
+name = "soc_iq_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sidecar-core = { path = "../sidecar-core" }
+keystore-core = { path = "../keystore-core" }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+
+# Phase 4O Security Part 1A: `keystore-core` (see src/keystore.rs) --
+# the framework-independent Rust-owned OS-keystore core ADR-008
+# calls for. Same path-dependency shape as `sidecar-core` below, and
+# for the identical reason: real logic and real `cargo test`
+# coverage live in a crate with no Tauri dependency of its own, kept
+# separate from this crate's own (currently environment-blocked,
+# pre-existing) build. See `keystore-core/Cargo.toml` for why it
+# pulls in `keyring` with a restricted feature set, and that crate's
+# `src/lib.rs` for the full scope note.
+#
+# Phase 2A Part 2B: `sidecar-core` is now a real dependency (see
+# src/sidecar.rs) — the "future Tauri/native adapter" that
+# sidecar-core's own docs described as depending on it, never the
+# reverse; the dependency direction is preserved.
+#
+# Still deliberately no `tokio`/`reqwest`/async-runtime dependency:
+# src/sidecar.rs's process-spawn and HTTP-health-check needs are met
+# with `std::process`/`std::net` alone (see that module's doc comment
+# for why a synchronous std-only implementation is sufficient here).
+# Adding an async runtime with no caller that needs it would still be
+# exactly the "unnecessary dependency" the earlier freeze audit (Step
+# 11) flagged against.
+#
+# Phase 4I Remediation, Blocker A: `tauri-plugin-dialog` and
+# `tauri-plugin-fs` are new dependencies, added deliberately and
+# documented per the remediation brief's own dependency rule (§4):
+#
+#   - Dependency: `tauri-plugin-dialog` (native OS open-file dialog)
+#     and `tauri-plugin-fs` (reads the bytes of the file the dialog
+#     returned, for the frontend's existing client-side UTF-8
+#     validation — `analysisInput.ts::validateAnalysisInput`).
+#   - Reason: `FileDropzone`'s browser `File` objects (drag/drop or
+#     `<input type="file">`) never carry a real filesystem path — a
+#     browser security property, not a missing permission — so there
+#     is no way for `analyze_report`'s `{ report_path: string }`
+#     payload to be populated from either of those selection paths.
+#     A native picker is the only source that can genuinely produce
+#     one.
+#   - Why existing libraries cannot solve it: nothing already in this
+#     dependency graph exposes a file-system picker or file-read
+#     capability — `tauri` core's own `dialog`/`fs` functionality was
+#     split out into these two official first-party plugins in Tauri
+#     v2 specifically because core no longer bundles them.
+#   - Security impact: both are official, first-party
+#     `tauri-apps`-maintained plugins (the same publisher as `tauri`
+#     itself), each gated by an explicit, narrow capability
+#     permission (`src-tauri/capabilities/default.json`:
+#     `dialog:allow-open`, `fs:allow-read-file`) rather than a
+#     wildcard `*:default`. `tauri-plugin-dialog`'s own documented
+#     behavior is that a path returned by its picker is added to the
+#     `fs`/asset-protocol scope for that selection only, and that
+#     scope is not persisted across restarts — no static, broad
+#     filesystem path scope is granted in this checkpoint's
+#     capability file. No shell/process/network capability is added
+#     by either plugin.
+#   - Bundle impact: both are small, synchronous, dependency-light
+#     crates (no async runtime pulled in — `tauri-plugin-fs`'s
+#     `readFile` binding is invoked from the frontend over the
+#     existing Tauri IPC bridge, not from any new Rust-side async
+#     code path in this crate).
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"

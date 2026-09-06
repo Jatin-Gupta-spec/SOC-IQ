@@ -1,0 +1,85 @@
+# SOC-IQ Phase A3 -- reproducibility snapshot, NOT a policy change.
+#
+# requirements.txt (only reordered by A3, not re-floored) intentionally
+# keeps minimum-version floors -- that policy decision predates A1/A3 and
+# neither phase's mandate is a redesign of the dependency strategy. This
+# file is purely additive: an exact pin of every distribution
+# `pip install -r requirements.txt` actually resolved to in a clean
+# environment, captured with `python3 -m pip freeze --local` immediately
+# after that install, in the same environment where the full test suite
+# below was independently re-run and passed:
+#   - 883 non-GUI backend tests (`pytest --ignore=tests/gui`)
+#   - 104 GUI backend tests (`pytest tests/gui`, PySide6 installed, offscreen)
+#   -> 987/987 collected backend tests passed, 0 failed.
+#
+# Use: `pip install -r requirements.lock.txt` for a byte-for-byte
+# reproducible install matching this verified snapshot. Use
+# `requirements.txt` when you want the floors to float forward.
+#
+# This snapshot will drift as soon as PyPI publishes new releases of
+# these floor-only constraints -- it captures one verified-good state,
+# it does not enforce one. Regenerate by re-running the two commands
+# above whenever requirements.txt changes.
+#
+# --- Phase A3 regeneration note ---
+# The previous (Phase A1) snapshot of this file was found, on independent
+# re-verification, to be an INCOMPLETE freeze: a clean
+# `pip install -r requirements.txt` in a fresh environment resolved three
+# additional transitive packages -- `httpcore` (httpx's transport, pulled
+# in by fastapi.testclient), `pillow` (a reportlab dependency), and
+# `typing-inspection` (a pydantic dependency) -- that were never declared
+# in that snapshot. Because those three were unpinned, a strict
+# `pip install -r requirements.lock.txt` from the old file would silently
+# let those three float to whatever PyPI currently serves, rather than
+# reproducing a fixed version -- exactly the reproducibility gap this file
+# exists to close. This regeneration captures all 34 resolved
+# distributions (was 31), verified against the full 987-test suite above.
+# Several floor-only packages also resolved to newer versions than the A1
+# snapshot simply because time passed and PyPI published new releases
+# matching the same floors (see requirements.txt's own header on this) --
+# most notably `reportlab` (4.4.10 -> 5.0.1) and `pypdf` (5.9.0 -> 6.16.2),
+# both major-version bumps. This is exactly the drift requirements.txt's
+# floor-based policy predicts and accepts; it is not a Phase A3 upgrade
+# decision -- requirements.txt's floors were not changed to force this.
+# The full test suite (987/987, including the PDF-export test that
+# exercises both reportlab and pypdf together) was independently
+# re-verified against this exact resolution before capturing it.
+
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.14.2
+certifi==2026.7.22
+charset-normalizer==3.5.1
+click==8.5.0
+fastapi==0.141.1
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.19
+iniconfig==2.3.0
+Jinja2==3.1.6
+markdown-it-py==4.2.0
+MarkupSafe==3.0.3
+mdurl==0.1.2
+packaging==26.3
+pillow==12.3.0
+platformdirs==4.9.4
+pluggy==1.6.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+Pygments==2.21.0
+PySide6==6.11.2
+PySide6_Addons==6.11.2
+PySide6_Essentials==6.11.2
+pypdf==6.16.2
+pytest==9.1.1
+python-dotenv==1.2.3
+reportlab==5.0.1
+requests==2.34.2
+rich==15.0.0
+shiboken6==6.11.2
+starlette==1.6.0
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+urllib3==2.7.0
+uvicorn==0.52.4

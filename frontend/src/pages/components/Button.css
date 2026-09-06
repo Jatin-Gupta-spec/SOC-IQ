@@ -1,0 +1,64 @@
+.button {
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition-property: background-color, color, border-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+}
+
+/* Primary: filled brand button (retry / save / default committed
+   action). Matches the shared spec Settings, Investigations, Reports,
+   and Dashboard retry buttons already converged on independently. */
+.button--primary {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-lg);
+  color: var(--color-text-inverse);
+  background-color: var(--color-brand-primary);
+  border: 1px solid var(--color-brand-primary);
+}
+
+.button--primary:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+}
+
+.button--primary:disabled {
+  color: var(--color-text-disabled);
+  background-color: var(--color-surface-elevated);
+  border-color: var(--color-border-default);
+}
+
+/* Primary/compact: the smaller page-header-scoped action button used
+   by the Investigations/Reports export actions. A legitimately
+   different context (inline header action vs. a Card's full-width
+   error action) -- kept as its own size rather than forced to match. */
+.button--primary.button--compact {
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-sm);
+}
+
+/* Secondary: transparent/outlined button (Analyze's browse control). */
+.button--secondary {
+  font-size: var(--font-size-body);
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-divider-secondary);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text-primary);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: var(--color-surface-secondary);
+}
+
+.button--secondary:disabled {
+  border-color: var(--color-divider-secondary);
+  color: var(--color-text-secondary);
+}

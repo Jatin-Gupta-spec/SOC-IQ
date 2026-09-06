@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from collections import Counter
-
 from app.database.service import InvestigationService
+from app.services.dashboard_aggregation import compute_ioc_distribution
 
 
 class DashboardIOCDistributionService:
@@ -23,18 +22,17 @@ class DashboardIOCDistributionService:
     ) -> dict[str, int]:
         """
         Return IOC counts grouped by type.
+
+        Delegates to `app.services.dashboard_aggregation
+        .compute_ioc_distribution` (Phase 4H Part 1) -- same
+        calculation as before, extracted so the new
+        `get_dashboard_summary` application command can reuse it
+        without a second, independently-maintained copy of this loop.
+        Return shape/value is unchanged.
         """
 
         investigations = (
             self._investigation_service.list_all()
         )
 
-        counter: Counter[str] = Counter()
-
-        for investigation in investigations:
-            for ioc_type, values in (
-                investigation.iocs.items()
-            ):
-                counter[ioc_type] += len(values)
-
-        return dict(counter)
+        return compute_ioc_distribution(investigations)

@@ -1,0 +1,48 @@
+[package]
+name = "keystore-core"
+version = "0.1.0"
+description = "Framework-independent OS-keystore ownership core (ADR-008 / ADR-004) — no Tauri dependency"
+authors = ["SOC-IQ"]
+edition = "2021"
+# Matches sidecar-core's rationale for keeping this low (see that
+# crate's own Cargo.toml comment): this crate has no Tauri
+# dependency, so it must remain buildable independent of whatever
+# edition/toolchain requirement the Tauri dependency graph in
+# src-tauri/Cargo.toml pulls in.
+rust-version = "1.75"
+
+[lib]
+name = "keystore_core"
+crate-type = ["rlib"]
+
+[dependencies]
+# Cross-platform OS credential-store binding -- the same role for
+# Rust that the third-party `keyring` *Python* library plays in
+# `app/secrets/store.py` today (ADR-008: "Python receives the key...
+# never reading the OS keystore itself"; this crate is the
+# replacement read/write path). Targets Windows Credential Manager
+# (this project's primary packaging target,
+# docs/architecture/18-packaging-release-architecture.md) plus a
+# macOS Keychain / Linux Secret Service path, matching the exact set
+# ADR-008 names.
+#
+# `default-features = false` + explicit feature list: the crate's
+# `default = ["platform-all"]` also pulls in `linux-keyutils`
+# (kernel keyring) as a *second* Linux backend. That backend's
+# current release requires Rust's `c"..."` literal syntax
+# (rust-lang/rust#105723), which is not yet stable on this
+# workspace's floor toolchain (1.75/1.77 -- see this crate's and
+# `src-tauri`'s `rust-version`). Excluding it costs nothing ADR-008
+# asks for: ADR-008 names Secret Service/KWallet (via
+# `linux-secret-service`, kept below), not the kernel keyring, as
+# the Linux path, and Windows remains the primary target either way.
+keyring = { version = "2", default-features = false, features = [
+    "platform-windows",
+    "platform-macos",
+    "linux-secret-service",
+] }
+
+[dev-dependencies]
+# none -- unit tests use `keyring::mock`, already part of the base
+# crate, exactly mirroring how `tests/test_secret_store.py` uses an
+# in-memory `keyring` backend rather than a real OS credential store.

@@ -1,0 +1,10 @@
+.info-note {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-surface-secondary);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body-small);
+  line-height: var(--line-height-relaxed);
+}

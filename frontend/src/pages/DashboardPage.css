@@ -1,0 +1,292 @@
+/*
+ * Phase 4H-P4 — Dashboard final polish.
+ *
+ * P3's 12-column composition remains the architecture. P4 only tightens
+ * hierarchy, density and responsive behavior so the existing real-data
+ * widgets scan cleanly in the target desktop viewports.
+ */
+.dashboard-page {
+  min-width: 0;
+}
+
+.dashboard-page > .page-header {
+  margin-bottom: var(--space-lg);
+}
+
+.dashboard-page__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "metrics metrics metrics metrics metrics metrics metrics metrics metrics metrics metrics metrics"
+    "operational operational operational operational investigations investigations investigations investigations investigations investigations investigations investigations"
+    "activity activity activity activity activity activity activity activity activity activity activity activity"
+    "recent recent recent recent recent recent recent recent risk risk risk risk"
+    "recent recent recent recent recent recent recent recent ioc ioc ioc ioc"
+    "recent recent recent recent recent recent recent recent quick quick quick quick";
+  gap: var(--space-lg);
+  align-items: stretch;
+}
+
+.dashboard-page__grid > section {
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-page__grid > section > .card {
+  height: 100%;
+}
+
+.dashboard-page__metrics {
+  grid-area: metrics;
+  min-width: 0;
+}
+
+.dashboard-page__operational {
+  grid-area: operational;
+  min-width: 0;
+  /* Operational Status has one real data row today (Phase 4H Part 1,
+     §12). Without this, grid's default `align-items: stretch` forces
+     this grid item to match its much denser Investigation Overview
+     row-neighbor's height, and the blanket `.card { height: 100% }`
+     rule then stretches the card to fill that tall, mostly-empty
+     space. Letting this specific grid item hug its own content height
+     fixes the imbalance; no fake fields are added to fill the gap. */
+  align-self: start;
+}
+
+.dashboard-page__investigations {
+  grid-area: investigations;
+  min-width: 0;
+}
+
+.dashboard-page__activity {
+  grid-area: activity;
+  min-width: 0;
+}
+
+.dashboard-page__recent {
+  grid-area: recent;
+  min-width: 0;
+}
+
+.dashboard-page__risk {
+  grid-area: risk;
+  min-width: 0;
+}
+
+.dashboard-page__ioc {
+  grid-area: ioc;
+  min-width: 0;
+}
+
+.dashboard-page__quick-actions {
+  grid-area: quick;
+  min-width: 0;
+}
+
+.dashboard-page__metrics .dashboard-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-page__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Structural loading skeleton -- mirrors dashboard-page__grid's real
+   grid-template-areas so the loading state resembles actual widget
+   geometry. No fake values are rendered; every block is unlabeled. */
+.dashboard-page__skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas:
+    "metrics metrics metrics metrics metrics metrics metrics metrics metrics metrics metrics metrics"
+    "operational operational operational operational investigations investigations investigations investigations investigations investigations investigations investigations"
+    "activity activity activity activity activity activity activity activity activity activity activity activity"
+    "recent recent recent recent recent recent recent recent risk risk risk risk"
+    "recent recent recent recent recent recent recent recent ioc ioc ioc ioc"
+    "recent recent recent recent recent recent recent recent quick quick quick quick";
+  gap: var(--space-lg);
+}
+
+.dashboard-page__skeleton-block {
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.dashboard-page__skeleton-block--pulse {
+  animation: dashboard-page-skeleton-pulse var(--duration-slowest) var(--easing-in-out) infinite;
+}
+
+@keyframes dashboard-page-skeleton-pulse {
+  0%,
+  100% {
+    opacity: var(--opacity-opaque);
+  }
+  50% {
+    opacity: var(--opacity-muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-page__skeleton-block--pulse {
+    animation: none;
+  }
+}
+
+.dashboard-page__skeleton-metrics {
+  grid-area: metrics;
+  height: 88px;
+}
+
+.dashboard-page__skeleton-operational {
+  grid-area: operational;
+  height: 120px;
+}
+
+.dashboard-page__skeleton-investigations {
+  grid-area: investigations;
+  height: 220px;
+}
+
+.dashboard-page__skeleton-activity {
+  grid-area: activity;
+  height: 160px;
+}
+
+.dashboard-page__skeleton-recent {
+  grid-area: recent;
+  height: 340px;
+}
+
+.dashboard-page__skeleton-risk {
+  grid-area: risk;
+  height: 160px;
+}
+
+.dashboard-page__skeleton-ioc {
+  grid-area: ioc;
+  height: 160px;
+}
+
+.dashboard-page__skeleton-quick {
+  grid-area: quick;
+  height: 140px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-page__skeleton-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas:
+      "metrics metrics metrics metrics metrics metrics"
+      "operational operational investigations investigations investigations investigations"
+      "activity activity activity activity activity activity"
+      "recent recent recent recent recent recent"
+      "risk risk risk risk risk risk"
+      "ioc ioc ioc ioc ioc ioc"
+      "quick quick quick quick quick quick";
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page__skeleton-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "metrics"
+      "operational"
+      "investigations"
+      "activity"
+      "recent"
+      "risk"
+      "ioc"
+      "quick";
+  }
+}
+
+.dashboard-page__empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-small);
+  line-height: var(--line-height-normal);
+}
+
+.dashboard-page__message {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.dashboard-page__actions {
+  margin-top: var(--space-md);
+}
+
+.dashboard-page__retry-button {
+  min-height: 2.25rem;
+  padding: 0 var(--space-md);
+}
+
+@media (max-width: 1280px) {
+  .dashboard-page > .page-header {
+    margin-bottom: var(--space-md);
+  }
+
+  .dashboard-page__grid {
+    gap: var(--space-md);
+  }
+
+  .dashboard-page__metrics .dashboard-metrics {
+    gap: var(--space-md);
+  }
+
+  .dashboard-page__grid .card {
+    padding: var(--space-md);
+  }
+
+  .dashboard-page__grid .card__title {
+    margin-bottom: var(--space-sm);
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-page__grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-areas:
+      "metrics metrics metrics metrics metrics metrics"
+      "operational operational investigations investigations investigations investigations"
+      "activity activity activity activity activity activity"
+      "recent recent recent recent recent recent"
+      "risk risk risk risk risk risk"
+      "ioc ioc ioc ioc ioc ioc"
+      "quick quick quick quick quick quick";
+  }
+
+  .dashboard-page__metrics .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-page__grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "metrics"
+      "operational"
+      "investigations"
+      "activity"
+      "recent"
+      "risk"
+      "ioc"
+      "quick";
+  }
+
+  .dashboard-page__metrics .dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+}

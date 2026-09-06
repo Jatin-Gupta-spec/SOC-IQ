@@ -15,6 +15,8 @@ from PySide6.QtCore import (
 
 from PySide6.QtGui import (
     QAction,
+    QBrush,
+    QColor,
     QGuiApplication,
     QKeySequence,
     QShortcut,
@@ -35,6 +37,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from app.gui.design.tokens.colors import Colors
+
 
 class IOCDetailsWidget(QWidget):
     """
@@ -46,8 +50,39 @@ class IOCDetailsWidget(QWidget):
         str,
     )
 
+    threat_intel_requested = Signal(
+        str,
+    )
+
+    # Emitted when the analyst asks to see the full IOC detail
+    # experience (value, investigation context, threat-intelligence
+    # status, risk significance) for a single selected indicator.
+    # Carries the raw IOC category key (e.g. "sha256", not "SHA256
+    # Hashes") and the selected value.
+    ioc_detail_requested = Signal(
+        str,
+        str,
+    )
+
+    # Column indices for the details table. Column 1 (Threat Intel)
+    # is only shown for categories where threat-intelligence
+    # enrichment applies (currently SHA256 hashes) -- see
+    # `display_iocs()`.
+    _COLUMN_VALUE = 0
+    _COLUMN_THREAT_INTEL = 1
+
     def __init__(self) -> None:
         super().__init__()
+
+        # Maps an IOC value (e.g. a SHA256 hash) to its enriched
+        # threat-intelligence record for the category currently on
+        # display. Populated by `display_iocs()` and consulted by
+        # `_populate_table()`/`_open_threat_intel()`. `None` means the
+        # current category has no threat-intelligence dimension at
+        # all (the Threat Intel column stays hidden), which is
+        # distinct from an empty dict (the category supports
+        # enrichment but no record exists yet for a given value).
+        self._threat_intel_lookup: dict[str, dict] | None = None
 
         self._selected_category_label = QLabel(
             "Selected Category: None",
@@ -72,6 +107,21 @@ class IOCDetailsWidget(QWidget):
             "Export",
         )
 
+        self._view_details_button = QPushButton(
+            "View Details",
+        )
+
+        self._view_details_button.setEnabled(
+            False,
+        )
+
+        # Raw category key (e.g. "sha256") for the values currently
+        # on display, distinct from `_current_category` which holds
+        # the human-readable title. Needed so `ioc_detail_requested`
+        # can carry the same category key the rest of the codebase
+        # (ThreatIntelService, RiskScoringEngine.IOC_WEIGHTS) uses.
+        self._current_category_key = ""
+
         self._statistics_label = QLabel(
             "Showing 0 IOC values",
         )
@@ -95,13 +145,24 @@ class IOCDetailsWidget(QWidget):
         self._table = QTableWidget()
 
         self._table.setColumnCount(
-            1,
+            2,
         )
 
         self._table.setHorizontalHeaderLabels(
             [
                 "Indicator of Compromise",
+                "Threat Intel",
             ]
+        )
+
+        # Hidden until `display_iocs()` is given a threat-intelligence
+        # lookup for the category on display -- most IOC categories
+        # (IPs, domains, CVEs, ...) have no threat-intelligence
+        # dimension in this workspace, so showing an always-empty
+        # column for them would just be dead space.
+        self._table.setColumnHidden(
+            self._COLUMN_THREAT_INTEL,
+            True,
         )
 
         self._table.verticalHeader().setVisible(
@@ -147,8 +208,13 @@ class IOCDetailsWidget(QWidget):
         )
 
         header.setSectionResizeMode(
-            0,
+            self._COLUMN_VALUE,
             QHeaderView.ResizeMode.Stretch,
+        )
+
+        header.setSectionResizeMode(
+            self._COLUMN_THREAT_INTEL,
+            QHeaderView.ResizeMode.ResizeToContents,
         )
 
         header.setMinimumSectionSize(
@@ -222,6 +288,10 @@ class IOCDetailsWidget(QWidget):
             self._export_button,
         )
 
+        controls_layout.addWidget(
+            self._view_details_button,
+        )
+
         layout.addWidget(
             self._selected_category_label,
         )
@@ -271,8 +341,16 @@ class IOCDetailsWidget(QWidget):
             self._export_visible_iocs,
         )
 
+        self._view_details_button.clicked.connect(
+            self._request_selected_ioc_detail,
+        )
+
         self._table.itemDoubleClicked.connect(
             self._double_click_copy,
+        )
+
+        self._table.itemSelectionChanged.connect(
+            self._on_selection_changed,
         )
 
     def _show_context_menu(
@@ -298,6 +376,11 @@ class IOCDetailsWidget(QWidget):
             self,
         )
 
+        # Selecting the row before the actions are built (above)
+        # means `view_details_action`/`copy_selected_action` act on
+        # the row that was right-clicked, matching the existing
+        # copy behavior.
+
         copy_selected_action = QAction(
             "Copy Selected IOC",
             self,
@@ -313,6 +396,15 @@ class IOCDetailsWidget(QWidget):
             self,
         )
 
+        view_details_action = QAction(
+            "View IOC Details",
+            self,
+        )
+
+        view_details_action.triggered.connect(
+            self._request_selected_ioc_detail,
+        )
+
         copy_selected_action.triggered.connect(
             self._copy_selected_ioc,
         )
@@ -324,6 +416,12 @@ class IOCDetailsWidget(QWidget):
         copy_all_action.triggered.connect(
             self._copy_all_iocs,
         )
+
+        menu.addAction(
+            view_details_action,
+        )
+
+        menu.addSeparator()
 
         menu.addAction(
             copy_selected_action,
@@ -373,8 +471,23 @@ class IOCDetailsWidget(QWidget):
         item: QTableWidgetItem,
     ) -> None:
         """
-        Copy an IOC when it is double-clicked.
+        Handle a double-click on an IOC row.
+
+        Double-clicking the Threat Intel column jumps to that
+        indicator's enrichment record instead of copying, since
+        there's nothing useful to copy from a verdict label and the
+        analyst's intent there is clearly "show me why". Double-
+        clicking anywhere else in the row copies the IOC value, as
+        before.
         """
+
+        if item.column() == self._COLUMN_THREAT_INTEL:
+
+            self._open_threat_intel(
+                item.row(),
+            )
+
+            return
 
         QGuiApplication.clipboard().setText(
             item.text(),
@@ -382,6 +495,35 @@ class IOCDetailsWidget(QWidget):
 
         self.copy_completed.emit(
             "IOC copied to clipboard",
+        )
+
+    def _open_threat_intel(
+        self,
+        row: int,
+    ) -> None:
+        """
+        Request that the enriched threat-intelligence record for
+        the IOC value on `row` be shown, if one exists.
+        """
+
+        value_item = self._table.item(
+            row,
+            self._COLUMN_VALUE,
+        )
+
+        if value_item is None:
+            return
+
+        value = value_item.text()
+
+        if (
+            self._threat_intel_lookup is None
+            or value not in self._threat_intel_lookup
+        ):
+            return
+
+        self.threat_intel_requested.emit(
+            value,
         )
 
     def keyPressEvent(
@@ -405,6 +547,61 @@ class IOCDetailsWidget(QWidget):
 
         super().keyPressEvent(
             event,
+        )
+
+    def _on_selection_changed(
+        self,
+    ) -> None:
+        """
+        Enable/disable "View Details" based on whether a row is
+        currently selected.
+        """
+
+        self._view_details_button.setEnabled(
+            bool(self._table.selectedItems()),
+        )
+
+    def _selected_value(
+        self,
+    ) -> str | None:
+        """
+        Return the IOC value of the currently selected row, or
+        `None` if nothing is selected.
+        """
+
+        selected_items = self._table.selectedItems()
+
+        if not selected_items:
+            return None
+
+        row = selected_items[0].row()
+
+        value_item = self._table.item(
+            row,
+            self._COLUMN_VALUE,
+        )
+
+        if value_item is None:
+            return None
+
+        return value_item.text()
+
+    def _request_selected_ioc_detail(
+        self,
+    ) -> None:
+        """
+        Emit `ioc_detail_requested` for the currently selected IOC
+        value, if any.
+        """
+
+        value = self._selected_value()
+
+        if value is None:
+            return
+
+        self.ioc_detail_requested.emit(
+            self._current_category_key,
+            value,
         )
 
     def _copy_selected_ioc(
@@ -468,9 +665,26 @@ class IOCDetailsWidget(QWidget):
         self,
         ioc_type: str,
         values: list[str],
+        threat_intel_lookup: dict[str, dict] | None = None,
     ) -> None:
         """
         Display IOC values.
+
+        Args:
+            ioc_type:
+                The IOC category key (e.g. "sha256", "ipv4").
+            values:
+                The IOC values belonging to that category.
+            threat_intel_lookup:
+                Optional mapping of IOC value to its enriched
+                threat-intelligence record, for categories that
+                have threat-intelligence enrichment (currently
+                SHA256 hashes). When provided, the Threat Intel
+                column is shown and populated per row; a value with
+                no entry in the mapping is shown as "Not Enriched".
+                When omitted (the default), the Threat Intel column
+                stays hidden -- most IOC categories don't have a
+                threat-intelligence dimension in this workspace.
         """
 
         ioc_titles = {
@@ -493,6 +707,15 @@ class IOCDetailsWidget(QWidget):
 
         self._current_category = title
 
+        self._current_category_key = ioc_type
+
+        self._threat_intel_lookup = threat_intel_lookup
+
+        self._table.setColumnHidden(
+            self._COLUMN_THREAT_INTEL,
+            threat_intel_lookup is None,
+        )
+
         self._selected_category_label.setText(
             (
                 f"Selected Category: {title} "
@@ -512,6 +735,70 @@ class IOCDetailsWidget(QWidget):
         self._update_statistics(
             len(values),
         )
+
+    # Verdict -> display color, mirrored from the verdict strings
+    # produced by `ThreatIntelService` (see
+    # `app/threat_intel/service.py`). Kept local to the widget
+    # rather than imported from the service, since this is purely a
+    # GUI presentation concern and the service has no reason to
+    # depend on Qt.
+    _VERDICT_COLORS = {
+        "Malicious": QColor(Colors.Severity.CRITICAL),
+        "Suspicious": QColor(Colors.Status.WARNING),
+        "Clean": QColor(Colors.Status.SUCCESS),
+    }
+
+    def _build_threat_intel_item(
+        self,
+        value: str,
+    ) -> QTableWidgetItem:
+        """
+        Build the Threat Intel column cell for a single IOC value.
+        """
+
+        record = (
+            self._threat_intel_lookup.get(
+                value,
+            )
+            if self._threat_intel_lookup is not None
+            else None
+        )
+
+        if record is None:
+
+            item = QTableWidgetItem(
+                "Not Enriched",
+            )
+
+            item.setToolTip(
+                "No threat-intelligence record for this indicator.",
+            )
+
+            return item
+
+        verdict = record.get(
+            "verdict",
+            "Unknown",
+        )
+
+        item = QTableWidgetItem(
+            verdict,
+        )
+
+        item.setForeground(
+            QBrush(
+                self._VERDICT_COLORS.get(
+                    verdict,
+                    QColor(Colors.Text.DISABLED),
+                ),
+            ),
+        )
+
+        item.setToolTip(
+            "Double-click to view the full threat-intelligence record.",
+        )
+
+        return item
 
     def _populate_table(
         self,
@@ -557,9 +844,19 @@ class IOCDetailsWidget(QWidget):
 
             self._table.setItem(
                 row,
-                0,
+                self._COLUMN_VALUE,
                 item,
             )
+
+            if self._threat_intel_lookup is not None:
+
+                self._table.setItem(
+                    row,
+                    self._COLUMN_THREAT_INTEL,
+                    self._build_threat_intel_item(
+                        value,
+                    ),
+                )
 
         self._table.resizeColumnsToContents()
 
@@ -898,6 +1195,19 @@ class IOCDetailsWidget(QWidget):
 
         self._statistics_label.setText(
             "Showing 0 IOC values",
+        )
+
+        self._threat_intel_lookup = None
+
+        self._current_category_key = ""
+
+        self._view_details_button.setEnabled(
+            False,
+        )
+
+        self._table.setColumnHidden(
+            self._COLUMN_THREAT_INTEL,
+            True,
         )
 
         self._search_box.clear()

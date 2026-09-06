@@ -227,7 +227,14 @@ class SettingsPage(QWidget):
         # once at construction time — without this signal, a
         # freshly saved key is silently ignored by any page
         # already open until the app is restarted.
-        events.settings_changed.emit({"virustotal_api_key": key})
+        # Only signal *that* the key changed, never the value itself --
+        # `_on_settings_changed` below (and its only other consumer,
+        # ThreatIntelPage) only ever checks for the key's presence in
+        # this dict and re-reads the real value via SettingsService
+        # (now secret-store-backed) when it needs it. There is no
+        # reason for the plaintext key to ride along on this in-process
+        # signal too (Phase 4M Part 2B secret-isolation pass).
+        events.settings_changed.emit({"virustotal_api_key": True})
 
     def _browse_export_dir(self) -> None:
         """

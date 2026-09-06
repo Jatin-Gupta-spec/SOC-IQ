@@ -16,9 +16,13 @@ from PySide6.QtWidgets import (
 from app.gui.components.layout.component_section import ComponentSection
 from app.gui.events.application_state import ApplicationState
 from app.gui.events.event_bus import event_bus
+from app.services.ioc_detail_context import (
+    build_investigation_threat_intel_overview,
+)
 from app.gui.widgets.ioc_details_widget import IOCDetailsWidget
 from app.gui.widgets.ioc_summary_widget import IOCSummaryWidget
 from app.gui.widgets.page_container import PageContainer
+from app.settings.service import SettingsService
 
 
 class IOCViewerPage(QWidget):
@@ -43,6 +47,14 @@ class IOCViewerPage(QWidget):
         # Tracks which investigation is currently rendered so refresh()
         # can tell a genuine change apart from a redundant signal.
         self._loaded_investigation_id: object | None = None
+
+        # Needed to build the same threat-intelligence overview
+        # `InvestigationWorkspacePage` computes, so this page's IOC
+        # summary table can show real enrichment coverage in its
+        # Threat Intelligence column instead of an "unknown"
+        # placeholder. Read-only: this page never calls a provider
+        # itself, it only checks whether a key is configured.
+        self._settings_service = SettingsService()
 
         self._build_ui()
         self._connect_signals()
@@ -151,9 +163,21 @@ class IOCViewerPage(QWidget):
             self._loaded_investigation_id = None
             return
 
-        same_investigation = investigation.id == self._loaded_investigation_id
+        same_investigation = (
+            investigation.investigation_id == self._loaded_investigation_id
+        )
 
-        self._ioc_summary.load_investigation(investigation)
+        settings = self._settings_service.load_settings()
+
+        threat_intel_overview = build_investigation_threat_intel_overview(
+            investigation,
+            api_key_configured=bool(settings.virustotal_api_key),
+        )
+
+        self._ioc_summary.load_investigation(
+            investigation,
+            threat_intel_overview,
+        )
 
         if not same_investigation:
             # Only clear the detail pane when switching to a
@@ -164,4 +188,4 @@ class IOCViewerPage(QWidget):
             # reason.
             self._ioc_details.reset()
 
-        self._loaded_investigation_id = investigation.id
+        self._loaded_investigation_id = investigation.investigation_id

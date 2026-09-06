@@ -85,8 +85,17 @@ class AnimatedButton(BaseWidget):
 
         layout.setSpacing(0)
 
+        # P0-2/Quick-Access fix: Expanding allowed Qt to shrink the
+        # button below the width its own label needs whenever the
+        # row containing it was given less space than its buttons'
+        # combined natural widths -- this is what truncated labels
+        # like "Threat Intel Lookup" under space pressure.
+        # MinimumExpanding still grows to fill available extra space
+        # (same growth priority as Expanding) but never shrinks below
+        # the button's own sizeHint, so its label always renders in
+        # full.
         self._button.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.MinimumExpanding,
             QSizePolicy.Policy.Fixed,
         )
 

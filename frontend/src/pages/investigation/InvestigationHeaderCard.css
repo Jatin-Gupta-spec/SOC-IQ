@@ -1,0 +1,85 @@
+/* Base surface (background/border/radius/padding) now comes from the
+   shared `.card` class (MAX-6 F-03) -- this only adds the header-card-
+   specific layout on top of it. */
+.investigation-header-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  min-width: 0;
+}
+
+.investigation-header-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+  flex: 1 1 240px;
+}
+
+.investigation-header-card__title {
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.investigation-header-card__meta {
+  margin: 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.investigation-header-card__meta--muted {
+  color: var(--color-text-disabled);
+}
+
+.investigation-header-card__meta-sep {
+  color: var(--color-text-disabled);
+}
+
+.investigation-header-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-xl);
+  margin: 0;
+  min-width: 0;
+}
+
+.investigation-header-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+
+.investigation-header-card__stat-label {
+  margin: 0;
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.investigation-header-card__stat-value {
+  margin: 0;
+}
+
+.investigation-header-card__stat-number {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+}
+
+.investigation-header-card__stat-number--muted {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-disabled);
+}

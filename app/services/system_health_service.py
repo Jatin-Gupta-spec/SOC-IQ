@@ -95,7 +95,15 @@ class SystemHealthService:
 
             return "Configured"
 
-        return "API Key Missing"
+        # Shortened from "API Key Missing" -- same "no key
+        # configured" meaning, but the longer phrase was the single
+        # largest width contributor in the dashboard's System
+        # Status strip (SystemStatusSection), forcing that row's
+        # minimum width well past what the 1280x720 floor's utility
+        # row actually has, which is what was truncating both this
+        # badge and the "Database Health"/"Threat Intelligence"
+        # labels next to it.
+        return "No API Key"
 
     # --------------------------------------------------
     # Repository

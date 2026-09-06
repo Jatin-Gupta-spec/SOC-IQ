@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.gui.components.cards.modern_card import ModernCard
+from app.gui.design.icons import Icon, icon_pixmap
 from app.gui.design.tokens import Radius, Spacing
 
 
@@ -44,6 +45,7 @@ class MetricCard(ModernCard):
         parent: QWidget | None = None,
     ) -> None:
 
+        self._icon: Icon | None = None
         self._icon_label = QLabel()
         self._icon_label.setFixedWidth(20)
         self._icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -220,9 +222,14 @@ class MetricCard(ModernCard):
             fonts.caption()
         )
 
-        self._icon_label.setStyleSheet(
-            f"color:{palette.text_primary};"
-        )
+        if self._icon is not None:
+            self._icon_label.setPixmap(
+                icon_pixmap(
+                    self._icon,
+                    color=palette.text_primary,
+                    size=18,
+                )
+            )
 
         self._title_label.setStyleSheet(
             f"color:{palette.text_secondary};"
@@ -259,12 +266,26 @@ class MetricCard(ModernCard):
     # Public API
     # --------------------------------------------------
 
-    def set_icon(self, icon: str) -> None:
+    def set_icon(self, icon_name: Icon | None) -> None:
         """
         Sets the KPI icon displayed beside the title.
+
+        Accepts an ``Icon`` design token (see
+        ``app.gui.design.icons``) rather than a raw unicode glyph,
+        so icons stay part of the centralized icon system and are
+        always themed with the current text color.
         """
-        self._icon_label.setText(icon)
-        self._icon_label.setVisible(bool(icon))
+        self._icon = icon_name
+        self._icon_label.setVisible(icon_name is not None)
+
+        if icon_name is not None:
+            self._icon_label.setPixmap(
+                icon_pixmap(
+                    icon_name,
+                    color=self.palette.text_primary,
+                    size=18,
+                )
+            )
 
     def set_title(self, title: str) -> None:
         self._title_label.setText(title)

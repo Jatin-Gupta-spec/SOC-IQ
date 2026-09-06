@@ -1,0 +1,74 @@
+/**
+ * AppShell — structural layout only (Phase 4G-2 Part 1).
+ *
+ * Reuses existing design tokens (`styles/tokens.css`) for color/border;
+ * no new palette, no unrelated framework. Layout is flex-based per
+ * `NON_NEGOTIABLE_RULES.md` #19 (page shell itself does not scroll —
+ * `styles/globals.css` already sets `body { overflow: hidden }`;
+ * individual regions opt into their own scrolling).
+ *
+ * `--shell-nav-region-width` (Phase 4G-2 Part 2): no frontend design
+ * doc specifies an exact sidebar pixel width, so 240px is a derived,
+ * not arbitrary, value — `--space-sidebar-padding` (16 x2) +
+ * `--space-sidebar-icon-gap` (12) + an 18px icon + the longest label
+ * ("Investigations"/"IOC Explorer"/"Threat Intel") at
+ * `--font-size-body` comes to roughly 200-210px; 240px keeps that
+ * with headroom rather than clipping at the pixel edge. It was 240px
+ * as a placeholder in Part 1 too — that number carries forward
+ * because it already satisfies the real requirement, not because it
+ * went unexamined. No live-rendered pixel measurement was possible in
+ * this sandbox (no browser/display); this is a token-arithmetic
+ * estimate, not a verified measurement — flagged in the Part 2 report.
+ *
+ * `.app-shell__regions` (Phase 4G-4 Part 2): the nav/content row used
+ * to be `.app-shell` itself; it is now a nested row so the
+ * restart-exhausted notification (mounted as `.app-shell`'s first
+ * child — see `AppShell.tsx`) can occupy its own full-width row above
+ * it without overlaying either region. No new token is introduced —
+ * this only adds the flex-column/row nesting the extra row needs.
+ */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app-shell__regions {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Sizes the Part 1 notification foundation for this row; introduces
+   no new color/spacing/radius/typography/motion token of its own. */
+.app-shell > .restart-exhausted-notification {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.app-shell__navigation-region {
+  --shell-nav-region-width: 240px;
+
+  flex: 0 0 var(--shell-nav-region-width);
+  width: var(--shell-nav-region-width);
+  height: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  background-color: var(--color-surface-primary);
+  border-right: 1px solid var(--color-border-default);
+  overflow: hidden;
+}
+
+.app-shell__content-region {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+}

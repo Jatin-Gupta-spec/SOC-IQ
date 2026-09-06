@@ -1,0 +1,80 @@
+/**
+ * SOC-IQ Motion Foundation
+ *
+ * "Motion communicates state change, not decoration."
+ * — docs/architecture/12-motion-animation-architecture.md,
+ *   NON_NEGOTIABLE_RULES.md #20
+ *
+ * This file establishes ONLY the motion infrastructure (duration/easing
+ * consumption + reduced-motion handling + reusable transition utility
+ * classes). It intentionally does not implement any specific
+ * feature-level animation (page transitions, verdict-badge morphs,
+ * skeleton shimmer, the risk-gauge spring) — those are Phase 4F design
+ * system work, built ON TOP of this foundation, per
+ * `docs/architecture/12-motion-animation-architecture.md`'s own
+ * migration notes.
+ */
+
+/* Reusable transition utilities. Consumers compose these on the
+   properties that actually change — no blanket `transition: all`,
+   which animates properties nobody intended to animate. */
+.transition-fade {
+  transition-property: opacity;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.transition-color {
+  transition-property: color, background-color, border-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.transition-transform {
+  transition-property: transform;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--easing-out);
+}
+
+/* Reduced-motion: disables non-essential transitions globally.
+   Per the motion architecture doc, state-changing animations should
+   degrade to an instant change rather than disappearing entirely —
+   feature-level code that implements a state-changing transition
+   (e.g. a verdict badge) is responsible for providing its own instant
+   fallback; this rule only strips decorative/entrance motion. */
+@media (prefers-reduced-motion: reduce) {
+  .transition-fade,
+  .transition-color,
+  .transition-transform {
+    transition-duration: var(--duration-instant);
+  }
+}
+
+/* MAX-4: blanket reduced-motion floor.
+ *
+ * The rule above only covers the three shared utility classes. MAX-4
+ * adds small, component-local `transition:` declarations directly in
+ * several page/shell stylesheets (tab hover, nav-link hover, button
+ * hover/press, row hover, etc. — see the MAX-4 motion inventory in
+ * `docs/audits/SOC-IQ-FRONTEND-MAX-4-MOTION-CLOSURE.md`). Rather than
+ * repeat a `prefers-reduced-motion` block in every one of those files,
+ * this single global floor collapses ALL transitions and animations to
+ * effectively-instant under the reduced-motion preference, site-wide.
+ *
+ * This intentionally does NOT use `display: none` / `visibility: hidden`
+ * or otherwise suppress the state change itself — only its duration.
+ * The analyst still sees the hover/active/loaded state; it simply
+ * applies without a perceptible transition. Elements that must keep
+ * animating for correctness (e.g. a spinner communicating "still
+ * working") are unaffected by duration alone and should use
+ * `animation-iteration-count` guards locally if they need to stop
+ * entirely under reduced motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: var(--duration-instant) !important;
+    scroll-behavior: auto !important;
+  }
+}

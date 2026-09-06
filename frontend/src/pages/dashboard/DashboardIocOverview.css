@@ -1,0 +1,93 @@
+.dashboard-ioc-overview__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-md);
+  /* Internal scroll for a fully-populated distribution (up to the ten
+     real `ioc_type` categories from `app/extractor.py::IOC_PATTERNS`)
+     so the list scrolls within the card instead of growing the
+     Dashboard's 12-column grid taller than the viewport (same
+     max-height + overflow-y: auto idiom as
+     `.command-palette__results` in CommandPalette.css). All real
+     categories remain in the DOM and reachable by scrolling; none are
+     hidden or truncated. */
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dashboard-ioc-overview__row {
+  display: grid;
+  grid-template-columns: minmax(72px, 0.8fr) minmax(64px, 2fr) auto;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.dashboard-ioc-overview__label {
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-small);
+}
+
+.dashboard-ioc-overview__bar-track {
+  min-width: 0;
+  height: 7px;
+  overflow: hidden;
+  border-radius: var(--radius-circle);
+  background: var(--color-surface-secondary);
+}
+
+.dashboard-ioc-overview__bar {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  transition: width var(--duration-faster) var(--easing-out);
+}
+
+.dashboard-ioc-overview__bar--ipv4 {
+  background-color: var(--color-chart-blue);
+}
+
+.dashboard-ioc-overview__bar--domain {
+  background-color: var(--color-chart-cyan);
+}
+
+.dashboard-ioc-overview__bar--url {
+  background-color: var(--color-chart-teal);
+}
+
+.dashboard-ioc-overview__bar--hash {
+  background-color: var(--color-chart-purple);
+}
+
+.dashboard-ioc-overview__bar--email {
+  background-color: var(--color-chart-pink);
+}
+
+.dashboard-ioc-overview__bar--other {
+  background-color: var(--color-chart-lime);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-ioc-overview__bar {
+    transition: none;
+  }
+}
+
+.dashboard-ioc-overview__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  min-width: 4.5rem;
+  justify-content: flex-end;
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.dashboard-ioc-overview__percentage {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}

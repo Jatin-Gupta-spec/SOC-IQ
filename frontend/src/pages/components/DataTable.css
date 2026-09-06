@@ -1,0 +1,123 @@
+/* MAX-3 (Part 3/5/11.4): local scroll region for the table only, so
+   an unusually dense table (many columns / long header labels) at the
+   1280px compact tier scrolls horizontally within its own card rather
+   than forcing page-level horizontal overflow. `PageLayout.css` already
+   clips page-level horizontal overflow (`overflow-x: hidden`) -- this
+   wrapper is what makes wide-table content reachable instead of clipped. */
+.data-table__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-body);
+}
+
+.data-table__caption {
+  /* Visually hidden but announced: each table sits directly under a
+     Card with a visible title already, so a second visible caption
+     would be redundant — but the caption is still required for
+     table semantics per §20. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.data-table th {
+  text-align: left;
+  padding: var(--space-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-label);
+  border-bottom: 1px solid var(--color-border-default);
+  white-space: nowrap;
+}
+
+/* MAX-10 (MAX10-F-01): sortable column headers. The button resets to
+   match the plain `<th>` text it replaces (no visible "button" chrome)
+   -- sort affordance comes from the icon and `:hover`/`:focus-visible`,
+   not from looking like a different kind of control. Keyboard focus
+   is handled entirely by the global `:focus-visible` rule
+   (`styles/globals.css`); no local focus style is needed here. */
+.data-table__sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.data-table__sort-button:hover {
+  color: var(--color-text-primary);
+}
+
+.data-table__sort-icon {
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+}
+
+.data-table td {
+  /* Phase 4G-2 Part 4-1: long unbroken values (file hashes, registry
+     paths, URLs — e.g. mock/iocs.ts's 55-char registry-key value)
+     would otherwise size the column to fit the whole token, growing
+     the table past its `width: 100%` card container; `page-layout`
+     (PageLayout.css) sets `overflow-x: hidden` on its ancestor, so an
+     unwrapped table would silently clip that content rather than
+     causing visible overflow. Wrapping keeps the value fully visible
+     within the existing column instead of hiding or truncating it. */
+  padding: var(--space-sm);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-divider-secondary);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr.data-table__row:hover {
+  background-color: var(--color-interactive-hover);
+}
+
+/* Opt-in interactive rows (Phase 4J-6 Part 2C) -- only applied when a
+   caller passes `onRowActivate`; a plain `<tr>` (every other current
+   consumer) is unaffected. */
+.data-table__row {
+  cursor: pointer;
+  transition-property: background-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.data-table__row:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: -2px;
+}
+
+/* Selected state is never color-only (Phase 4J-6 Part 2D task brief
+   §11): the inset stripe is a shape change readable in grayscale or
+   under a color-vision deficiency, on top of (not instead of) the
+   existing background tint -- `aria-selected` on the row already
+   carries the state semantically for assistive tech. */
+.data-table__row--selected {
+  background-color: var(--color-interactive-selected);
+  box-shadow: inset 3px 0 0 0 var(--color-border-focus);
+}
+
+.data-table__row--selected:hover {
+  background-color: var(--color-interactive-selected);
+}

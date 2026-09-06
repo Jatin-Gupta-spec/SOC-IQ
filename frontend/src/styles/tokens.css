@@ -1,0 +1,178 @@
+/**
+ * SOC-IQ Design System — CSS Custom Properties
+ *
+ * Mirrors the values in `tokens/*.ts` exactly. This file exists so
+ * plain CSS (and CSS-in-component styles) can reference tokens without
+ * a JS/TS build step. If a value changes, change it in BOTH the .ts
+ * source and here — the .ts files remain the single documented source
+ * of truth (with provenance comments); this file is a CSS projection
+ * of them, not an independent second source.
+ */
+
+:root {
+  /* Background */
+  --color-bg-primary: #0f1117;
+  --color-bg-secondary: #151922;
+  --color-bg-tertiary: #1b2130;
+
+  /* Surface */
+  --color-surface-primary: #171c26;
+  --color-surface-secondary: #1e2431;
+  --color-surface-elevated: #252c3b;
+
+  /* Border */
+  --color-border-subtle: #262d3a;
+  --color-border-default: #313949;
+  --color-border-strong: #495365;
+  --color-border-focus: #8b5cf6;
+
+  /* Text */
+  --color-text-primary: #f5f7fa;
+  --color-text-secondary: #c8d0dd;
+  --color-text-muted: #98a2b3;
+  --color-text-disabled: #667085;
+  --color-text-inverse: #111827;
+
+  /* Brand */
+  --color-brand-primary: #8b5cf6;
+  --color-brand-hover: #a78bfa;
+  --color-brand-pressed: #7c3aed;
+
+  /* Status */
+  --color-status-success: #22c55e;
+  --color-status-warning: #f59e0b;
+  --color-status-error: #ef4444;
+  --color-status-info: #38bdf8;
+
+  /* Severity */
+  --color-severity-low: #22c55e;
+  --color-severity-medium: #facc15;
+  --color-severity-high: #f97316;
+  --color-severity-critical: #dc2626;
+
+  /* Threat-intel verdicts (NOT_FOUND != CLEAN — see color.ts) */
+  --color-verdict-malicious: #dc2626;
+  --color-verdict-suspicious: #f59e0b;
+  --color-verdict-clean: #22c55e;
+  --color-verdict-not-found: #64748b;
+  --color-verdict-unsupported: #94a3b8;
+  --color-verdict-no-api-key: #a78bfa;
+  --color-verdict-unavailable: #475569;
+  --color-verdict-rate-limited: #38bdf8;
+  --color-verdict-error: #ef4444;
+
+  /* Chart */
+  --color-chart-blue: #4f8cff;
+  --color-chart-cyan: #38bdf8;
+  --color-chart-teal: #14b8a6;
+  --color-chart-green: #22c55e;
+  --color-chart-lime: #84cc16;
+  --color-chart-yellow: #facc15;
+  --color-chart-orange: #f97316;
+  --color-chart-red: #ef4444;
+  --color-chart-pink: #ec4899;
+  --color-chart-purple: #8b5cf6;
+
+  /* Interactive */
+  --color-interactive-hover: #212938;
+  --color-interactive-pressed: #2a3446;
+  --color-interactive-selected: #314a7f;
+
+  /* Overlay */
+  --color-overlay-modal: #00000099;
+  --color-overlay-selection: #8b5cf633;
+
+  /* Divider */
+  --color-divider-primary: #262d3a;
+  --color-divider-secondary: #1e2431;
+
+  /* Shadow */
+  --color-shadow-soft: #00000055;
+  --color-shadow-medium: #00000077;
+  --color-shadow-strong: #00000099;
+
+  /* Spacing (px) */
+  --space-none: 0px;
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-xxxl: 48px;
+  --space-page-margin: 24px;
+  --space-section-gap: 24px;
+  --space-card-padding: 16px;
+  --space-panel-padding: 20px;
+  --space-sidebar-padding: 16px;
+  --space-sidebar-item-height: 44px;
+  --space-sidebar-icon-gap: 12px;
+
+  /* Radius (px) */
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-xxl: 16px;
+  --radius-circle: 999px;
+
+  /* Typography */
+  --font-family-primary:
+    "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-family-monospace:
+    "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas,
+    monospace;
+  --font-size-display: 28px;
+  --font-size-heading: 22px;
+  --font-size-title: 18px;
+  --font-size-subtitle: 16px;
+  --font-size-body: 12px;
+  --font-size-body-small: 11px;
+  --font-size-label: 11px;
+  --font-size-caption: 10px;
+  --font-size-code: 10px;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.1;
+  --line-height-normal: 1.3;
+  --line-height-relaxed: 1.5;
+
+  /* Elevation (semantic level, composed into shadows at component layer) */
+  --elevation-none: 0;
+  --elevation-low: 1;
+  --elevation-medium: 2;
+  --elevation-high: 3;
+  --elevation-dialog: 4;
+  --elevation-overlay: 5;
+
+  /* Motion — see also styles/motion.css */
+  --duration-instant: 0ms;
+  --duration-fastest: 100ms;
+  --duration-faster: 150ms;
+  --duration-fast: 200ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+  --duration-slowest: 750ms;
+
+  --easing-linear: linear;
+  --easing-in: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  --easing-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --easing-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  /* Opacity */
+  --opacity-transparent: 0;
+  --opacity-subtle: 0.1;
+  --opacity-hover: 0.15;
+  --opacity-selected: 0.2;
+  --opacity-disabled: 0.4;
+  --opacity-muted: 0.6;
+  --opacity-overlay: 0.75;
+  --opacity-opaque: 1;
+}

@@ -9,7 +9,7 @@ from stored investigations.
 from __future__ import annotations
 
 from app.database.service import InvestigationService
-from app.gui.components.feedback.status_badge import BadgeType
+from app.services.models import BadgeType
 
 
 class DashboardThreatService:

@@ -1,0 +1,28 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bladeA" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="bladeB" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#6D28D9"/>
+    </linearGradient>
+    <radialGradient id="coreGrad" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#E0F2FE"/>
+      <stop offset="45%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0EA5E9"/>
+    </radialGradient>
+  </defs>
+  <g>
+    <path d="M 60.00,256.00 L 158.00,86.26 L 227.45,141.51 L 142.57,223.47 Z" fill="url(#bladeA)"/>
+    <path d="M 158.00,86.26 L 354.00,86.26 L 340.88,174.03 L 227.45,141.51 Z" fill="url(#bladeB)"/>
+    <path d="M 354.00,86.26 L 452.00,256.00 L 369.43,288.53 L 340.88,174.03 Z" fill="url(#bladeA)"/>
+    <path d="M 452.00,256.00 L 354.00,425.74 L 284.55,370.49 L 369.43,288.53 Z" fill="url(#bladeB)"/>
+    <path d="M 354.00,425.74 L 158.00,425.74 L 171.12,337.97 L 284.55,370.49 Z" fill="url(#bladeA)"/>
+    <path d="M 158.00,425.74 L 60.00,256.00 L 142.57,223.47 L 171.12,337.97 Z" fill="url(#bladeB)"/>
+    <line x1="60.00" y1="256.00" x2="20.00" y2="256.00" stroke="#38BDF8" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round"/><line x1="354.00" y1="86.26" x2="374.00" y2="51.62" stroke="#38BDF8" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round"/><line x1="354.00" y1="425.74" x2="374.00" y2="460.38" stroke="#38BDF8" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="256.0" cy="256.0" r="46" fill="url(#coreGrad)"/>
+    <circle cx="20.00" cy="256.00" r="8" fill="#38BDF8"/><circle cx="374.00" cy="51.62" r="8" fill="#38BDF8"/><circle cx="374.00" cy="460.38" r="8" fill="#38BDF8"/>
+  </g>
+</svg>

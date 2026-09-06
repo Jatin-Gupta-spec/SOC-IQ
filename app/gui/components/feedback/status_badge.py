@@ -7,30 +7,20 @@ Reusable badge component for displaying statuses and severity levels.
 
 from __future__ import annotations
 
-from enum import Enum, auto
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QLabel, QHBoxLayout, QWidget
+from PySide6.QtWidgets import QLabel, QHBoxLayout, QSizePolicy, QWidget
 
 from app.gui.components.base_widget import BaseWidget
 from app.gui.design.tokens import Radius, Spacing
 
+# Canonical definition lives in app.services.models so that backend
+# services can describe badge/severity types without importing GUI
+# code. Re-exported here (same object, same members) for backward
+# compatibility with existing GUI imports.
+from app.services.models import BadgeType
 
-class BadgeType(Enum):
-    """Supported badge variants."""
-
-    DEFAULT = auto()
-
-    SUCCESS = auto()
-    WARNING = auto()
-    ERROR = auto()
-    INFO = auto()
-
-    LOW = auto()
-    MEDIUM = auto()
-    HIGH = auto()
-    CRITICAL = auto()
+__all__ = ["BadgeType", "StatusBadge"]
 
 
 class StatusBadge(BaseWidget):
@@ -83,9 +73,26 @@ class StatusBadge(BaseWidget):
 
         self.setMinimumHeight(24)
 
+        # Root cause of P0-2 (hero badge/timestamp collision): this used
+        # to be `self.setSizePolicy(self.sizePolicy().horizontalPolicy(),
+        # self.sizePolicy().verticalPolicy())` -- a no-op that just read
+        # back and reapplied QWidget's existing default policy
+        # (Preferred/Preferred). Preferred lets Qt shrink the badge below
+        # its natural text width whenever the row it sits in (e.g. the
+        # DashboardHeroWidget status strip) is given less horizontal space
+        # than its content needs -- silently compressing the badge instead
+        # of guaranteeing it stays wide enough for its own label, which is
+        # how a longer label ("THREAT: CRITICAL" vs. "THREAT: ELEVATED")
+        # ends up visually colliding with whatever sits next to it.
+        #
+        # Minimum still lets the badge grow if the row has extra space,
+        # but never lets it shrink below its own sizeHint, so the label is
+        # always rendered in full -- any space pressure is resolved by the
+        # row giving the badge its required minimum, not by compressing
+        # badge content.
         self.setSizePolicy(
-            self.sizePolicy().horizontalPolicy(),
-            self.sizePolicy().verticalPolicy(),
+            QSizePolicy.Policy.Minimum,
+            QSizePolicy.Policy.Fixed,
         )
 
     def _apply_theme(self) -> None:

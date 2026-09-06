@@ -1,0 +1,111 @@
+/**
+ * Sidebar navigation styling (Phase 4G-2 Part 2).
+ *
+ * Uses only existing design tokens (`styles/tokens.css`) — no new
+ * palette, no new spacing scale. `--space-sidebar-*` were mirrored
+ * into `tokens.css` from the already-existing `Spacing.sidebar*`
+ * values in `styles/tokens/spacing.ts` (they existed in the .ts
+ * source since Part 1 but had no CSS custom-property mirror yet,
+ * since nothing consumed them until this checkpoint).
+ */
+
+.nav-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-sidebar-padding) 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nav-sidebar__brand {
+  flex: 0 0 auto;
+  padding: 0 var(--space-sidebar-padding) var(--space-lg);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: 0.02em;
+}
+
+.nav-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.nav-sidebar__list-item {
+  display: block;
+}
+
+.nav-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sidebar-icon-gap);
+  height: var(--space-sidebar-item-height);
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-md);
+  border-left: 2px solid transparent;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  transition-property: background-color, color, border-left-color;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--easing-out);
+}
+
+.nav-sidebar__link:hover {
+  background-color: var(--color-interactive-hover);
+  color: var(--color-text-primary);
+}
+
+.nav-sidebar__link--active {
+  background-color: var(--color-interactive-selected);
+  border-left-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.nav-sidebar__icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.nav-sidebar__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-sidebar__divider {
+  flex: 0 0 auto;
+  height: 1px;
+  margin: var(--space-lg) var(--space-md);
+  background-color: var(--color-divider-primary);
+  border: none;
+}
+
+.nav-sidebar__spacer {
+  flex: 1 1 auto;
+}
+
+/**
+ * Sidecar status footer band (Phase 4G-3 Part 2). Mirrors
+ * `.nav-sidebar__brand`'s own horizontal padding so the status text
+ * lines up with the brand text and nav labels above it, with a top
+ * border (reusing `--color-divider-primary`, the same token
+ * `.nav-sidebar__divider` already uses) to separate it from the
+ * secondary nav group rather than a second `<hr>` element.
+ */
+.nav-sidebar__footer {
+  flex: 0 0 auto;
+  padding: var(--space-lg) var(--space-sidebar-padding) 0;
+  margin-top: var(--space-lg);
+  border-top: 1px solid var(--color-divider-primary);
+}

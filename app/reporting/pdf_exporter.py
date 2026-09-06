@@ -14,6 +14,7 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
 
+from app.reporting.atomic_write import atomic_write
 from app.reporting.models import InvestigationReport
 
 PAGE_MARGIN = 40
@@ -37,6 +38,18 @@ class PDFReportExporter:
     as PDF files.
     """
 
+    # Canonical mapping of each enrichable TI category (as stored on
+    # `report.threat_intelligence`) to the record field holding the
+    # indicator's value and a display label for the "Type" column.
+    # Hashes stay first so existing hash-only reports render
+    # identically to before Phase 3E.
+    _TI_CATEGORIES: tuple[tuple[str, str, str], ...] = (
+        ("hashes", "sha256", "SHA256"),
+        ("ips", "ip", "IPv4"),
+        ("domains", "domain", "Domain"),
+        ("urls", "url", "URL"),
+    )
+
     @staticmethod
     def export(
         report: InvestigationReport,
@@ -44,6 +57,41 @@ class PDFReportExporter:
     ) -> Path:
         """
         Export an investigation report to PDF.
+
+        MAX-21B-3 Part 2: written atomically via `atomic_write` (see
+        `json_exporter.py` for the rationale) -- closes MAX-21A F3
+        for the PDF format. The actual reportlab rendering is
+        unchanged and lives in `_render`; this method's only job is
+        to point that rendering at a temporary file and only replace
+        `output_path` once it has completed successfully.
+        """
+
+        try:
+            def _write(tmp_path: Path) -> None:
+                PDFReportExporter._render(report, tmp_path)
+
+            atomic_write(output_path, _write)
+
+            return output_path
+
+        except OSError as error:
+            raise RuntimeError(
+                f"Failed to export PDF report: {error}"
+            ) from error
+
+    @staticmethod
+    def _render(
+        report: InvestigationReport,
+        output_path: Path,
+    ) -> None:
+        """
+        Render `report` as a PDF directly to `output_path`.
+
+        This is the original (pre-MAX-21B-3) export body, unchanged
+        except that it no longer returns a value -- `export` above is
+        now the only public entry point and always writes to a
+        temporary path via `atomic_write`, so `output_path` here is
+        never the final user-facing destination.
         """
 
         output_path.parent.mkdir(
@@ -286,6 +334,20 @@ class PDFReportExporter:
             12,
         )
 
+        investigation_id = (
+            report.investigation_id
+            if report.investigation_id is not None
+            else "N/A"
+        )
+
+        pdf.drawString(
+            60,
+            y,
+            f"Investigation ID: {investigation_id}",
+        )
+
+        y -= 20
+
         pdf.drawString(
             60,
             y,
@@ -486,42 +548,59 @@ class PDFReportExporter:
 
         threat_table = [
             [
-                "SHA256",
+                "Indicator",
+                "Type",
                 "Verdict",
                 "Detection",
             ]
         ]
 
-        hashes = report.threat_intelligence.get(
-            "hashes",
-            [],
-        )
+        for category, value_field, type_label in (
+            PDFReportExporter._TI_CATEGORIES
+        ):
 
-        for item in hashes:
-
-            threat_table.append(
-                [
-                    item.get(
-                        "sha256",
-                        "",
-                    )[:24] + "...",
-                    item.get(
-                        "verdict",
-                        "Unknown",
-                    ),
-                    str(
-                        item.get(
-                            "detection_ratio",
-                            "N/A",
-                        )
-                    ),
-                ]
+            records = (
+                report.threat_intelligence.get(
+                    category,
+                    [],
+                )
+                or []
             )
+
+            for item in records:
+
+                value = str(
+                    item.get(
+                        value_field,
+                        "",
+                    )
+                )
+
+                if len(value) > 24:
+                    value = value[:24] + "..."
+
+                threat_table.append(
+                    [
+                        value,
+                        type_label,
+                        item.get(
+                            "verdict",
+                            "Unknown",
+                        ),
+                        str(
+                            item.get(
+                                "detection_ratio",
+                                "N/A",
+                            )
+                        ),
+                    ]
+                )
 
         if len(threat_table) == 1:
 
             threat_table.append(
                 [
+                    "-",
                     "-",
                     "No Threat Intelligence",
                     "-",
@@ -531,9 +610,10 @@ class PDFReportExporter:
         table = Table(
             threat_table,
             colWidths=[
-                250,
+                190,
+                70,
                 120,
-                100,
+                90,
             ],
         )
 
@@ -640,5 +720,3 @@ class PDFReportExporter:
         )
 
         pdf.save()
-
-        return output_path

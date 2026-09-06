@@ -1,0 +1,56 @@
+/**
+ * Sidecar status indicator styling (Phase 4G-3 Part 2).
+ *
+ * Reuses only existing tokens from `styles/tokens.css` — no new
+ * color, spacing, or radius values. Sidebar-specific outer spacing
+ * (the footer band this sits inside) lives in `navigation.css`'s
+ * `.nav-sidebar__footer`, matching the existing convention where
+ * `NavigationRegion`'s own CSS owns sidebar-region layout and each
+ * mounted piece owns only its own internal presentation.
+ */
+
+.sidecar-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.sidecar-status__dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-circle);
+}
+
+.sidecar-status__dot--unknown,
+.sidecar-status__dot--disconnected {
+  background-color: var(--color-text-disabled);
+}
+
+.sidecar-status__dot--starting {
+  background-color: var(--color-status-info);
+}
+
+.sidecar-status__dot--connected {
+  background-color: var(--color-status-success);
+}
+
+.sidecar-status__dot--restarting {
+  background-color: var(--color-status-warning);
+}
+
+.sidecar-status__dot--failure {
+  background-color: var(--color-status-error);
+}
+
+.sidecar-status__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+}

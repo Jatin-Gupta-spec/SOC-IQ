@@ -8,8 +8,10 @@ as a JSON report.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
+from app.reporting.atomic_write import atomic_write
 from app.reporting.models import InvestigationReport
 
 
@@ -27,15 +29,18 @@ class JSONReportExporter:
         """
         Export an investigation report
         to a JSON file.
+
+        MAX-21B-3 Part 2: written atomically via `atomic_write` --
+        the complete JSON is written to a temporary file in the same
+        directory and only then moved onto `output_path`, so a crash,
+        disk-full condition, or interrupted write can never leave a
+        truncated `output_path` or destroy a previously-valid export
+        that was being overwritten (MAX-21A F3).
         """
 
         try:
-            output_path.parent.mkdir(
-                parents=True,
-                exist_ok=True,
-            )
-
             report_data = {
+                "investigation_id": report.investigation_id,
                 "report_name": report.report_name,
                 "analyzed_at": str(report.analyzed_at),
                 "status": report.status,
@@ -49,16 +54,21 @@ class JSONReportExporter:
                 "threat_intelligence": report.threat_intelligence,
             }
 
-            with output_path.open(
-                "w",
-                encoding="utf-8",
-            ) as file:
-                json.dump(
-                    report_data,
-                    file,
-                    indent=4,
-                    ensure_ascii=False,
-                )
+            def _write(tmp_path: Path) -> None:
+                with tmp_path.open(
+                    "w",
+                    encoding="utf-8",
+                ) as file:
+                    json.dump(
+                        report_data,
+                        file,
+                        indent=4,
+                        ensure_ascii=False,
+                    )
+                    file.flush()
+                    os.fsync(file.fileno())
+
+            atomic_write(output_path, _write)
 
             return output_path
 

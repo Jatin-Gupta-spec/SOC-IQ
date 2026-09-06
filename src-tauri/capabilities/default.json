@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "MAX-10 export remediation (MAX-AUDIT-01): added `dialog:allow-save`, the narrow plugin permission `tauri-plugin-dialog`'s native save() dialog requires -- `frontend/src/pages/reports/reportExportPath.ts` and `frontend/src/pages/investigations/investigationsCsvExportPath.ts` already called `save()` from `@tauri-apps/plugin-dialog`, but without this grant Tauri's ACL denies the call at runtime even though it is fully mocked (and therefore invisible) in unit tests. Everything else here is unchanged from the prior checkpoint: `core:default` for the app's own `#[tauri::command]`s (`get_sidecar_origin`, `get_sidecar_status`), `dialog:allow-open` for the existing native open-file picker (`frontend/src/pages/analyze/nativeFileSelection.ts`), and `fs:allow-read-file` for reading only the bytes of a path that picker just returned. Deliberately NOT `dialog:default`/`fs:default` (both pull in additional commands this app does not use -- directory pickers, message boxes, write/remove/rename). No `fs:allow-write*` permission is granted: the save dialog only returns a user-chosen destination path to the frontend, it does not itself write bytes, and no capability here lets JS write to the filesystem directly -- the actual export write happens in the Python sidecar behind the existing `export_report`/`export_investigations_csv` commands (see `docs/security/filesystem-security-model.md` for that boundary). No static fs `scope` is configured: `tauri-plugin-dialog`'s documented behavior is that a path returned by `open()`/`save()` is added to the fs scope for that one selection only, non-persistently. Still no shell or HTTP plugin capability of any kind is granted.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "fs:allow-read-file"
+  ]
+}

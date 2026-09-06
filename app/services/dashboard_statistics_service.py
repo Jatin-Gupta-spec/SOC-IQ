@@ -8,6 +8,7 @@ Calculates dashboard metrics from stored investigations.
 from __future__ import annotations
 
 from app.database.service import InvestigationService
+from app.services.dashboard_aggregation import compute_dashboard_metrics
 
 
 class DashboardStatisticsService:
@@ -31,38 +32,26 @@ class DashboardStatisticsService:
     ) -> dict[str, str]:
         """
         Return dashboard KPI summary.
+
+        Delegates the actual counting to `app.services
+        .dashboard_aggregation.compute_dashboard_metrics` (Phase 4H
+        Part 1) -- same calculation as before, extracted so the new
+        `get_dashboard_summary` application command can reuse it
+        (as real `int`s) without a second, independently-maintained
+        copy. This method's own return shape/values are unchanged:
+        still `dict[str, str]`, still including the static
+        `"database": "Connected"` field the GUI already relies on.
         """
 
         investigations = (
             self._investigation_service.list_all()
         )
 
-        report_count = len(
-            investigations
-        )
-
-        total_iocs = sum(
-            sum(
-                len(values)
-                for values in investigation.iocs.values()
-            )
-            for investigation in investigations
-        )
-
-        high_risk = sum(
-            1
-            for investigation in investigations
-            if (
-                investigation.severity or ""
-            ).upper() in {
-                "HIGH",
-                "CRITICAL",
-            }
-        )
+        metrics = compute_dashboard_metrics(investigations)
 
         return {
-            "reports": str(report_count),
-            "iocs": str(total_iocs),
-            "high_risk": str(high_risk),
+            "reports": str(metrics["report_count"]),
+            "iocs": str(metrics["total_iocs"]),
+            "high_risk": str(metrics["high_risk"]),
             "database": "Connected",
         }

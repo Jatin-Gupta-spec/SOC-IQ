@@ -1,0 +1,14 @@
+/* Sizing for RouteLoadingFallback's single SkeletonBlock (MAX-8 Phase
+ * 2A, MAX8-F-01). The block itself already gets its visual treatment
+ * (color/border/radius/pulse) from the shared `.skeleton-block`
+ * rule in `pages/components/Skeleton.css` -- this file only supplies
+ * the route-transition-specific placeholder's dimensions, since that
+ * shared rule intentionally owns no size of its own (each caller
+ * arranges blocks into its own shape, per `SkeletonBlock`'s doc
+ * comment). A single generously-sized block (rather than a
+ * page-shaped skeleton grid) is deliberate: this fallback is shown
+ * for every route, not one specific page's layout. */
+.route-loading-fallback__block {
+  min-height: 240px;
+  width: 100%;
+}

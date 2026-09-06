@@ -1,0 +1,28 @@
+[package]
+name = "sidecar-core"
+version = "0.2.0"
+description = "Framework-independent sidecar lifecycle core (Phase 2A Part 2, hardened) — no Tauri dependency"
+authors = ["SOC-IQ"]
+edition = "2021"
+# Deliberately kept low: this crate must remain buildable independent of
+# whatever edition/toolchain requirement the Tauri dependency graph in
+# src-tauri/Cargo.toml pulls in (see docs/phase4/PHASE4_2A_PART1_SIDECAR_CORE.md
+# "Known environment limitations"). It has no Tauri dependency, so nothing
+# here should ever require raising this.
+rust-version = "1.75"
+
+[lib]
+name = "sidecar_core"
+crate-type = ["rlib"]
+
+[dependencies]
+# Already present in the workspace's transitive dependency graph
+# (src-tauri/Cargo.lock, pulled in by tauri itself), so this follows the
+# existing project's established typed-error convention rather than
+# introducing a new one. No other dependency is added: no process,
+# HTTP, or async-runtime crate — Part 1 implements no real I/O.
+thiserror = "1"
+
+[dev-dependencies]
+# none — tests use only the public API and std, deliberately avoiding
+# arbitrary sleeps or any timing-dependent behavior (task brief §11).

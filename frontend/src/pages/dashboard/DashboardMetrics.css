@@ -1,0 +1,36 @@
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+
+.dashboard-metrics__item {
+  min-width: 0;
+}
+
+.dashboard-metrics .metric-card {
+  min-height: 7rem;
+  justify-content: center;
+}
+
+@media (max-width: 1280px) {
+  .dashboard-metrics .metric-card {
+    min-height: 6.25rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-metrics .metric-card {
+    min-height: 5.5rem;
+  }
+}

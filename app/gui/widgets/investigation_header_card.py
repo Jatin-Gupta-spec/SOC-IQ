@@ -12,7 +12,8 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QPushButton
 
 from app.database.models import Investigation
-from app.gui.widgets.badge import Badge
+from app.gui.components.feedback.status_badge import StatusBadge
+from app.gui.utils.badge_mapping import severity_to_badge_type
 from app.gui.widgets.detail_section import DetailSection
 from app.gui.widgets.key_value_row import KeyValueRow
 
@@ -68,8 +69,13 @@ class InvestigationHeaderCard(DetailSection):
             "0%",
         )
 
-        self._severity_badge = Badge(
+        self._threat_intel_row = KeyValueRow(
+            "Threat Intelligence",
             "Waiting...",
+        )
+
+        self._severity_badge = StatusBadge(
+            "WAITING...",
         )
 
         self._export_button = QPushButton(
@@ -106,6 +112,10 @@ class InvestigationHeaderCard(DetailSection):
 
         self.add_widget(
             self._ioc_count_row,
+        )
+
+        self.add_widget(
+            self._threat_intel_row,
         )
 
         self.add_widget(
@@ -149,8 +159,18 @@ class InvestigationHeaderCard(DetailSection):
             "0",
         )
 
-        self._severity_badge.set_text(
+        self._threat_intel_row.set_value(
             "Waiting...",
+        )
+
+        self._threat_intel_row.setToolTip("")
+
+        self._severity_badge.set_text(
+            "WAITING...",
+        )
+
+        self._severity_badge.set_badge_type(
+            severity_to_badge_type("waiting..."),
         )
 
         self._risk_score_row.set_value(
@@ -164,9 +184,23 @@ class InvestigationHeaderCard(DetailSection):
     def load_investigation(
         self,
         investigation: Investigation,
+        threat_intel_overview: dict | None = None,
     ) -> None:
         """
         Display an investigation.
+
+        Args:
+            investigation:
+                The investigation to display.
+            threat_intel_overview:
+                Optional result of
+                `build_investigation_threat_intel_overview()`. When
+                omitted, the Threat Intelligence row is left at its
+                previous value -- callers that care about this row
+                (currently `InvestigationWorkspacePage`) always pass
+                it; it's optional here only so existing/other
+                callers and tests that construct this widget for
+                unrelated fields keep working unchanged.
         """
 
         investigation_id = (
@@ -201,6 +235,16 @@ class InvestigationHeaderCard(DetailSection):
         self._ioc_count_row.set_value(
             str(total_iocs),
         )
+
+        if threat_intel_overview is not None:
+
+            self._threat_intel_row.set_value(
+                threat_intel_overview["short_label"],
+            )
+
+            self._threat_intel_row.setToolTip(
+                threat_intel_overview["message"],
+            )
 
         self._severity_badge.set_text(
             investigation.severity,

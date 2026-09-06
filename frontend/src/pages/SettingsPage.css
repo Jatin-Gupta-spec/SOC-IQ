@@ -1,0 +1,157 @@
+.settings-page__section-description {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-muted);
+}
+
+.settings-page__control-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.settings-page__control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-divider-secondary);
+}
+
+.settings-page__control-row:last-child {
+  border-bottom: none;
+}
+
+.settings-page__control-label {
+  font-size: var(--font-size-body);
+  color: var(--color-text-secondary);
+}
+
+.settings-page__control-value {
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+
+.settings-page__toggle {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-disabled);
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs) var(--space-sm);
+  cursor: not-allowed;
+}
+
+/* Part 2B-1: real Theme / Export Directory / VirusTotal controls. */
+
+.settings-page__message {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+}
+
+.settings-page__actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.settings-page__field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.settings-page__field-group + .settings-page__field-group {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-divider-secondary);
+}
+
+.settings-page__field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-md);
+}
+
+.settings-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 220px;
+}
+
+.settings-page__field--grow {
+  flex: 1 1 320px;
+}
+
+.settings-page__field-label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.settings-page__select,
+.settings-page__text-input {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.settings-page__select:focus,
+.settings-page__text-input:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 1px;
+}
+
+.settings-page__field-note {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-muted);
+}
+
+.settings-page__field-status {
+  margin: 0;
+  font-size: var(--font-size-body-small);
+}
+
+.settings-page__field-status--success {
+  color: var(--color-status-success);
+}
+
+.settings-page__field-status--error {
+  color: var(--color-status-error);
+}
+
+.settings-page__field-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Structural loading skeleton (MAX-2) -- one block per card this page
+   actually renders (see SettingsPage.tsx::SettingsSkeleton). No fake
+   controls or values. */
+.settings-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.settings-page__skeleton-card {
+  height: 120px;
+}
+
+.settings-page__skeleton-card--mock {
+  height: 96px;
+}

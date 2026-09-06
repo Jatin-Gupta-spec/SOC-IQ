@@ -1,0 +1,63 @@
+/* Base surface (background/border/radius/padding) now comes from the
+   shared `.card` class (MAX-6 F-03) -- this only adds the metric-card-
+   specific layout on top of it. */
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+}
+
+.metric-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.metric-card__label {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.metric-card__icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background-color: var(--color-surface-secondary);
+}
+
+.metric-card__icon-badge svg {
+  width: 14px;
+  height: 14px;
+}
+
+.metric-card__icon-badge--neutral {
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-default);
+}
+
+.metric-card__icon-badge--severity {
+  color: var(--color-severity-high);
+  border-color: var(--color-severity-high);
+}
+
+.metric-card__value {
+  font-size: var(--font-size-heading);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+}
+
+.metric-card__trend {
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-secondary);
+}

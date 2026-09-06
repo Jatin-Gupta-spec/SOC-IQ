@@ -10,9 +10,25 @@ from __future__ import annotations
 
 import copy
 import threading
+from dataclasses import dataclass
 
 from app.database.models import Investigation
 from app.gui.events.event_bus import event_bus
+
+
+@dataclass(frozen=True, slots=True)
+class SelectedIOC:
+    """
+    Identifies a single IOC value currently under investigation
+    by the analyst, within the context of the current investigation.
+
+    `ioc_type` is the raw IOC category key used throughout the
+    codebase (e.g. "sha256", "ipv4"), not a display title.
+    """
+
+    ioc_type: str
+
+    value: str
 
 
 class ApplicationState:
@@ -37,6 +53,15 @@ class ApplicationState:
     _lock = threading.RLock()
 
     _current_investigation: Investigation | None = None
+
+    # The specific IOC value the analyst is currently drilled into
+    # within the current investigation (e.g. one selected SHA256
+    # hash), if any. This is deliberately a *separate* field from
+    # `_current_investigation` rather than folded into it: it is
+    # transient GUI-navigation state, not investigation data, and
+    # must never be persisted (see PHASE2_PART2A scope: "Do not
+    # persist transient GUI state unnecessarily").
+    _selected_ioc: SelectedIOC | None = None
 
     @classmethod
     def set_current_investigation(
@@ -84,6 +109,13 @@ class ApplicationState:
             # the caller's reference.
             cls._current_investigation = copy.deepcopy(investigation)
 
+            # A previously selected IOC belongs to whichever
+            # investigation was loaded when it was selected. Carrying
+            # it over to a newly selected investigation would let the
+            # IOC detail view silently show a value that isn't part
+            # of the investigation currently on screen.
+            cls._selected_ioc = None
+
         # Emitted outside the lock: a slot connected to this
         # signal could call back into ApplicationState (e.g.
         # from a DirectConnection on another thread), and
@@ -125,6 +157,7 @@ class ApplicationState:
 
         with cls._lock:
             cls._current_investigation = None
+            cls._selected_ioc = None
 
         # Previously this cleared the state but never told
         # anyone. Pages that only refresh on
@@ -148,3 +181,51 @@ class ApplicationState:
 
         with cls._lock:
             return cls._current_investigation is not None
+
+    @classmethod
+    def set_selected_ioc(
+        cls,
+        ioc_type: str,
+        value: str,
+    ) -> None:
+        """
+        Record which IOC value the analyst is currently drilled
+        into, within the current investigation.
+
+        This does not validate that `value` actually belongs to
+        the current investigation -- callers (the IOC detail flow)
+        already have that guarantee because the value came from
+        the investigation's own extracted IOCs.
+        """
+
+        with cls._lock:
+            cls._selected_ioc = SelectedIOC(
+                ioc_type=ioc_type,
+                value=value,
+            )
+
+    @classmethod
+    def get_selected_ioc(
+        cls,
+    ) -> SelectedIOC | None:
+        """
+        Return the currently selected IOC, if any.
+
+        `SelectedIOC` is frozen/immutable, so unlike
+        `get_current_investigation()` no defensive copy is needed.
+        """
+
+        with cls._lock:
+            return cls._selected_ioc
+
+    @classmethod
+    def clear_selected_ioc(
+        cls,
+    ) -> None:
+        """
+        Clear the currently selected IOC without affecting the
+        current investigation.
+        """
+
+        with cls._lock:
+            cls._selected_ioc = None

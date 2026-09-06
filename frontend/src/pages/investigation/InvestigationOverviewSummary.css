@@ -1,0 +1,5 @@
+.investigation-overview-summary__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-lg);
+}

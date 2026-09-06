@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.database.models import Investigation
+from app.reporting.builder import ReportBuilder
 from app.reporting.export_manager import ExportManager
 from app.reporting.models import InvestigationReport
 
@@ -46,21 +47,13 @@ class ReportingService:
         """
         Build an InvestigationReport
         from an Investigation.
+
+        Delegates to `ReportBuilder` so there is a single place
+        that maps `Investigation` -> `InvestigationReport` fields,
+        rather than duplicating that mapping here.
         """
 
-        return InvestigationReport(
-            report_name=investigation.report_name,
-            analyzed_at=investigation.analyzed_at,
-            status=investigation.status,
-            severity=investigation.severity,
-            risk_score=investigation.risk_score,
-            confidence=investigation.confidence,
-            ioc_score=investigation.ioc_score,
-            threat_intel_score=investigation.threat_intel_score,
-            cve_score=investigation.cve_score,
-            iocs=investigation.iocs,
-            threat_intelligence=investigation.threat_intelligence,
-        )
+        return ReportBuilder.build(investigation)
 
     def export_html(
         self,
